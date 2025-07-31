@@ -8,6 +8,7 @@ export function HemodialysisHome() {
     { title: "🔬  همودیالیز در اطفال", path: "/hemo/dialysisAssistant" },
    
     { title: "⚠️ عوارض دیالیز و درمان آن", path: "/hemo/complications" },
+    
   ];
 
   return (
