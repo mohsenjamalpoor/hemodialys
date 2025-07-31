@@ -5,9 +5,9 @@ import { useNavigate } from "react-router-dom";
 export function HemodialysisHome() {
   const navigate = useNavigate();
   const items = [
-    { title: "🔬  همودیالیز در اطفال", path: "/hemo/dialysisAssistant" },
-   
-    { title: "⚠️ عوارض دیالیز و درمان آن", path: "/hemo/complications" },
+    { title: "  همودیالیز در اطفال", path: "/hemo/dialysisAssistant" },
+     { title: "   آموزش همودیالیز اطفال ", path: "/hemo/hemodialsisTraining" },
+    { title: " عوارض دیالیز و درمان آن", path: "/hemo/complications" },
     
   ];
 

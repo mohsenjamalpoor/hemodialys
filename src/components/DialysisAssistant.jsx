@@ -26,7 +26,7 @@ const filters = [
     suitableFor: "15–25 کیلوگرم",
     description: "مناسب برای کودکان با وزن متوسط رو به بالا",
     minWeight: 15,
-    maxWeight: 20.5,
+    maxWeight: 25,
     koa: "6.8 mL/min",
     uf: "637 mL/min",
     tmp: "500 mmHg",
