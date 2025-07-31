@@ -5,8 +5,8 @@ import { useNavigate } from "react-router-dom";
 export function HemodialysisHome() {
   const navigate = useNavigate();
   const items = [
-    { title: "🔬 انتخاب صافی در اطفال", path: "/hemo/filters" },
-    { title: "💉 محاسبه سرعت پمپ خون (Qb)", path: "/hemo/qb" },
+    { title: "🔬  همودیالیز در اطفال", path: "/hemo/dialysisAssistant" },
+   
     { title: "⚠️ عوارض دیالیز و درمان آن", path: "/hemo/complications" },
   ];
 
