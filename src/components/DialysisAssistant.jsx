@@ -36,7 +36,7 @@ const filters = [
     suitableFor: "20–40 کیلوگرم",
     description: "قابل استفاده برای کودکان بزرگ‌تر",
     minWeight: 20,
-    maxWeight: 30,
+    maxWeight: 40,
     koa: "8.8 mL/min",
     uf: "746 mL/min",
     tmp: "500 mmHg",
