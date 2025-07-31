@@ -107,11 +107,13 @@ export function DialysisAssistant() {
         محاسبه
       </button>
 
+      
+
       {/* نتایج فقط وقتی محاسبه شده نمایش داده میشه */}
       {numericWeight > 0 && (
         <>
           <div className="bg-blue-50 border rounded-lg p-4">
-            <h3 className="font-bold text-blue-800 mb-2">Qb پیشنهادی:</h3>
+            <h3 className="font-bold text-blue-800 mb-2">سرعت پمپ خون </h3>
             <p>
               محدوده Qb:{" "}
               <span className="font-medium">{qbRange.min} – {qbRange.max}</span> ml/min
@@ -125,7 +127,7 @@ export function DialysisAssistant() {
           </div>
 
           <div className="bg-green-50 border rounded-lg p-4">
-            <h3 className="font-bold text-green-800 mb-2">دوز هپارین پیشنهادی:</h3>
+            <h3 className="font-bold text-green-800 mb-2">دوز هپارین </h3>
             <p>
               💉 Bolus اولیه:{" "}
               <span className="font-medium">
@@ -146,7 +148,7 @@ export function DialysisAssistant() {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-bold text-blue-800">صافی(فیلتر) پیشنهادی:</h3>
+            <h3 className="text-lg font-bold text-blue-800">صافی(فیلتر) </h3>
 
             {matchedFilters.length === 0 ? (
               <p className="text-red-600">❌ صافی مناسب برای این وزن یافت نشد.</p>
@@ -173,6 +175,7 @@ export function DialysisAssistant() {
                 </div>
               ))
             )}
+            
           </div>
         </>
       )}
