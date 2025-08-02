@@ -5,6 +5,7 @@ import { ComplicationManagement } from "./components/ComplicationManagement";
 import { HemodialysisHome } from "./components/HemodialysisHome";
 import { DialysisAssistant } from "./components/DialysisAssistant";
 import HemodialsisTraining from "./components/HemodialsisTraining";
+import HemodialysisAlarms from "./components/HemodialysisAlarms";
 
 
 function App() {
@@ -17,6 +18,8 @@ function App() {
       
         <Route path="/hemo" element={<HemodialysisHome />} />
         <Route path="/hemo/hemodialsisTraining" element={<HemodialsisTraining />} />
+        <Route path="/hemo/hemodialysisAlarms" element={<HemodialysisAlarms />} />
+
 
         <Route path="/hemo/dialysisAssistant" element={<DialysisAssistant />} />
         <Route path="/hemo/complications" element={<ComplicationManagement />} />

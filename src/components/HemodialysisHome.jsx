@@ -7,6 +7,7 @@ export function HemodialysisHome() {
   const items = [
     { title: "  همودیالیز در اطفال", path: "/hemo/dialysisAssistant" },
      { title: "   آموزش همودیالیز اطفال ", path: "/hemo/hemodialsisTraining" },
+     { title: "   آلارم های دستگاه همودیالیز  ", path: "/hemo/hemodialysisAlarms" },
     { title: " عوارض دیالیز و درمان آن", path: "/hemo/complications" },
     
   ];
