@@ -92,10 +92,18 @@ export function DialysisAssistant() {
       ? "⚠️ INR بالا است، ممکن است ریسک خونریزی وجود داشته باشد."
       : null;
 
-  const bpWarning =
-    numericBpS > 0 && numericBpS < 90
-      ? "⚠️ فشار خون سیستولیک پایین است، احتمال افت فشار حین دیالیز وجود دارد."
-      : null;
+const bpSystolicWarning =
+  numericBpS > 0 && numericBpS < 90
+    ? "⚠️ فشار خون سیستولیک پایین است، احتمال افت فشار حین دیالیز وجود دارد."
+    : null;
+
+const bpDiastolicWarning =
+  numericBpD > 0 && numericBpD < 50
+    ? "⚠️ فشار خون دیاستولیک پایین است، نیاز به پایش دقیق‌تر دارد."
+    : null;
+;
+    
+
 
   // پیدا کردن فیلتر مناسب با منطق کامل
   const getMatchedFilters = () => {
@@ -115,8 +123,22 @@ export function DialysisAssistant() {
   const matchedFilters = getMatchedFilters();
 
   // زمان پیشنهادی دیالیز بر اساس وزن (مثلاً 4 ساعت ثابت برای کودک معمولی)
-  const dialysisTimeHours =
-    numericWeight > 0 ? Math.min(Math.max(3, numericWeight / 5), 5) : 0;
+ const dialysisTimeHours = (() => {
+  if (numericWeight <= 0) return 0;
+
+  if (clinicalStatus === "acute") {
+    if (hemodynamicStatus === "unstable") {
+      return 1; // حاد + ناپایدار (اینتوبه)
+    } else {
+      return 1.5; // حاد + پایدار
+    }
+  }
+
+  // سایر شرایط (مثلاً مزمن یا بدون انتخاب وضعیت خاص)
+  return Math.min(Math.max(3, numericWeight / 5), 5); // ۳ تا ۵ ساعت
+})();
+
+
 
   function handleCalculate() {
     setSubmitted(true);
@@ -147,7 +169,7 @@ export function DialysisAssistant() {
           type="number"
           min={0}
           step="0.1"
-          placeholder="مثال: 12.5"
+          placeholder="مثال: 10"
           value={weight}
           onChange={(e) => setWeight(e.target.value)}
           className="w-full px-4 py-2 border rounded-lg text-right"
@@ -309,16 +331,18 @@ export function DialysisAssistant() {
           </div>
 
           {/* هشدارهای ایمنی */}
-          {(pltWarning || inrWarning || bpWarning) && (
-            <div className="bg-yellow-50 border border-yellow-400 rounded-lg p-4 text-yellow-800 font-semibold">
-              <h3 className="mb-2">⚠️ هشدارهای ایمنی</h3>
-              <ul className="list-disc list-inside space-y-1">
-                {pltWarning && <li>{pltWarning}</li>}
-                {inrWarning && <li>{inrWarning}</li>}
-                {bpWarning && <li>{bpWarning}</li>}
-              </ul>
-            </div>
-          )}
+          {(pltWarning || inrWarning || bpSystolicWarning || bpDiastolicWarning) && (
+  <div className="bg-yellow-50 border border-yellow-400 rounded-lg p-4 text-yellow-800 font-semibold">
+    <h3 className="mb-2">⚠️ هشدارهای ایمنی</h3>
+    <ul className="list-disc list-inside space-y-1">
+      {pltWarning && <li>{pltWarning}</li>}
+      {inrWarning && <li>{inrWarning}</li>}
+      {bpSystolicWarning && <li>{bpSystolicWarning}</li>}
+      {bpDiastolicWarning && <li>{bpDiastolicWarning}</li>}
+    </ul>
+  </div>
+)}
+
 
           {/* فیلتر */}
           <div className="space-y-4">
@@ -358,12 +382,12 @@ export function DialysisAssistant() {
           {/* نکات آموزشی */}
           <button
             onClick={() => setShowNotes(!showNotes)}
-            className="mt-4 underline text-blue-700"
+            className="mt-4 p-2 font-bold border rounded-lg  text-blue-700"
           >
             {showNotes ? "پنهان کردن نکات آموزشی" : "نمایش نکات آموزشی"}
           </button>
           {showNotes && (
-            <div className="bg-gray-100 border rounded-lg p-4 mt-2 text-sm text-gray-800 space-y-2">
+            <div className="bg-gray-100 border rounded-lg p-4 mt-2 text-lg text-gray-800 space-y-2">
               <p>
                 • Qb جریان خون است که بر اساس وزن بیمار تعیین می‌شود و باید با دقت تنظیم شود.
               </p>
