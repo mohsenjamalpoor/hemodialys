@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { FiX } from "react-icons/fi";
 
 const complicationsData = [
   {
@@ -114,7 +115,7 @@ export function ComplicationManagement() {
               className="absolute top-2 left-2 text-gray-400 hover:text-gray-600 text-xl"
               onClick={() => setSelected(null)}
             >
-              ✖
+            <FiX size={20} />
             </button>
             <h3 className="text-xl font-bold mb-3 text-blue-700">
               {selected.complication}

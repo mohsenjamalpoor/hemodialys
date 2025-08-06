@@ -82,7 +82,7 @@ export default function HemodialysisTraining() {
               className="absolute top-2 left-2 text-gray-500 hover:text-red-500 text-xl font-bold"
               aria-label="بستن پنجره"
             >
-              <FiX />
+              <FiX size={20} />
             </button>
           </div>
         </div>

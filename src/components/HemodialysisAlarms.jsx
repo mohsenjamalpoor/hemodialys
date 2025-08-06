@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { FiX } from "react-icons/fi";
 
 // ✅ داده‌های آلارم جداگانه
 const alarmData = [
@@ -178,7 +179,7 @@ export default function HemodialysisAlarms() {
               onClick={closeModal}
               className="absolute top-2 left-2 text-gray-500 hover:text-red-500 text-xl font-bold"
             >
-              ×
+             <FiX size={20} />
             </button>
           </div>
         </div>
