@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { IoWater } from "react-icons/io5";
 import { GrPowerCycle } from "react-icons/gr";
 import { GoStopwatch } from "react-icons/go";
+import { LuSyringe } from "react-icons/lu";
+import { GiChemicalTank } from "react-icons/gi";
 
 const filters = [
   {
@@ -308,7 +310,7 @@ const bpDiastolicWarning =
 
           {/* دوز هپارین */}
           <div className="bg-green-50 border rounded-lg p-4">
-            <h3 className="font-bold text-green-800 mb-2">💉 دوز هپارین</h3>
+            <h3 className="font-bold text-green-800 flex mb-2"><LuSyringe className="text-green-800 ml-1 mt-1" /> دوز هپارین</h3>
             {canUseHeparin ? (
               <>
                 <p>
@@ -349,7 +351,7 @@ const bpDiastolicWarning =
 
           {/* فیلتر */}
           <div className="space-y-4">
-            <h3 className="text-xl font-bold text-blue-800">🧪 صافی پیشنهادی</h3>
+            <h3 className="text-xl font-bold flex text-blue-800"><GiChemicalTank className="text-blue-800 mt-1.5" /> صافی پیشنهادی</h3>
             {matchedFilters.length === 0 ? (
               <p className="text-red-600">صافی مناسب یافت نشد</p>
             ) : (
