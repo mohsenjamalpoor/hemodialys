@@ -62,6 +62,7 @@ export function DialysisAssistant() {
   const [bpDiastolic, setBpDiastolic] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
+  
 
   const numericWeight = parseFloat(weight.replace(/٫|٬|,/g, ".")) || 0;
   const numericPlt = parseFloat(plt) || 0;
