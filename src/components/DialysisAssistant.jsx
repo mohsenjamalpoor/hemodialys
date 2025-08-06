@@ -4,53 +4,8 @@ import { GrPowerCycle } from "react-icons/gr";
 import { GoStopwatch } from "react-icons/go";
 import { LuSyringe } from "react-icons/lu";
 import { GiChemicalTank } from "react-icons/gi";
-
-const filters = [
-  {
-    name: "F4",
-    suitableFor: "<15 کیلوگرم",
-    description: "صافی کوچک مناسب برای نوزاد و کودک کم‌وزن",
-    minWeight: 0,
-    maxWeight: 14.9,
-    koa: "2.8 mL/min",
-    uf: "364 mL/min",
-    tmp: "600 mmHg",
-    preferredForUnstable: true,
-  },
-  {
-    name: "F6",
-    suitableFor: "15–20 کیلوگرم",
-    description: "توان پاکسازی متوسط؛ فشار مناسب",
-    minWeight: 15,
-    maxWeight: 20,
-    koa: "5.5 mL/min",
-    uf: "630 mL/min",
-    tmp: "600 mmHg",
-    preferredForUnstable: true,
-  },
-  {
-    name: "PS10",
-    suitableFor: "15–25 کیلوگرم",
-    description: "مناسب برای کودکان با وزن متوسط رو به بالا",
-    minWeight: 15,
-    maxWeight: 25,
-    koa: "6.8 mL/min",
-    uf: "637 mL/min",
-    tmp: "500 mmHg",
-    preferredForUnstable: false,
-  },
-  {
-    name: "PS13",
-    suitableFor: "20–40 کیلوگرم",
-    description: "قابل استفاده برای کودکان بزرگ‌تر",
-    minWeight: 20,
-    maxWeight: 40,
-    koa: "8.8 mL/min",
-    uf: "746 mL/min",
-    tmp: "500 mmHg",
-    preferredForUnstable: false,
-  },
-];
+import { filters } from "../utils/filters";
+import { EducationalNotes } from "./EducationalNotes";
 
 export function DialysisAssistant() {
   const [weight, setWeight] = useState("");
@@ -77,6 +32,7 @@ export function DialysisAssistant() {
     max: numericWeight * 5,
     standard: baseQb + adjustment,
   };
+  
 
   // پیشنهاد Qd (Dialysate flow rate): معمولاً 2 برابر Qb در کودکان
   const qdSuggested = qbRange.standard * 2;
@@ -423,36 +379,7 @@ export function DialysisAssistant() {
           </div>
 
           {/* نکات آموزشی */}
-          <button
-            onClick={() => setShowNotes(!showNotes)}
-            className=" bg-blue-400 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-md mt-4"
-          >
-            {showNotes ? "پنهان کردن نکات آموزشی" : "نمایش نکات آموزشی"}
-          </button>
-          {showNotes && (
-            <div className="bg-gray-200 border rounded-lg p-4 mt-2 text-lg text-gray-800 space-y-2">
-              <p>
-                • Qb جریان خون است که بر اساس وزن بیمار تعیین می‌شود و باید با
-                دقت تنظیم شود.
-              </p>
-              <p>
-                • Qd یا جریان دیالیز معمولاً دو برابر Qb است تا پاکسازی مناسب
-                انجام شود.
-              </p>
-              <p>
-                • دوز هپارین بر اساس وزن تعیین می‌شود و باید حتما وضعیت PLT و
-                INR بررسی شود.
-              </p>
-              <p>
-                • در بیماران ناپایدار، فیلترهایی که مناسب وضعیت همودینامیک هستند
-                اولویت دارند.
-              </p>
-              <p>
-                • فشار خون پایین می‌تواند خطر افت فشار حین دیالیز را افزایش دهد؛
-                مراقبت‌های ویژه لازم است.
-              </p>
-            </div>
-          )}
+        <EducationalNotes setShowNotes={setShowNotes} showNotes={showNotes}  />
         </div>
       )}
     </div>
