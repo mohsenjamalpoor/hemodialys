@@ -27,10 +27,19 @@ export function DialysisAssistant() {
   const baseQb = numericWeight * 4;
   const adjustment =
     clinicalStatus === "acute" ? 50 : clinicalStatus === "chronic" ? 100 : 0;
+ 
+  const hypotension =
+    (numericBpS > 0 && numericBpS < 90) || (numericBpD > 0 && numericBpD < 50);
+
+  let standardQb = baseQb + adjustment;
+  if (hypotension) {
+    standardQb *= 0.75; // کاهش 25 درصدی به دلیل افت فشار خون
+  }
+
   const qbRange = {
     min: numericWeight * 3,
     max: numericWeight * 5,
-    standard: baseQb + adjustment,
+    standard: standardQb,
   };
   
 
@@ -238,11 +247,10 @@ export function DialysisAssistant() {
       {submitted && numericWeight > 0 && (
         <div className="space-y-6 mt-6">
           {/* Qb */}
-          <div className="bg-blue-50 border rounded-lg p-4">
+           <div className="bg-blue-50 border rounded-lg p-4">
             <h3 className="font-bold flex text-blue-800 mb-2">
-              {" "}
-              <GrPowerCycle className="text-blue-800 ml-1 mt-1.5" /> سرعت پمپ
-              خون (Qb)
+              <GrPowerCycle className="text-blue-800 ml-1 mt-1.5" />
+              سرعت پمپ خون (Qb)
             </h3>
             <p>
               محدوده Qb:{" "}
@@ -253,8 +261,13 @@ export function DialysisAssistant() {
             </p>
             {clinicalStatus !== "none" && (
               <p>
-                Qb پیشنهادی: <strong>{qbRange.standard.toFixed(1)}</strong>{" "}
-                ml/min
+                Qb پیشنهادی:{" "}
+                <strong>{qbRange.standard.toFixed(1)}</strong> ml/min
+              </p>
+            )}
+            {hypotension && (
+              <p className="text-red-600 text-sm mt-1">
+                ⚠️ به دلیل فشار خون پایین، Qb پیشنهادی کاهش یافته است.
               </p>
             )}
           </div>
