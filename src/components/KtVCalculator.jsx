@@ -65,6 +65,7 @@ export function KtVCalculator() {
         >
           محاسبه
         </button>
+        
 
         {result !== null && (
           <div className="mt-4 text-center text-lg font-semibold">
