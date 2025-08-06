@@ -278,7 +278,7 @@ const bpDiastolicWarning =
         <div className="space-y-6 mt-6">
           {/* Qb */}
           <div className="bg-blue-50 border rounded-lg p-4">
-            <h3 className="font-bold text-blue-800 mb-2">🔄 Qb</h3>
+            <h3 className="font-bold text-blue-800 mb-2">🔄  سرعت پمپ خون (Qb)</h3>
             <p>
               محدوده Qb: <strong>{qbRange.min.toFixed(1)} – {qbRange.max.toFixed(1)}</strong> ml/min
             </p>
@@ -324,8 +324,8 @@ const bpDiastolicWarning =
                 </p>
               </>
             ) : (
-              <p className="text-red-600 font-semibold">
-                ❌ بیمار برای هپارین مناسب نیست (INR یا PLT غیرمجاز)
+              <p className="text-red-600 font-bold">
+                 بیمار برای هپارین مناسب نیست (INR یا PLT غیرمجاز)
               </p>
             )}
           </div>
