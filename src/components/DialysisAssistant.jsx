@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { IoWater } from "react-icons/io5";
+import { GrPowerCycle } from "react-icons/gr";
 
 const filters = [
   {
@@ -278,7 +280,7 @@ const bpDiastolicWarning =
         <div className="space-y-6 mt-6">
           {/* Qb */}
           <div className="bg-blue-50 border rounded-lg p-4">
-            <h3 className="font-bold text-blue-800 mb-2">🔄  سرعت پمپ خون (Qb)</h3>
+            <h3 className="font-bold flex text-blue-800 mb-2"> <GrPowerCycle  className="text-blue-800 ml-1 mt-1.5"/> سرعت پمپ خون (Qb)</h3>
             <p>
               محدوده Qb: <strong>{qbRange.min.toFixed(1)} – {qbRange.max.toFixed(1)}</strong> ml/min
             </p>
@@ -289,14 +291,14 @@ const bpDiastolicWarning =
 
           {/* Qd */}
           <div className="bg-blue-100 border rounded-lg p-4">
-            <h3 className="font-bold text-blue-900 mb-2">💧 Qd (Dialysate Flow Rate)</h3>
+            <h3 className="font-bold flex text-blue-900 mb-2"> <IoWater className="text-blue-500 mt-1" />  Qd (Dialysate Flow Rate) </h3>
             <p>Qd پیشنهادی: <strong>{qdSuggested.toFixed(1)}</strong> ml/min</p>
             <p className="text-sm text-gray-700">معمولاً دو برابر Qb در کودکان</p>
           </div>
 
           {/* Ultrafiltration Rate */}
           <div className="bg-blue-100 border rounded-lg p-4">
-            <h3 className="font-bold text-blue-900 mb-2">💧 Ultrafiltration Rate (UFR)</h3>
+            <h3 className="font-bold flex text-blue-900 mb-2"><IoWater className="text-blue-500 mt-1" /> Ultrafiltration Rate (UFR)</h3>
             <p>
               محدوده پیشنهادی: <strong>{ufrMin.toFixed(0)} – {ufrMax.toFixed(0)}</strong> mL/hr
             </p>
@@ -382,12 +384,12 @@ const bpDiastolicWarning =
           {/* نکات آموزشی */}
           <button
             onClick={() => setShowNotes(!showNotes)}
-            className="mt-4 p-2 font-bold border rounded-lg  text-blue-700"
+            className=" bg-blue-400 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-md mt-4"
           >
             {showNotes ? "پنهان کردن نکات آموزشی" : "نمایش نکات آموزشی"}
           </button>
           {showNotes && (
-            <div className="bg-gray-100 border rounded-lg p-4 mt-2 text-lg text-gray-800 space-y-2">
+            <div className="bg-gray-200 border rounded-lg p-4 mt-2 text-lg text-gray-800 space-y-2">
               <p>
                 • Qb جریان خون است که بر اساس وزن بیمار تعیین می‌شود و باید با دقت تنظیم شود.
               </p>
