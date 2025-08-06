@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { FiX } from "react-icons/fi";
 
 export default function HemodialysisTraining() {
   const [selectedTopic, setSelectedTopic] = useState(null);
@@ -46,8 +47,13 @@ export default function HemodialysisTraining() {
   const closeModal = () => setSelectedTopic(null);
 
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-white shadow rounded-xl space-y-6" dir="rtl">
-      <h1 className="text-2xl font-bold text-center text-indigo-700">آموزش همودیالیز</h1>
+    <div
+      className="max-w-3xl mx-auto p-6 bg-white shadow rounded-xl space-y-6"
+      dir="rtl"
+    >
+      <h1 className="text-2xl font-bold text-center text-indigo-700">
+        آموزش همودیالیز
+      </h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {topics.map((topic, index) => (
@@ -65,7 +71,9 @@ export default function HemodialysisTraining() {
       {selectedTopic && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white w-full max-w-md mx-4 sm:mx-auto p-6 rounded-lg shadow-xl relative text-right">
-            <h2 className="text-lg font-bold mb-4 text-indigo-800">{selectedTopic.title}</h2>
+            <h2 className="text-lg font-bold mb-4 text-indigo-800">
+              {selectedTopic.title}
+            </h2>
             <pre className="whitespace-pre-wrap text-base leading-loose text-gray-800 font-sans">
               {selectedTopic.content}
             </pre>
@@ -74,7 +82,7 @@ export default function HemodialysisTraining() {
               className="absolute top-2 left-2 text-gray-500 hover:text-red-500 text-xl font-bold"
               aria-label="بستن پنجره"
             >
-              ×
+              <FiX />
             </button>
           </div>
         </div>

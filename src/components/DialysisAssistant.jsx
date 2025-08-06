@@ -62,7 +62,6 @@ export function DialysisAssistant() {
   const [bpDiastolic, setBpDiastolic] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
-  
 
   const numericWeight = parseFloat(weight.replace(/٫|٬|,/g, ".")) || 0;
   const numericPlt = parseFloat(plt) || 0;
@@ -98,19 +97,15 @@ export function DialysisAssistant() {
       ? "⚠️ INR بالا است، ممکن است ریسک خونریزی وجود داشته باشد."
       : null;
 
-const bpSystolicWarning =
-  numericBpS > 0 && numericBpS < 90
-    ? "⚠️ فشار خون سیستولیک پایین است، احتمال افت فشار حین دیالیز وجود دارد."
-    : null;
+  const bpSystolicWarning =
+    numericBpS > 0 && numericBpS < 90
+      ? "⚠️ فشار خون سیستولیک پایین است، احتمال افت فشار حین دیالیز وجود دارد."
+      : null;
 
-const bpDiastolicWarning =
-  numericBpD > 0 && numericBpD < 50
-    ? "⚠️ فشار خون دیاستولیک پایین است، نیاز به پایش دقیق‌تر دارد."
-    : null;
-;
-    
-
-
+  const bpDiastolicWarning =
+    numericBpD > 0 && numericBpD < 50
+      ? "⚠️ فشار خون دیاستولیک پایین است، نیاز به پایش دقیق‌تر دارد."
+      : null;
   // پیدا کردن فیلتر مناسب با منطق کامل
   const getMatchedFilters = () => {
     const matched = filters.filter(
@@ -129,22 +124,20 @@ const bpDiastolicWarning =
   const matchedFilters = getMatchedFilters();
 
   // زمان پیشنهادی دیالیز بر اساس وزن (مثلاً 4 ساعت ثابت برای کودک معمولی)
- const dialysisTimeHours = (() => {
-  if (numericWeight <= 0) return 0;
+  const dialysisTimeHours = (() => {
+    if (numericWeight <= 0) return 0;
 
-  if (clinicalStatus === "acute") {
-    if (hemodynamicStatus === "unstable") {
-      return 1; // حاد + ناپایدار (اینتوبه)
-    } else {
-      return 1.5; // حاد + پایدار
+    if (clinicalStatus === "acute") {
+      if (hemodynamicStatus === "unstable") {
+        return 1; // حاد + ناپایدار (اینتوبه)
+      } else {
+        return 1.5; // حاد + پایدار
+      }
     }
-  }
 
-  // سایر شرایط (مثلاً مزمن یا بدون انتخاب وضعیت خاص)
-  return Math.min(Math.max(3, numericWeight / 5), 5); // ۳ تا ۵ ساعت
-})();
-
-
+    // سایر شرایط (مثلاً مزمن یا بدون انتخاب وضعیت خاص)
+    return Math.min(Math.max(3, numericWeight / 5), 5); // ۳ تا ۵ ساعت
+  })();
 
   function handleCalculate() {
     setSubmitted(true);
@@ -212,7 +205,9 @@ const bpDiastolicWarning =
       {/* آزمایشات PLT و INR */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block mb-1 font-semibold">PLT (میلیون بر میلی‌لیتر):</label>
+          <label className="block mb-1 font-semibold">
+            PLT (میلیون بر میلی‌لیتر):
+          </label>
           <input
             type="number"
             min={0}
@@ -240,7 +235,9 @@ const bpDiastolicWarning =
       {/* فشار خون */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block mb-1 font-semibold">فشار خون سیستولیک (mmHg):</label>
+          <label className="block mb-1 font-semibold">
+            فشار خون سیستولیک (mmHg):
+          </label>
           <input
             type="number"
             min={0}
@@ -251,7 +248,9 @@ const bpDiastolicWarning =
           />
         </div>
         <div>
-          <label className="block mb-1 font-semibold">فشار خون دیاستولیک (mmHg):</label>
+          <label className="block mb-1 font-semibold">
+            فشار خون دیاستولیک (mmHg):
+          </label>
           <input
             type="number"
             min={0}
@@ -284,75 +283,109 @@ const bpDiastolicWarning =
         <div className="space-y-6 mt-6">
           {/* Qb */}
           <div className="bg-blue-50 border rounded-lg p-4">
-            <h3 className="font-bold flex text-blue-800 mb-2"> <GrPowerCycle  className="text-blue-800 ml-1 mt-1.5"/> سرعت پمپ خون (Qb)</h3>
+            <h3 className="font-bold flex text-blue-800 mb-2">
+              {" "}
+              <GrPowerCycle className="text-blue-800 ml-1 mt-1.5" /> سرعت پمپ
+              خون (Qb)
+            </h3>
             <p>
-              محدوده Qb: <strong>{qbRange.min.toFixed(1)} – {qbRange.max.toFixed(1)}</strong> ml/min
+              محدوده Qb:{" "}
+              <strong>
+                {qbRange.min.toFixed(1)} – {qbRange.max.toFixed(1)}
+              </strong>{" "}
+              ml/min
             </p>
             {clinicalStatus !== "none" && (
-              <p>Qb پیشنهادی: <strong>{qbRange.standard.toFixed(1)}</strong> ml/min</p>
+              <p>
+                Qb پیشنهادی: <strong>{qbRange.standard.toFixed(1)}</strong>{" "}
+                ml/min
+              </p>
             )}
           </div>
 
           {/* Qd */}
           <div className="bg-blue-100 border rounded-lg p-4">
-            <h3 className="font-bold flex text-blue-900 mb-2"> <IoWater className="text-blue-500 mt-1" />  Qd (Dialysate Flow Rate) </h3>
-            <p>Qd پیشنهادی: <strong>{qdSuggested.toFixed(1)}</strong> ml/min</p>
-            <p className="text-sm text-gray-700">معمولاً دو برابر Qb در کودکان</p>
+            <h3 className="font-bold flex text-blue-900 mb-2">
+              {" "}
+              <IoWater className="text-blue-500 mt-1" /> Qd (Dialysate Flow
+              Rate){" "}
+            </h3>
+            <p>
+              Qd پیشنهادی: <strong>{qdSuggested.toFixed(1)}</strong> ml/min
+            </p>
+            <p className="text-sm text-gray-700">
+              معمولاً دو برابر Qb در کودکان
+            </p>
           </div>
 
           {/* Ultrafiltration Rate */}
           <div className="bg-blue-100 border rounded-lg p-4">
-            <h3 className="font-bold flex text-blue-900 mb-2"><IoWater className="text-blue-500 mt-1" /> Ultrafiltration Rate (UFR)</h3>
+            <h3 className="font-bold flex text-blue-900 mb-2">
+              <IoWater className="text-blue-500 mt-1" /> Ultrafiltration Rate
+              (UFR)
+            </h3>
             <p>
-              محدوده پیشنهادی: <strong>{ufrMin.toFixed(0)} – {ufrMax.toFixed(0)}</strong> mL/hr
+              محدوده پیشنهادی:{" "}
+              <strong>
+                {ufrMin.toFixed(0)} – {ufrMax.toFixed(0)}
+              </strong>{" "}
+              mL/hr
             </p>
             <p className="text-sm text-gray-700">معمولاً 10-15 mL/kg/hr</p>
           </div>
 
           {/* دوز هپارین */}
           <div className="bg-green-50 border rounded-lg p-4">
-            <h3 className="font-bold text-green-800 flex mb-2"><LuSyringe className="text-green-800 ml-1 mt-1" /> دوز هپارین</h3>
+            <h3 className="font-bold text-green-800 flex mb-2">
+              <LuSyringe className="text-green-800 ml-1 mt-1" /> دوز هپارین
+            </h3>
             {canUseHeparin ? (
               <>
                 <p>
                   Bolus اولیه:{" "}
                   <strong>
-                    {Math.round(numericWeight * 15)} – {Math.round(numericWeight * 20)}
+                    {Math.round(numericWeight * 15)} –{" "}
+                    {Math.round(numericWeight * 20)}
                   </strong>{" "}
                   IU
                 </p>
                 <p>
                   Infusion مداوم:{" "}
                   <strong>
-                    {Math.round(numericWeight * 20)} – {Math.round(numericWeight * 30)}
+                    {Math.round(numericWeight * 20)} –{" "}
+                    {Math.round(numericWeight * 30)}
                   </strong>{" "}
                   IU/h
                 </p>
               </>
             ) : (
               <p className="text-red-600 font-bold">
-                 بیمار برای هپارین مناسب نیست (INR یا PLT غیرمجاز)
+                بیمار برای هپارین مناسب نیست (INR یا PLT غیرمجاز)
               </p>
             )}
           </div>
 
           {/* هشدارهای ایمنی */}
-          {(pltWarning || inrWarning || bpSystolicWarning || bpDiastolicWarning) && (
-  <div className="bg-yellow-50 border border-yellow-400 rounded-lg p-4 text-yellow-800 font-semibold">
-    <h3 className="mb-2">⚠️ هشدارهای ایمنی</h3>
-    <ul className="list-disc list-inside space-y-1">
-      {pltWarning && <li>{pltWarning}</li>}
-      {inrWarning && <li>{inrWarning}</li>}
-      {bpSystolicWarning && <li>{bpSystolicWarning}</li>}
-      {bpDiastolicWarning && <li>{bpDiastolicWarning}</li>}
-    </ul>
-  </div>
-)}
-
+          {(pltWarning ||
+            inrWarning ||
+            bpSystolicWarning ||
+            bpDiastolicWarning) && (
+            <div className="bg-yellow-50 border border-yellow-400 rounded-lg p-4 text-yellow-800 font-semibold">
+              <h3 className="mb-2">⚠️ هشدارهای ایمنی</h3>
+              <ul className="list-disc list-inside space-y-1">
+                {pltWarning && <li>{pltWarning}</li>}
+                {inrWarning && <li>{inrWarning}</li>}
+                {bpSystolicWarning && <li>{bpSystolicWarning}</li>}
+                {bpDiastolicWarning && <li>{bpDiastolicWarning}</li>}
+              </ul>
+            </div>
+          )}
 
           {/* فیلتر */}
           <div className="space-y-4">
-            <h3 className="text-xl font-bold flex text-blue-800"><GiChemicalTank className="text-blue-800 mt-1.5" /> صافی پیشنهادی</h3>
+            <h3 className="text-xl font-bold flex text-blue-800">
+              <GiChemicalTank className="text-blue-800 mt-1.5" /> صافی پیشنهادی
+            </h3>
             {matchedFilters.length === 0 ? (
               <p className="text-red-600">صافی مناسب یافت نشد</p>
             ) : (
@@ -376,7 +409,11 @@ const bpDiastolicWarning =
 
           {/* زمان پیشنهادی دیالیز */}
           <div className="bg-blue-50 border rounded-lg p-4 mt-6">
-            <h3 className="font-bold text-blue-800 flex mb-2"> <GoStopwatch className="text-blue-800 ml-1 mt-1.5" /> زمان پیشنهادی دیالیز</h3>
+            <h3 className="font-bold text-blue-800 flex mb-2">
+              {" "}
+              <GoStopwatch className="text-blue-800 ml-1 mt-1.5" /> زمان
+              پیشنهادی دیالیز
+            </h3>
             <p>
               حدود <strong>{dialysisTimeHours.toFixed(1)}</strong> ساعت
             </p>
@@ -395,19 +432,24 @@ const bpDiastolicWarning =
           {showNotes && (
             <div className="bg-gray-200 border rounded-lg p-4 mt-2 text-lg text-gray-800 space-y-2">
               <p>
-                • Qb جریان خون است که بر اساس وزن بیمار تعیین می‌شود و باید با دقت تنظیم شود.
+                • Qb جریان خون است که بر اساس وزن بیمار تعیین می‌شود و باید با
+                دقت تنظیم شود.
               </p>
               <p>
-                • Qd یا جریان دیالیز معمولاً دو برابر Qb است تا پاکسازی مناسب انجام شود.
+                • Qd یا جریان دیالیز معمولاً دو برابر Qb است تا پاکسازی مناسب
+                انجام شود.
               </p>
               <p>
-                • دوز هپارین بر اساس وزن تعیین می‌شود و باید حتما وضعیت PLT و INR بررسی شود.
+                • دوز هپارین بر اساس وزن تعیین می‌شود و باید حتما وضعیت PLT و
+                INR بررسی شود.
               </p>
               <p>
-                • در بیماران ناپایدار، فیلترهایی که مناسب وضعیت همودینامیک هستند اولویت دارند.
+                • در بیماران ناپایدار، فیلترهایی که مناسب وضعیت همودینامیک هستند
+                اولویت دارند.
               </p>
               <p>
-                • فشار خون پایین می‌تواند خطر افت فشار حین دیالیز را افزایش دهد؛ مراقبت‌های ویژه لازم است.
+                • فشار خون پایین می‌تواند خطر افت فشار حین دیالیز را افزایش دهد؛
+                مراقبت‌های ویژه لازم است.
               </p>
             </div>
           )}
