@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { IoWater } from "react-icons/io5";
 import { GrPowerCycle } from "react-icons/gr";
+import { GoStopwatch } from "react-icons/go";
 
 const filters = [
   {
@@ -372,7 +373,7 @@ const bpDiastolicWarning =
 
           {/* زمان پیشنهادی دیالیز */}
           <div className="bg-blue-50 border rounded-lg p-4 mt-6">
-            <h3 className="font-bold text-blue-800 mb-2">⏱️ زمان پیشنهادی دیالیز</h3>
+            <h3 className="font-bold text-blue-800 flex mb-2"> <GoStopwatch className="text-blue-800 ml-1 mt-1.5" /> زمان پیشنهادی دیالیز</h3>
             <p>
               حدود <strong>{dialysisTimeHours.toFixed(1)}</strong> ساعت
             </p>
