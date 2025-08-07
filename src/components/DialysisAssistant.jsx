@@ -27,7 +27,7 @@ export function DialysisAssistant() {
   const baseQb = numericWeight * 4;
   const adjustment =
     clinicalStatus === "acute" ? 50 : clinicalStatus === "chronic" ? 100 : 0;
- 
+
   const hypotension =
     (numericBpS > 0 && numericBpS < 90) || (numericBpD > 0 && numericBpD < 50);
 
@@ -41,7 +41,6 @@ export function DialysisAssistant() {
     max: numericWeight * 5,
     standard: standardQb,
   };
-  
 
   // پیشنهاد Qd (Dialysate flow rate): معمولاً 2 برابر Qb در کودکان
   const qdSuggested = qbRange.standard * 2;
@@ -50,7 +49,21 @@ export function DialysisAssistant() {
   const ufrMin = numericWeight * 10;
   const ufrMax = numericWeight * 15;
 
-  const canUseHeparin = numericInr <= 1.5 && numericPlt >= 50000;
+  const pltIsLow = numericPlt > 0 && numericPlt < 50000;
+  const inrIsHigh = numericInr > 1.5;
+
+  const canUseHeparin = !pltIsLow && !inrIsHigh;
+
+  const heparinEligibilityMessage = (() => {
+    if (pltIsLow && inrIsHigh) {
+      return "PLT و INR هر دو مختل هستند.";
+    } else if (pltIsLow) {
+      return "پلاکت مختل است ولی INR طبیعی است.";
+    } else if (inrIsHigh) {
+      return "INR مختل است ولی پلاکت طبیعی است.";
+    }
+    return null;
+  })();
 
   // هشدارهای ایمنی
   const pltWarning =
@@ -89,19 +102,26 @@ export function DialysisAssistant() {
   const matchedFilters = getMatchedFilters();
 
   // زمان پیشنهادی دیالیز بر اساس وزن (مثلاً 4 ساعت ثابت برای کودک معمولی)
-  const dialysisTimeHours = (() => {
-    if (numericWeight <= 0) return 0;
+  const dialysisTimeText = (() => {
+    if (numericWeight <= 0) return "";
 
     if (clinicalStatus === "acute") {
       if (hemodynamicStatus === "unstable") {
-        return 1; // حاد + ناپایدار (اینتوبه)
+        return "۱ تا ۲ ساعت (اینتوبه / ناپایدار)";
       } else {
-        return 1.5; // حاد + پایدار
+        return "۱ تا ۲ ساعت - بستگی به وضعیت بالینی دارد";
       }
     }
 
-    // سایر شرایط (مثلاً مزمن یا بدون انتخاب وضعیت خاص)
-    return Math.min(Math.max(3, numericWeight / 5), 5); // ۳ تا ۵ ساعت
+    if (clinicalStatus === "chronic") {
+      if (hemodynamicStatus === "unstable") {
+        return "۲ تا ۳ ساعت (مزمن + ناپایدار)";
+      } else {
+        return "۳ تا ۴ ساعت (مزمن + پایدار)";
+      }
+    }
+
+    return "۳ تا ۴ ساعت (ارزیابی بالینی نیاز است)";
   })();
 
   function handleCalculate() {
@@ -247,7 +267,7 @@ export function DialysisAssistant() {
       {submitted && numericWeight > 0 && (
         <div className="space-y-6 mt-6">
           {/* Qb */}
-           <div className="bg-blue-50 border rounded-lg p-4">
+          <div className="bg-blue-50 border rounded-lg p-4">
             <h3 className="font-bold flex text-blue-800 mb-2">
               <GrPowerCycle className="text-blue-800 ml-1 mt-1.5" />
               سرعت پمپ خون (Qb)
@@ -261,8 +281,8 @@ export function DialysisAssistant() {
             </p>
             {clinicalStatus !== "none" && (
               <p>
-                Qb پیشنهادی:{" "}
-                <strong>{qbRange.standard.toFixed(1)}</strong> ml/min
+                Qb پیشنهادی: <strong>{qbRange.standard.toFixed(1)}</strong>{" "}
+                ml/min
               </p>
             )}
             {hypotension && (
@@ -304,11 +324,21 @@ export function DialysisAssistant() {
           </div>
 
           {/* دوز هپارین */}
+          {/* دوز هپارین */}
           <div className="bg-green-50 border rounded-lg p-4">
             <h3 className="font-bold text-green-800 flex mb-2">
               <LuSyringe className="text-green-800 ml-1 mt-1" /> دوز هپارین
             </h3>
-            {canUseHeparin ? (
+            {!canUseHeparin ? (
+              <>
+                <p className="text-red-600 font-bold">❌ هپارین تزریق نشود</p>
+                {heparinEligibilityMessage && (
+                  <p className="text-red-500 mt-1">
+                    {heparinEligibilityMessage}
+                  </p>
+                )}
+              </>
+            ) : (
               <>
                 <p>
                   Bolus اولیه:{" "}
@@ -327,10 +357,6 @@ export function DialysisAssistant() {
                   IU/h
                 </p>
               </>
-            ) : (
-              <p className="text-red-600 font-bold">
-                بیمار برای هپارین مناسب نیست (INR یا PLT غیرمجاز)
-              </p>
             )}
           </div>
 
@@ -384,15 +410,16 @@ export function DialysisAssistant() {
               پیشنهادی دیالیز
             </h3>
             <p>
-              حدود <strong>{dialysisTimeHours.toFixed(1)}</strong> ساعت
+              زمان پیشنهادی: <strong>{dialysisTimeText}</strong>
             </p>
+
             <p className="text-sm text-gray-700">
               این مقدار تقریبی است و باید بر اساس وضعیت بیمار تنظیم شود.
             </p>
           </div>
 
           {/* نکات آموزشی */}
-        <EducationalNotes setShowNotes={setShowNotes} showNotes={showNotes}  />
+          <EducationalNotes setShowNotes={setShowNotes} showNotes={showNotes} />
         </div>
       )}
     </div>
