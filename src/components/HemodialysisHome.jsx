@@ -9,9 +9,9 @@ export function HemodialysisHome() {
     { title: "محاسبه Kt/V", path: "/hemo/ktv" },
      { title: "   آموزش همودیالیز اطفال ", path: "/hemo/hemodialsisTraining" },
      { title: "   آلارم های دستگاه همودیالیز  ", path: "/hemo/hemodialysisAlarms" },
-     { title: "تغذیه", path: "/hemo/nutritionAssistant" },
+    
      { title: "دسترسی عروقی", path: "/hemo/vascularAccess" },
-    //  { title: "دوز دارو", path: "/hemo/medicationDosage" },
+   
 
      { title: " عوارض دیالیز و درمان آن", path: "/hemo/complications" },
 
