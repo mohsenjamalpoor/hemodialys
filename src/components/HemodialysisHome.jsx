@@ -10,7 +10,7 @@ export function HemodialysisHome() {
      { title: "   آموزش همودیالیز اطفال ", path: "/hemo/hemodialsisTraining" },
      { title: "   آلارم های دستگاه همودیالیز  ", path: "/hemo/hemodialysisAlarms" },
     
-     { title: "دسترسی عروقی", path: "/hemo/vascularAccess" },
+   
    
 
      { title: " عوارض دیالیز و درمان آن", path: "/hemo/complications" },

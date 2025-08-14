@@ -7,7 +7,7 @@ import HemodialsisTraining from "./components/HemodialsisTraining";
 import HemodialysisAlarms from "./components/HemodialysisAlarms";
 import { KtVCalculator } from "./components/KtVCalculator";
 
-import { VascularAccess } from "./components/VascularAccess";
+
 
 function App() {
   return (
@@ -28,7 +28,7 @@ function App() {
 
         <Route path="/hemo/ktv" element={<KtVCalculator />} />
       
-        <Route path="/hemo/vascularAccess" element={<VascularAccess />} />
+     
 
         <Route path="/hemo/dialysisAssistant" element={<DialysisAssistant />} />
 
