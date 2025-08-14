@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 
 // صفحه اصلی همودیالیز
@@ -6,17 +5,14 @@ export function HemodialysisHome() {
   const navigate = useNavigate();
   const items = [
     { title: "  همودیالیز در اطفال", path: "/hemo/dialysisAssistant" },
-    { title: "محاسبه Kt/V", path: "/hemo/ktv" },
-     { title: "   آموزش همودیالیز اطفال ", path: "/hemo/hemodialsisTraining" },
-     { title: "   آلارم های دستگاه همودیالیز  ", path: "/hemo/hemodialysisAlarms" },
-    
-   
-   
+    { title: "محاسبه Kt/Vو UF", path: "/hemo/ktv" },
+    { title: "   آموزش همودیالیز اطفال ", path: "/hemo/hemodialsisTraining" },
+    {
+      title: "   آلارم های دستگاه همودیالیز  ",
+      path: "/hemo/hemodialysisAlarms",
+    },
 
-     { title: " عوارض دیالیز و درمان آن", path: "/hemo/complications" },
-
-    
-    
+    { title: " عوارض دیالیز و درمان آن", path: "/hemo/complications" },
   ];
 
   return (
