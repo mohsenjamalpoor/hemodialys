@@ -292,19 +292,36 @@ export function DialysisAssistant() {
       </div>
 
       {/* نتایج */}
-      {submitted && numericWeight > 0 && (
-        <div className="space-y-6 mt-6">
-          {/* هشدار تزریق */}
-          {numericHb > 0 && numericHb < 7 && transfusionType && (
-            <div className="bg-red-50 border border-red-400 rounded-lg p-4 text-red-800 font-semibold">
-              <h3 className="mb-2"> تزریق {transfusionType}</h3>
-              <p>ابتدا پرایم انجام شود.</p>
-              <p>
-                سپس برای تزریق:{" "}
-                <strong>{(numericWeight * 5).toFixed(0)} سی‌سی</strong> (۵ سی‌سی به ازای هر کیلوگرم)
-              </p>
-            </div>
-          )}
+      {numericHb > 0 && numericHb < 7 && transfusionType && (
+  <>
+    {transfusionType === "ALB" ? (
+      // شرایط برای آلبومین
+      numericBpS < 140 ? (
+        <div className="bg-red-50 border border-red-400 rounded-lg p-4 text-red-800 font-semibold">
+          <h3 className="mb-2">تزریق آلبومین</h3>
+          <p>⚠️ بدون نیاز به پرایم</p>
+          <p>تزریق آلبومین مجاز است (در صورت نبود فشار خون بالا).</p>
+        </div>
+      ) : (
+        <div className="bg-yellow-50 border border-yellow-400 rounded-lg p-4 text-yellow-800 font-semibold">
+          <h3 className="mb-2">تزریق آلبومین مجاز نیست</h3>
+          <p>به علت فشار خون بالا، آلبومین تزریق نشود.</p>
+        </div>
+      )
+    ) : (
+      // شرایط برای PC یا FFP
+      <div className="bg-red-50 border border-red-400 rounded-lg p-4 text-red-800 font-semibold">
+        <h3 className="mb-2"> تزریق {transfusionType}</h3>
+        <p>ابتدا پرایم انجام شود.</p>
+        <p>
+          سپس برای تزریق:{" "}
+          <strong>{(numericWeight * 5).toFixed(0)} سی‌سی</strong> (۵ سی‌سی به ازای هر کیلوگرم)
+        </p>
+      </div>
+    )}
+  </>
+)}
+
 
           {/* سرعت پمپ خون */}
           <div className="bg-blue-50 border rounded-lg p-4">
