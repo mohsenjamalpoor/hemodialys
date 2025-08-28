@@ -5,7 +5,7 @@ import { FiX } from "react-icons/fi";
 const alarmData = [
   {
     title: "فشار شریانی (Arterial Pressure)",
-    label: "فشار شریانی",
+    label: "فشار شریانی (Arterial Pressure)",
     content: `فشار شریانی (Arterial Pressure):
 محدوده نرمال: 250- تا 100- mmHg
 
@@ -15,7 +15,7 @@ const alarmData = [
   },
   {
     title: "فشار وریدی (Venous Pressure)",
-    label: "فشار وریدی",
+    label: "فشار وریدی (Venous Pressure)",
     content: `فشار وریدی (Venous Pressure):
 محدوده نرمال: 100+ تا 250+ mmHg
 
@@ -59,7 +59,7 @@ const alarmData = [
   },
   {
     title: "حباب هوا (Air Bubble)",
-    label: "حباب هوا",
+    label: "حباب هوا (Air Bubble)",
     content: `آلارم حباب هوا (Air Bubble):
 ⛔ ورود هوا به سیستم خون بسیار خطرناک است
 
@@ -75,7 +75,7 @@ const alarmData = [
   },
   {
     title: "نشت خون (Blood Leak)",
-    label: "نشت خون",
+    label: "نشت خون (Blood Leak)",
     content: `نشت خون (Blood Leak):
 🔴 خون وارد دیالیزیت شده
 
@@ -106,7 +106,7 @@ const alarmData = [
   },
   {
     title: "آلارم دما (Temperature)",
-    label: "دما",
+    label: "دما (Temperature)",
     content: `آلارم دما (Temperature):
 ✅ دمای نرمال دیالیز: حدود 36.5–37.5°C
 
