@@ -15,11 +15,12 @@ export function DialysisAssistant() {
   const [inr, setInr] = useState("");
   const [bpSystolic, setBpSystolic] = useState("");
   const [bpDiastolic, setBpDiastolic] = useState("");
-  const [hb, setHb] = useState(""); // NEW: Hemoglobin input
-  const [transfusionType, setTransfusionType] = useState(""); // NEW: Type of transfusion
+  const [hb, setHb] = useState("");
+  const [transfusionType, setTransfusionType] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
 
+  // Parse numbers safely
   const numericWeight = parseFloat(weight.replace(/٫|٬|,/g, ".")) || 0;
   const numericPlt = parseFloat(plt) || 0;
   const numericInr = parseFloat(inr) || 0;
@@ -27,10 +28,10 @@ export function DialysisAssistant() {
   const numericBpD = parseInt(bpDiastolic) || 0;
   const numericHb = parseFloat(hb) || 0;
 
+  // Calculations
   const baseQb = numericWeight * 4;
   const adjustment =
     clinicalStatus === "acute" ? 50 : clinicalStatus === "chronic" ? 100 : 0;
-
   const hypotension =
     (numericBpS > 0 && numericBpS < 90) || (numericBpD > 0 && numericBpD < 50);
 
@@ -85,9 +86,7 @@ export function DialysisAssistant() {
     const matched = filters.filter(
       (f) => numericWeight >= f.minWeight && numericWeight <= f.maxWeight
     );
-
     if (matched.length === 0) return [];
-
     if (hemodynamicStatus === "unstable") {
       const unstableFilters = matched.filter((f) => f.preferredForUnstable);
       if (unstableFilters.length > 0) return unstableFilters;
@@ -99,23 +98,16 @@ export function DialysisAssistant() {
 
   const dialysisTimeText = (() => {
     if (numericWeight <= 0) return "";
-
     if (clinicalStatus === "acute") {
-      if (hemodynamicStatus === "unstable") {
-        return "۱ تا ۲ ساعت (اینتوبه / ناپایدار)";
-      } else {
-        return "۱ تا ۲ ساعت - بستگی به وضعیت بالینی دارد";
-      }
+      return hemodynamicStatus === "unstable"
+        ? "۱ تا ۲ ساعت (اینتوبه / ناپایدار)"
+        : "۱ تا ۲ ساعت - بستگی به وضعیت بالینی دارد";
     }
-
     if (clinicalStatus === "chronic") {
-      if (hemodynamicStatus === "unstable") {
-        return "۲ تا ۳ ساعت (مزمن + ناپایدار)";
-      } else {
-        return "۳ تا ۴ ساعت (مزمن + پایدار)";
-      }
+      return hemodynamicStatus === "unstable"
+        ? "۲ تا ۳ ساعت (مزمن + ناپایدار)"
+        : "۳ تا ۴ ساعت (مزمن + پایدار)";
     }
-
     return "۳ تا ۴ ساعت (ارزیابی بالینی نیاز است)";
   })();
 
@@ -142,7 +134,8 @@ export function DialysisAssistant() {
       <h2 className="text-3xl font-bold text-center text-blue-700 mb-6">
         همیار دیالیز کودکان
       </h2>
-      {/* ورودی وزن */}
+
+      {/* وزن */}
       <div>
         <label className="block mb-1 font-semibold">وزن بیمار (کیلوگرم):</label>
         <input
@@ -155,8 +148,8 @@ export function DialysisAssistant() {
           className="w-full px-4 py-2 border rounded-lg text-right"
         />
       </div>
-      
-{/* هموگلوبین */}
+
+      {/* هموگلوبین */}
       <div>
         <label className="block mb-1 font-semibold">هموگلوبین (g/dL):</label>
         <input
@@ -170,7 +163,7 @@ export function DialysisAssistant() {
         />
       </div>
 
-      {/* گزینه‌های تزریق اگر Hb زیر 7 باشد */}
+      {/* انتخاب نوع تزریق */}
       {numericHb > 0 && numericHb < 7 && (
         <div>
           <label className="block mb-1 font-semibold">نوع تزریق:</label>
@@ -186,7 +179,6 @@ export function DialysisAssistant() {
           </select>
         </div>
       )}
-
 
       {/* وضعیت بالینی */}
       <div>
@@ -215,12 +207,10 @@ export function DialysisAssistant() {
         </select>
       </div>
 
-      {/* آزمایشات PLT و INR */}
+      {/* PLT و INR */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block mb-1 font-semibold">
-            PLT (میلیون بر میلی‌لیتر):
-          </label>
+          <label className="block mb-1 font-semibold">PLT:</label>
           <input
             type="number"
             min={0}
@@ -248,9 +238,7 @@ export function DialysisAssistant() {
       {/* فشار خون */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block mb-1 font-semibold">
-            فشار خون سیستولیک (mmHg):
-          </label>
+          <label className="block mb-1 font-semibold">فشار خون سیستولیک:</label>
           <input
             type="number"
             min={0}
@@ -261,9 +249,7 @@ export function DialysisAssistant() {
           />
         </div>
         <div>
-          <label className="block mb-1 font-semibold">
-            فشار خون دیاستولیک (mmHg):
-          </label>
+          <label className="block mb-1 font-semibold">فشار خون دیاستولیک:</label>
           <input
             type="number"
             min={0}
@@ -275,7 +261,7 @@ export function DialysisAssistant() {
         </div>
       </div>
 
-      {/* دکمه محاسبه */}
+      {/* دکمه‌ها */}
       <div className="flex space-x-2 rtl:space-x-reverse">
         <button
           onClick={handleCalculate}
@@ -292,36 +278,37 @@ export function DialysisAssistant() {
       </div>
 
       {/* نتایج */}
-      {numericHb > 0 && numericHb < 7 && transfusionType && (
-  <>
-    {transfusionType === "ALB" ? (
-      // شرایط برای آلبومین
-      numericBpS < 140 ? (
-        <div className="bg-red-50 border border-red-400 rounded-lg p-4 text-red-800 font-semibold">
-          <h3 className="mb-2">تزریق آلبومین</h3>
-          <p>⚠️ بدون نیاز به پرایم</p>
-          <p>تزریق آلبومین مجاز است (در صورت نبود فشار خون بالا).</p>
-        </div>
-      ) : (
-        <div className="bg-yellow-50 border border-yellow-400 rounded-lg p-4 text-yellow-800 font-semibold">
-          <h3 className="mb-2">تزریق آلبومین مجاز نیست</h3>
-          <p>به علت فشار خون بالا، آلبومین تزریق نشود.</p>
-        </div>
-      )
-    ) : (
-      // شرایط برای PC یا FFP
-      <div className="bg-red-50 border border-red-400 rounded-lg p-4 text-red-800 font-semibold">
-        <h3 className="mb-2"> تزریق {transfusionType}</h3>
-        <p>ابتدا پرایم انجام شود.</p>
-        <p>
-          سپس برای تزریق:{" "}
-          <strong>{(numericWeight * 5).toFixed(0)} سی‌سی</strong> (۵ سی‌سی به ازای هر کیلوگرم)
-        </p>
-      </div>
-    )}
-  </>
-)}
-
+      {submitted && numericWeight > 0 && (
+        <div className="space-y-6 mt-6">
+          {/* تزریق */}
+          {numericHb > 0 && numericHb < 7 && transfusionType && (
+            <>
+              {transfusionType === "ALB" ? (
+                numericBpS < 140 ? (
+                  <div className="bg-red-50 border border-red-400 rounded-lg p-4 text-red-800 font-semibold">
+                    <h3 className="mb-2">تزریق آلبومین</h3>
+                    <p>⚠️ بدون نیاز به پرایم</p>
+                    <p>تزریق آلبومین مجاز است (در صورت نبود فشار خون بالا).</p>
+                  </div>
+                ) : (
+                  <div className="bg-yellow-50 border border-yellow-400 rounded-lg p-4 text-yellow-800 font-semibold">
+                    <h3 className="mb-2">تزریق آلبومین مجاز نیست</h3>
+                    <p>به علت فشار خون بالا، آلبومین تزریق نشود.</p>
+                  </div>
+                )
+              ) : (
+                <div className="bg-red-50 border border-red-400 rounded-lg p-4 text-red-800 font-semibold">
+                  <h3 className="mb-2">تزریق {transfusionType}</h3>
+                  <p>ابتدا پرایم انجام شود.</p>
+                  <p>
+                    سپس برای تزریق:{" "}
+                    <strong>{(numericWeight * 5).toFixed(0)} سی‌سی</strong>{" "}
+                    (۵ سی‌سی به ازای هر کیلوگرم)
+                  </p>
+                </div>
+              )}
+            </>
+          )}
 
           {/* سرعت پمپ خون */}
           <div className="bg-blue-50 border rounded-lg p-4">
@@ -338,8 +325,7 @@ export function DialysisAssistant() {
             </p>
             {clinicalStatus !== "none" && (
               <p>
-                Qb پیشنهادی: <strong>{qbRange.standard.toFixed(1)}</strong>{" "}
-                ml/min
+                Qb پیشنهادی: <strong>{qbRange.standard.toFixed(1)}</strong> ml/min
               </p>
             )}
             {hypotension && (
@@ -357,9 +343,7 @@ export function DialysisAssistant() {
             <p>
               Qd پیشنهادی: <strong>{qdSuggested.toFixed(1)}</strong> ml/min
             </p>
-            <p className="text-sm text-gray-700">
-              معمولاً دو برابر Qb در کودکان
-            </p>
+            <p className="text-sm text-gray-700">معمولاً دو برابر Qb در کودکان</p>
           </div>
 
           {/* Ultrafiltration */}
@@ -377,7 +361,7 @@ export function DialysisAssistant() {
             <p className="text-sm text-gray-700">معمولاً 10-15 mL/kg/hr</p>
           </div>
 
-          {/* دوز هپارین */}
+          {/* Heparin */}
           <div className="bg-green-50 border rounded-lg p-4">
             <h3 className="font-bold text-green-800 flex mb-2">
               <LuSyringe className="text-green-800 ml-1 mt-1" /> دوز هپارین
@@ -414,7 +398,10 @@ export function DialysisAssistant() {
           </div>
 
           {/* هشدارها */}
-          {(pltWarning || inrWarning || bpSystolicWarning || bpDiastolicWarning) && (
+          {(pltWarning ||
+            inrWarning ||
+            bpSystolicWarning ||
+            bpDiastolicWarning) && (
             <div className="bg-yellow-50 border border-yellow-400 rounded-lg p-4 text-yellow-800 font-semibold">
               <h3 className="mb-2">⚠️ هشدارهای ایمنی</h3>
               <ul className="list-disc list-inside space-y-1">
