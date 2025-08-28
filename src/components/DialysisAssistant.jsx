@@ -299,25 +299,34 @@ export function DialysisAssistant() {
       {/* نتایج */}
       {submitted && numericWeight > 0 && (
         <div className="space-y-6 mt-6">
-          {/* PC */}
-          {pcAction && pcAction !== "none" && (
-            <div className="bg-red-50 border border-red-400 rounded p-4 text-red-800">
-              <h3>PC ({pcAction === "prime" ? "پرایم" : "تزریق"})</h3>
-              <p>
-                حجم: <strong>{(numericWeight * 5).toFixed(0)} سی‌سی</strong> (۵ سی‌سی به ازای هر کیلوگرم)
-              </p>
-            </div>
-          )}
+         {/* PC */}
+{pcAction && pcAction !== "none" && (
+  <div className="bg-red-50 border border-red-400 rounded p-4 text-red-800">
+    <h3>PC</h3>
+    {pcAction === "prime" ? (
+      <p>⚡ با PC پرایم شود</p>
+    ) : (
+      <p>
+        تزریق: حجم <strong>{(numericWeight * 5).toFixed(0)} سی‌سی</strong> (۵ سی‌سی به ازای هر کیلوگرم)
+      </p>
+    )}
+  </div>
+)}
 
-          {/* FFP */}
-          {ffpAction && ffpAction !== "none" && (
-            <div className="bg-yellow-50 border border-yellow-400 rounded p-4 text-yellow-800">
-              <h3>FFP ({ffpAction === "prime" ? "پرایم" : "تزریق"})</h3>
-              <p>
-                حجم: <strong>{(numericWeight * 5).toFixed(0)} سی‌سی</strong> (۵ سی‌سی به ازای هر کیلوگرم)
-              </p>
-            </div>
-          )}
+{/* FFP */}
+{ffpAction && ffpAction !== "none" && (
+  <div className="bg-yellow-50 border border-yellow-400 rounded p-4 text-yellow-800">
+    <h3>FFP</h3>
+    {ffpAction === "prime" ? (
+      <p>⚡ با FFP پرایم شود</p>
+    ) : (
+      <p>
+        تزریق: حجم <strong>{(numericWeight * 5).toFixed(0)} سی‌سی</strong> (۵ سی‌سی به ازای هر کیلوگرم)
+      </p>
+    )}
+  </div>
+)}
+
 
           {/* سرعت پمپ خون */}
           <div className="bg-blue-50 border rounded-lg p-4">
