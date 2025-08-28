@@ -297,7 +297,7 @@ export function DialysisAssistant() {
           {/* هشدار تزریق */}
           {numericHb > 0 && numericHb < 7 && transfusionType && (
             <div className="bg-red-50 border border-red-400 rounded-lg p-4 text-red-800 font-semibold">
-              <h3 className="mb-2">⚠️ تزریق {transfusionType}</h3>
+              <h3 className="mb-2"> تزریق {transfusionType}</h3>
               <p>ابتدا پرایم انجام شود.</p>
               <p>
                 سپس برای تزریق:{" "}
