@@ -15,6 +15,8 @@ export function DialysisAssistant() {
   const [inr, setInr] = useState("");
   const [bpSystolic, setBpSystolic] = useState("");
   const [bpDiastolic, setBpDiastolic] = useState("");
+  const [hb, setHb] = useState(""); // NEW: Hemoglobin input
+  const [transfusionType, setTransfusionType] = useState(""); // NEW: Type of transfusion
   const [submitted, setSubmitted] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
 
@@ -23,6 +25,7 @@ export function DialysisAssistant() {
   const numericInr = parseFloat(inr) || 0;
   const numericBpS = parseInt(bpSystolic) || 0;
   const numericBpD = parseInt(bpDiastolic) || 0;
+  const numericHb = parseFloat(hb) || 0;
 
   const baseQb = numericWeight * 4;
   const adjustment =
@@ -33,7 +36,7 @@ export function DialysisAssistant() {
 
   let standardQb = baseQb + adjustment;
   if (hypotension) {
-    standardQb *= 0.75; // کاهش 25 درصدی به دلیل افت فشار خون
+    standardQb *= 0.75;
   }
 
   const qbRange = {
@@ -42,16 +45,12 @@ export function DialysisAssistant() {
     standard: standardQb,
   };
 
-  // پیشنهاد Qd (Dialysate flow rate): معمولاً 2 برابر Qb در کودکان
   const qdSuggested = qbRange.standard * 2;
-
-  // پیشنهاد Ultrafiltration Rate (UFR): معمولاً 10-15 mL/kg/hr در کودکان
   const ufrMin = numericWeight * 10;
   const ufrMax = numericWeight * 15;
 
   const pltIsLow = numericPlt > 0 && numericPlt < 50000;
   const inrIsHigh = numericInr > 1.5;
-
   const canUseHeparin = !pltIsLow && !inrIsHigh;
 
   const heparinEligibilityMessage = (() => {
@@ -65,7 +64,6 @@ export function DialysisAssistant() {
     return null;
   })();
 
-  // هشدارهای ایمنی
   const pltWarning =
     numericPlt > 0 && numericPlt < 50000
       ? "⚠️ PLT پایین است، خطر خونریزی افزایش می‌یابد."
@@ -74,17 +72,15 @@ export function DialysisAssistant() {
     numericInr > 1.5
       ? "⚠️ INR بالا است، ممکن است ریسک خونریزی وجود داشته باشد."
       : null;
-
   const bpSystolicWarning =
     numericBpS > 0 && numericBpS < 90
       ? "⚠️ فشار خون سیستولیک پایین است، احتمال افت فشار حین دیالیز وجود دارد."
       : null;
-
   const bpDiastolicWarning =
     numericBpD > 0 && numericBpD < 50
       ? "⚠️ فشار خون دیاستولیک پایین است، نیاز به پایش دقیق‌تر دارد."
       : null;
-  // پیدا کردن فیلتر مناسب با منطق کامل
+
   const getMatchedFilters = () => {
     const matched = filters.filter(
       (f) => numericWeight >= f.minWeight && numericWeight <= f.maxWeight
@@ -101,7 +97,6 @@ export function DialysisAssistant() {
 
   const matchedFilters = getMatchedFilters();
 
-  // زمان پیشنهادی دیالیز بر اساس وزن (مثلاً 4 ساعت ثابت برای کودک معمولی)
   const dialysisTimeText = (() => {
     if (numericWeight <= 0) return "";
 
@@ -136,6 +131,8 @@ export function DialysisAssistant() {
     setInr("");
     setBpSystolic("");
     setBpDiastolic("");
+    setHb("");
+    setTransfusionType("");
     setSubmitted(false);
     setShowNotes(false);
   }
@@ -143,9 +140,8 @@ export function DialysisAssistant() {
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6 font-sans">
       <h2 className="text-3xl font-bold text-center text-blue-700 mb-6">
-        دستیار دیالیز کودکان
+        همیار دیالیز کودکان
       </h2>
-
       {/* ورودی وزن */}
       <div>
         <label className="block mb-1 font-semibold">وزن بیمار (کیلوگرم):</label>
@@ -159,6 +155,38 @@ export function DialysisAssistant() {
           className="w-full px-4 py-2 border rounded-lg text-right"
         />
       </div>
+      
+{/* هموگلوبین */}
+      <div>
+        <label className="block mb-1 font-semibold">هموگلوبین (g/dL):</label>
+        <input
+          type="number"
+          min={0}
+          step="0.1"
+          placeholder="مثال: 8"
+          value={hb}
+          onChange={(e) => setHb(e.target.value)}
+          className="w-full px-4 py-2 border rounded-lg text-right"
+        />
+      </div>
+
+      {/* گزینه‌های تزریق اگر Hb زیر 7 باشد */}
+      {numericHb > 0 && numericHb < 7 && (
+        <div>
+          <label className="block mb-1 font-semibold">نوع تزریق:</label>
+          <select
+            value={transfusionType}
+            onChange={(e) => setTransfusionType(e.target.value)}
+            className="w-full px-4 py-2 border rounded-lg"
+          >
+            <option value="">انتخاب کنید</option>
+            <option value="PC">PC (Packed Cell)</option>
+            <option value="FFP">FFP (Plasma)</option>
+            <option value="ALB">Albumin</option>
+          </select>
+        </div>
+      )}
+
 
       {/* وضعیت بالینی */}
       <div>
@@ -266,7 +294,19 @@ export function DialysisAssistant() {
       {/* نتایج */}
       {submitted && numericWeight > 0 && (
         <div className="space-y-6 mt-6">
-          {/* Qb */}
+          {/* هشدار تزریق */}
+          {numericHb > 0 && numericHb < 7 && transfusionType && (
+            <div className="bg-red-50 border border-red-400 rounded-lg p-4 text-red-800 font-semibold">
+              <h3 className="mb-2">⚠️ تزریق {transfusionType}</h3>
+              <p>ابتدا پرایم انجام شود.</p>
+              <p>
+                سپس برای تزریق:{" "}
+                <strong>{(numericWeight * 5).toFixed(0)} سی‌سی</strong> (۵ سی‌سی به ازای هر کیلوگرم)
+              </p>
+            </div>
+          )}
+
+          {/* سرعت پمپ خون */}
           <div className="bg-blue-50 border rounded-lg p-4">
             <h3 className="font-bold flex text-blue-800 mb-2">
               <GrPowerCycle className="text-blue-800 ml-1 mt-1.5" />
@@ -295,9 +335,7 @@ export function DialysisAssistant() {
           {/* Qd */}
           <div className="bg-blue-100 border rounded-lg p-4">
             <h3 className="font-bold flex text-blue-900 mb-2">
-              {" "}
-              <IoWater className="text-blue-500 mt-1" /> Qd (Dialysate Flow
-              Rate){" "}
+              <IoWater className="text-blue-500 mt-1" /> Qd (Dialysate Flow Rate)
             </h3>
             <p>
               Qd پیشنهادی: <strong>{qdSuggested.toFixed(1)}</strong> ml/min
@@ -307,11 +345,10 @@ export function DialysisAssistant() {
             </p>
           </div>
 
-          {/* Ultrafiltration Rate */}
+          {/* Ultrafiltration */}
           <div className="bg-blue-100 border rounded-lg p-4">
             <h3 className="font-bold flex text-blue-900 mb-2">
-              <IoWater className="text-blue-500 mt-1" /> Ultrafiltration Rate
-              (UFR)
+              <IoWater className="text-blue-500 mt-1" /> Ultrafiltration Rate (UFR)
             </h3>
             <p>
               محدوده پیشنهادی:{" "}
@@ -323,7 +360,6 @@ export function DialysisAssistant() {
             <p className="text-sm text-gray-700">معمولاً 10-15 mL/kg/hr</p>
           </div>
 
-          {/* دوز هپارین */}
           {/* دوز هپارین */}
           <div className="bg-green-50 border rounded-lg p-4">
             <h3 className="font-bold text-green-800 flex mb-2">
@@ -360,11 +396,8 @@ export function DialysisAssistant() {
             )}
           </div>
 
-          {/* هشدارهای ایمنی */}
-          {(pltWarning ||
-            inrWarning ||
-            bpSystolicWarning ||
-            bpDiastolicWarning) && (
+          {/* هشدارها */}
+          {(pltWarning || inrWarning || bpSystolicWarning || bpDiastolicWarning) && (
             <div className="bg-yellow-50 border border-yellow-400 rounded-lg p-4 text-yellow-800 font-semibold">
               <h3 className="mb-2">⚠️ هشدارهای ایمنی</h3>
               <ul className="list-disc list-inside space-y-1">
@@ -376,7 +409,7 @@ export function DialysisAssistant() {
             </div>
           )}
 
-          {/* فیلتر */}
+          {/* فیلتر پیشنهادی */}
           <div className="space-y-4">
             <h3 className="text-xl font-bold flex text-blue-800">
               <GiChemicalTank className="text-blue-800 mt-1.5" /> صافی پیشنهادی
@@ -402,17 +435,14 @@ export function DialysisAssistant() {
             )}
           </div>
 
-          {/* زمان پیشنهادی دیالیز */}
+          {/* زمان دیالیز */}
           <div className="bg-blue-50 border rounded-lg p-4 mt-6">
             <h3 className="font-bold text-blue-800 flex mb-2">
-              {" "}
-              <GoStopwatch className="text-blue-800 ml-1 mt-1.5" /> زمان
-              پیشنهادی دیالیز
+              <GoStopwatch className="text-blue-800 ml-1 mt-1.5" /> زمان پیشنهادی دیالیز
             </h3>
             <p>
               زمان پیشنهادی: <strong>{dialysisTimeText}</strong>
             </p>
-
             <p className="text-sm text-gray-700">
               این مقدار تقریبی است و باید بر اساس وضعیت بیمار تنظیم شود.
             </p>
