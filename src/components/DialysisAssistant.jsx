@@ -19,6 +19,8 @@ export function DialysisAssistant() {
   const [transfusionType, setTransfusionType] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
+    const [pcAction, setPcAction] = useState("");
+  const [ffpAction, setFfpAction] = useState("");
 
   // Parse numbers safely
   const numericWeight = parseFloat(weight.replace(/٫|٬|,/g, ".")) || 0;
@@ -164,18 +166,26 @@ export function DialysisAssistant() {
       </div>
 
       {/* انتخاب نوع تزریق */}
-      {numericHb > 0 && numericHb < 7 && (
+  
+     {numericHb > 0 && numericHb < 7 && (
         <div>
-          <label className="block mb-1 font-semibold">نوع تزریق:</label>
-          <select
-            value={transfusionType}
-            onChange={(e) => setTransfusionType(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg"
-          >
-            <option value="">انتخاب کنید</option>
-            <option value="PC">PC (Packed Cell)</option>
-            <option value="FFP">FFP (Plasma)</option>
-            <option value="ALB">Albumin</option>
+          <label>PC (Packed Cell):</label>
+          <select value={pcAction} onChange={e => setPcAction(e.target.value)} className="w-full border rounded p-2 mt-2">
+            <option value="">انتخاب عملیات</option>
+            <option value="prime">پرایم</option>
+            <option value="inject">تزریق</option>
+          </select>
+        </div>
+      )}
+
+      {/* FFP */}
+      {numericInr > 3 && (
+        <div>
+          <label>FFP:</label>
+          <select value={ffpAction} onChange={e => setFfpAction(e.target.value)} className="w-full border rounded p-2 mt-2">
+            <option value="">انتخاب عملیات</option>
+            <option value="prime">پرایم</option>
+            <option value="inject">تزریق</option>
           </select>
         </div>
       )}
@@ -281,33 +291,20 @@ export function DialysisAssistant() {
       {submitted && numericWeight > 0 && (
         <div className="space-y-6 mt-6">
           {/* تزریق */}
-          {numericHb > 0 && numericHb < 7 && transfusionType && (
-            <>
-              {transfusionType === "ALB" ? (
-                numericBpS < 140 ? (
-                  <div className="bg-red-50 border border-red-400 rounded-lg p-4 text-red-800 font-semibold">
-                    <h3 className="mb-2">تزریق آلبومین</h3>
-                    <p>⚠️ بدون نیاز به پرایم</p>
-                    <p>تزریق آلبومین مجاز است (در صورت نبود فشار خون بالا).</p>
-                  </div>
-                ) : (
-                  <div className="bg-yellow-50 border border-yellow-400 rounded-lg p-4 text-yellow-800 font-semibold">
-                    <h3 className="mb-2">تزریق آلبومین مجاز نیست</h3>
-                    <p>به علت فشار خون بالا، آلبومین تزریق نشود.</p>
-                  </div>
-                )
-              ) : (
-                <div className="bg-red-50 border border-red-400 rounded-lg p-4 text-red-800 font-semibold">
-                  <h3 className="mb-2">تزریق {transfusionType}</h3>
-                  <p>ابتدا پرایم انجام شود.</p>
-                  <p>
-                    سپس برای تزریق:{" "}
-                    <strong>{(numericWeight * 5).toFixed(0)} سی‌سی</strong>{" "}
-                    (۵ سی‌سی به ازای هر کیلوگرم)
-                  </p>
-                </div>
-              )}
-            </>
+        {/* PC */}
+          {pcAction && (
+            <div className="bg-red-50 border border-red-400 rounded p-4 text-red-800">
+               <h3>PC ({pcAction === "prime" ? "پرایم" : "تزریق"})</h3>
+               <p>حجم: <strong>{(numericWeight*5).toFixed(0)} سی‌سی</strong> (۵ سی‌سی به ازای هر کیلوگرم)</p>
+             </div>
+           )}
+
+           {/* FFP */}
+           {ffpAction && (
+            <div className="bg-yellow-50 border border-yellow-400 rounded p-4 text-yellow-800">
+               <h3>FFP ({ffpAction === "prime" ? "پرایم" : "تزریق"})</h3>
+               <p>حجم: <strong>{(numericWeight*5).toFixed(0)} سی‌سی</strong> (۵ سی‌سی به ازای هر کیلوگرم)</p>
+            </div>
           )}
 
           {/* سرعت پمپ خون */}
