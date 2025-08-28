@@ -16,10 +16,9 @@ export function DialysisAssistant() {
   const [bpSystolic, setBpSystolic] = useState("");
   const [bpDiastolic, setBpDiastolic] = useState("");
   const [hb, setHb] = useState("");
-  const [transfusionType, setTransfusionType] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
-    const [pcAction, setPcAction] = useState("");
+  const [pcAction, setPcAction] = useState("");
   const [ffpAction, setFfpAction] = useState("");
 
   // Parse numbers safely
@@ -126,7 +125,8 @@ export function DialysisAssistant() {
     setBpSystolic("");
     setBpDiastolic("");
     setHb("");
-    setTransfusionType("");
+    setPcAction("");
+    setFfpAction("");
     setSubmitted(false);
     setShowNotes(false);
   }
@@ -165,15 +165,19 @@ export function DialysisAssistant() {
         />
       </div>
 
-      {/* انتخاب نوع تزریق */}
-  
-     {numericHb > 0 && numericHb < 7 && (
+      {/* PC */}
+      {numericHb > 0 && numericHb < 7 && (
         <div>
-          <label>PC (Packed Cell):</label>
-          <select value={pcAction} onChange={e => setPcAction(e.target.value)} className="w-full border rounded p-2 mt-2">
-            <option value="">انتخاب عملیات</option>
+          <label className="block mb-1 font-semibold">PC (Packed Cell):</label>
+          <select
+            value={pcAction}
+            onChange={(e) => setPcAction(e.target.value)}
+            className="w-full border rounded p-2 mt-2"
+          >
+            <option value="">انتخاب کنید</option>
             <option value="prime">پرایم</option>
             <option value="inject">تزریق</option>
+            <option value="none">هیچ‌کدام</option>
           </select>
         </div>
       )}
@@ -181,11 +185,16 @@ export function DialysisAssistant() {
       {/* FFP */}
       {numericInr > 3 && (
         <div>
-          <label>FFP:</label>
-          <select value={ffpAction} onChange={e => setFfpAction(e.target.value)} className="w-full border rounded p-2 mt-2">
-            <option value="">انتخاب عملیات</option>
+          <label className="block mb-1 font-semibold">FFP:</label>
+          <select
+            value={ffpAction}
+            onChange={(e) => setFfpAction(e.target.value)}
+            className="w-full border rounded p-2 mt-2"
+          >
+            <option value="">انتخاب کنید</option>
             <option value="prime">پرایم</option>
             <option value="inject">تزریق</option>
+            <option value="none">هیچ‌کدام</option>
           </select>
         </div>
       )}
@@ -290,20 +299,23 @@ export function DialysisAssistant() {
       {/* نتایج */}
       {submitted && numericWeight > 0 && (
         <div className="space-y-6 mt-6">
-          {/* تزریق */}
-        {/* PC */}
-          {pcAction && (
+          {/* PC */}
+          {pcAction && pcAction !== "none" && (
             <div className="bg-red-50 border border-red-400 rounded p-4 text-red-800">
-               <h3>PC ({pcAction === "prime" ? "پرایم" : "تزریق"})</h3>
-               <p>حجم: <strong>{(numericWeight*5).toFixed(0)} سی‌سی</strong> (۵ سی‌سی به ازای هر کیلوگرم)</p>
-             </div>
-           )}
+              <h3>PC ({pcAction === "prime" ? "پرایم" : "تزریق"})</h3>
+              <p>
+                حجم: <strong>{(numericWeight * 5).toFixed(0)} سی‌سی</strong> (۵ سی‌سی به ازای هر کیلوگرم)
+              </p>
+            </div>
+          )}
 
-           {/* FFP */}
-           {ffpAction && (
+          {/* FFP */}
+          {ffpAction && ffpAction !== "none" && (
             <div className="bg-yellow-50 border border-yellow-400 rounded p-4 text-yellow-800">
-               <h3>FFP ({ffpAction === "prime" ? "پرایم" : "تزریق"})</h3>
-               <p>حجم: <strong>{(numericWeight*5).toFixed(0)} سی‌سی</strong> (۵ سی‌سی به ازای هر کیلوگرم)</p>
+              <h3>FFP ({ffpAction === "prime" ? "پرایم" : "تزریق"})</h3>
+              <p>
+                حجم: <strong>{(numericWeight * 5).toFixed(0)} سی‌سی</strong> (۵ سی‌سی به ازای هر کیلوگرم)
+              </p>
             </div>
           )}
 
@@ -314,11 +326,7 @@ export function DialysisAssistant() {
               سرعت پمپ خون (Qb)
             </h3>
             <p>
-              محدوده Qb:{" "}
-              <strong>
-                {qbRange.min.toFixed(1)} – {qbRange.max.toFixed(1)}
-              </strong>{" "}
-              ml/min
+              محدوده Qb: <strong>{qbRange.min.toFixed(1)} – {qbRange.max.toFixed(1)}</strong> ml/min
             </p>
             {clinicalStatus !== "none" && (
               <p>
@@ -349,11 +357,7 @@ export function DialysisAssistant() {
               <IoWater className="text-blue-500 mt-1" /> Ultrafiltration Rate (UFR)
             </h3>
             <p>
-              محدوده پیشنهادی:{" "}
-              <strong>
-                {ufrMin.toFixed(0)} – {ufrMax.toFixed(0)}
-              </strong>{" "}
-              mL/hr
+              محدوده پیشنهادی: <strong>{ufrMin.toFixed(0)} – {ufrMax.toFixed(0)}</strong> mL/hr
             </p>
             <p className="text-sm text-gray-700">معمولاً 10-15 mL/kg/hr</p>
           </div>
@@ -367,38 +371,23 @@ export function DialysisAssistant() {
               <>
                 <p className="text-red-600 font-bold">❌ هپارین تزریق نشود</p>
                 {heparinEligibilityMessage && (
-                  <p className="text-red-500 mt-1">
-                    {heparinEligibilityMessage}
-                  </p>
+                  <p className="text-red-500 mt-1">{heparinEligibilityMessage}</p>
                 )}
               </>
             ) : (
               <>
                 <p>
-                  Bolus اولیه:{" "}
-                  <strong>
-                    {Math.round(numericWeight * 15)} –{" "}
-                    {Math.round(numericWeight * 20)}
-                  </strong>{" "}
-                  IU
+                  Bolus اولیه: <strong>{Math.round(numericWeight * 15)} – {Math.round(numericWeight * 20)}</strong> IU
                 </p>
                 <p>
-                  Infusion مداوم:{" "}
-                  <strong>
-                    {Math.round(numericWeight * 20)} –{" "}
-                    {Math.round(numericWeight * 30)}
-                  </strong>{" "}
-                  IU/h
+                  Infusion مداوم: <strong>{Math.round(numericWeight * 20)} – {Math.round(numericWeight * 30)}</strong> IU/h
                 </p>
               </>
             )}
           </div>
 
           {/* هشدارها */}
-          {(pltWarning ||
-            inrWarning ||
-            bpSystolicWarning ||
-            bpDiastolicWarning) && (
+          {(pltWarning || inrWarning || bpSystolicWarning || bpDiastolicWarning) && (
             <div className="bg-yellow-50 border border-yellow-400 rounded-lg p-4 text-yellow-800 font-semibold">
               <h3 className="mb-2">⚠️ هشدارهای ایمنی</h3>
               <ul className="list-disc list-inside space-y-1">
@@ -419,14 +408,9 @@ export function DialysisAssistant() {
               <p className="text-red-600">صافی مناسب یافت نشد</p>
             ) : (
               matchedFilters.map((f, idx) => (
-                <div
-                  key={idx}
-                  className="p-4 rounded-xl border shadow bg-white"
-                >
+                <div key={idx} className="p-4 rounded-xl border shadow bg-white">
                   <h4 className="text-lg font-bold text-blue-800">{f.name}</h4>
-                  <p>
-                    مناسب برای: <strong>{f.suitableFor}</strong>
-                  </p>
+                  <p>مناسب برای: <strong>{f.suitableFor}</strong></p>
                   <p>KOA: {f.koa}</p>
                   <p>UF: {f.uf}</p>
                   <p>TMP: {f.tmp}</p>
@@ -441,12 +425,8 @@ export function DialysisAssistant() {
             <h3 className="font-bold text-blue-800 flex mb-2">
               <GoStopwatch className="text-blue-800 ml-1 mt-1.5" /> زمان پیشنهادی دیالیز
             </h3>
-            <p>
-              زمان پیشنهادی: <strong>{dialysisTimeText}</strong>
-            </p>
-            <p className="text-sm text-gray-700">
-              این مقدار تقریبی است و باید بر اساس وضعیت بیمار تنظیم شود.
-            </p>
+            <p>زمان پیشنهادی: <strong>{dialysisTimeText}</strong></p>
+            <p className="text-sm text-gray-700">این مقدار تقریبی است و باید بر اساس وضعیت بیمار تنظیم شود.</p>
           </div>
 
           {/* نکات آموزشی */}
