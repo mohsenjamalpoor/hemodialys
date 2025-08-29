@@ -6,6 +6,7 @@ import { DialysisAssistant } from "./components/DialysisAssistant";
 import HemodialsisTraining from "./components/HemodialsisTraining";
 import HemodialysisAlarms from "./components/HemodialysisAlarms";
 import { KtVCalculator } from "./components/KtVCalculator";
+import Priming4008S from "./components/prime/Priming4008s";
 
 
 
@@ -28,7 +29,7 @@ function App() {
 
         <Route path="/hemo/ktv" element={<KtVCalculator />} />
       
-     
+     <Route path="/hemo/priming4008S" element={<Priming4008S />} />
 
         <Route path="/hemo/dialysisAssistant" element={<DialysisAssistant />} />
 

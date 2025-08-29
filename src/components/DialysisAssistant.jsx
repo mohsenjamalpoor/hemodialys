@@ -182,22 +182,7 @@ export function DialysisAssistant() {
         </div>
       )}
 
-      {/* FFP */}
-      {numericInr > 3 && (
-        <div>
-          <label className="block mb-1 font-semibold">FFP:</label>
-          <select
-            value={ffpAction}
-            onChange={(e) => setFfpAction(e.target.value)}
-            className="w-full border rounded p-2 mt-2"
-          >
-            <option value="">انتخاب کنید</option>
-            <option value="prime">پرایم</option>
-            <option value="inject">تزریق</option>
-            <option value="none">هیچ‌کدام</option>
-          </select>
-        </div>
-      )}
+      
 
       {/* وضعیت بالینی */}
       <div>
@@ -253,6 +238,22 @@ export function DialysisAssistant() {
           />
         </div>
       </div>
+      {/* FFP */}
+      {numericInr > 3 && (
+        <div>
+          <label className="block mb-1 font-semibold">FFP:</label>
+          <select
+            value={ffpAction}
+            onChange={(e) => setFfpAction(e.target.value)}
+            className="w-full border rounded p-2 mt-2"
+          >
+            <option value="">انتخاب کنید</option>
+            <option value="prime">پرایم</option>
+            <option value="inject">تزریق</option>
+            <option value="none">هیچ‌کدام</option>
+          </select>
+        </div>
+      )}
 
       {/* فشار خون */}
       <div className="grid grid-cols-2 gap-4">

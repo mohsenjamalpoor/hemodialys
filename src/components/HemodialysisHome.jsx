@@ -7,6 +7,8 @@ export function HemodialysisHome() {
     { title: "  همودیالیز در اطفال", path: "/hemo/dialysisAssistant" },
     { title: "محاسبه Kt/Vو UF", path: "/hemo/ktv" },
     { title: "   آموزش همودیالیز اطفال ", path: "/hemo/hemodialsisTraining" },
+    { title: " پرایم کردن دستگاه همودیالیز  ", path: "/hemo/priming4008S" },
+
     {
       title: "   آلارم های دستگاه همودیالیز  ",
       path: "/hemo/hemodialysisAlarms",
