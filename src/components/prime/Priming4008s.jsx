@@ -111,8 +111,9 @@ export default function Priming4008S() {
 
   return (
     <div className="max-w-6xl mx-auto p-4">
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Main Simulation Panel */}
+      {/* ستون‌ها: sidebar چپ و simulation راست */}
+      <div className="flex flex-col lg:flex-row-reverse gap-6">
+        {/* Simulation Panel */}
         <div className="flex-1 bg-white rounded-2xl shadow p-5">
           <div className="flex items-start justify-between mb-4">
             <div>
