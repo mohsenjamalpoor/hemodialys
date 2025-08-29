@@ -314,10 +314,7 @@ export default function Priming4008S() {
               <h2 className="text-lg font-semibold">
                 Fresenius 4008S — Priming Trainer
               </h2>
-              <div className="text-sm text-slate-500">
-                این شبیه‌ساز آموزشی جایگزین آموزش بالینی یا دفترچه شرکت سازنده
-                نیست.
-              </div>
+            
             </div>
             <div className="flex items-center gap-3 mt-2 lg:mt-0">
               <div
@@ -342,20 +339,6 @@ export default function Priming4008S() {
               duration={duration}
               style={flowVars}
             />
-          </div>
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <LegendItem
-              color="#ef4444"
-              labelFa="لاین شریانی"
-              labelEn="Arterial line"
-            />
-            <LegendItem
-              color="#2563eb"
-              labelFa="لاین وریدی"
-              labelEn="Venous line"
-            />
-            <LegendItem color="#f59e0b" labelFa="صافی" labelEn="Dialyzer" />
-            <LegendItem color="#10b981" labelFa="محلول" labelEn="Fluid" />
           </div>
         </div>
 
@@ -386,7 +369,7 @@ export default function Priming4008S() {
             <div>
               <label className="text-sm font-medium">Flow Rate (mL/min)</label>
               <div className="text-xs text-slate-500 mb-2">
-                سرعت جریان — animation speed maps to this value
+                سرعت جریان 
               </div>
               <input
                 type="range"
@@ -492,10 +475,7 @@ export default function Priming4008S() {
                 ))}
               </div>
             </div>
-            <div className="text-xs text-slate-500">
-              تذکر: این شبیه‌ساز برای آموزش طراحی شده — همیشه از پروتکل محل کار
-              تبعیت کنید.
-            </div>
+            
           </div>
         </aside>
       </div>
