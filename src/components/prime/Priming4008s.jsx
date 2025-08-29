@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { HiChevronRight } from "react-icons/hi";
+import { HiChevronLeft } from "react-icons/hi";
 
 // -------------------- Utility --------------------
 const rateToDuration = (rate) => {
@@ -403,9 +405,9 @@ export default function Priming4008S() {
 
             <div>
               <label className="text-sm font-medium">
-                Fluid Type / نوع محلول
+             نوع محلول پرایم
               </label>
-              <div className="flex gap-2 mt-1">
+              <div className="flex gap-2 mt-3">
                 {["NS", "FFP", "Alb", "PC"].map((type) => (
                   <button
                     key={type}
@@ -453,14 +455,13 @@ export default function Priming4008S() {
                 <div>
                   <div className="text-sm text-slate-500">مرحله</div>
                   <div className="font-semibold">{step.titleFa}</div>
-                  <div className="text-xs text-slate-400">{step.hintEn}</div>
                 </div>
                 <div className="flex gap-2 mt-2 sm:mt-0">
                   <button
                     onClick={() => setStepIndex((i) => Math.max(0, i - 1))}
                     className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95"
                   >
-                    ◀︎ قبلی
+                    <HiChevronRight /> 
                   </button>
                   <button
                     onClick={() =>
@@ -468,7 +469,7 @@ export default function Priming4008S() {
                     }
                     className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95"
                   >
-                    بعدی ▶︎
+                    <HiChevronLeft /> 
                   </button>
                 </div>
               </div>
