@@ -20,6 +20,8 @@ export function DialysisAssistant() {
   const [showNotes, setShowNotes] = useState(false);
   const [pcAction, setPcAction] = useState("");
   const [ffpAction, setFfpAction] = useState("");
+  const [albuminAction, setAlbuminAction] = useState("");
+
 
   // Parse numbers safely
   const numericWeight = parseFloat(weight.replace(/٫|٬|,/g, ".")) || 0;
@@ -166,21 +168,22 @@ export function DialysisAssistant() {
       </div>
 
       {/* PC */}
-      {numericHb > 0 && numericHb < 7 && (
-        <div>
-          <label className="block mb-1 font-semibold">PC (Packed Cell):</label>
-          <select
-            value={pcAction}
-            onChange={(e) => setPcAction(e.target.value)}
-            className="w-full border rounded p-2 mt-2"
-          >
-            <option value="">انتخاب کنید</option>
-            <option value="prime">پرایم</option>
-            <option value="inject">تزریق</option>
-            <option value="none">هیچ‌کدام</option>
-          </select>
-        </div>
-      )}
+      {((weight !== "" && numericWeight < 10) || (numericHb > 0 && numericHb < 7)) && (
+  <div>
+    <label className="block mb-1 font-semibold">PC (Packed Cell):</label>
+    <select
+      value={pcAction}
+      onChange={(e) => setPcAction(e.target.value)}
+      className="w-full border rounded p-2 mt-2"
+    >
+      <option value="">انتخاب کنید</option>
+      <option value="prime">پرایم</option>
+      <option value="inject">تزریق</option>
+      <option value="none">هیچ‌کدام</option>
+    </select>
+  </div>
+)}
+
 
       
 
@@ -280,6 +283,23 @@ export function DialysisAssistant() {
           />
         </div>
       </div>
+      {/* Albumin */}
+{numericBpS > 0 && numericBpS < 100 && (
+  <div>
+    <label className="block mb-1 font-semibold">Albumin:</label>
+    <select
+      value={albuminAction}
+      onChange={(e) => setAlbuminAction(e.target.value)}
+      className="w-full border rounded p-2 mt-2"
+    >
+      <option value="">انتخاب کنید</option>
+      <option value="prime">پرایم</option>
+      <option value="inject">تزریق</option>
+      <option value="none">هیچ‌کدام</option>
+    </select>
+  </div>
+)}
+
 
       {/* دکمه‌ها */}
       <div className="flex space-x-2 rtl:space-x-reverse">
@@ -313,6 +333,19 @@ export function DialysisAssistant() {
     )}
   </div>
 )}
+{/* Albumin */}
+{albuminAction && albuminAction !== "none" && (
+  <div className="bg-green-50 border border-green-400 rounded p-4 text-green-800">
+    <h3>Albumin</h3>
+    {albuminAction === "prime" ? (
+      <p>⚡ پرایم با ۱۰ گرم آلبومین</p>
+    ) : (
+      <p>تزریق: ۱۰ گرم آلبومین</p>
+    )}
+  </div>
+)}
+
+
 
 {/* FFP */}
 {ffpAction && ffpAction !== "none" && (
