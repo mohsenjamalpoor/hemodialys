@@ -14,7 +14,7 @@ export function HemodialysisHome() {
       path: "/hemo/hemodialysisAlarms",
     },
 
-    { title: " عوارض دیالیز و درمان آن", path: "/hemo/complications" },
+    { title: " عوارض حین همودیالیز و درمان آن", path: "/hemo/complications" },
   ];
 
   return (
