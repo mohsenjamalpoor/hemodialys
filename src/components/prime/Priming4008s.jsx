@@ -87,17 +87,22 @@ function LegendItem({ color, labelFa, labelEn }) {
 }
 
 // -------------------- Circuit SVG --------------------
-function CircuitSVG({ running, highlights, fluidType, duration = "2s", style }) {
+
+function CircuitSVG({ running, highlights, fluidType, duration = 2, style }) {
   const is = (part) => highlights.includes(part) || highlights.includes("all");
   const dim = (part) => (is(part) ? 1 : 0.25);
 
-  // رنگ محلول
   const fluidColor =
     fluidType === "NS"
       ? "#d1fae5"
       : fluidType === "PC"
       ? "#ef4444"
-      : "#fde68a"; // FFP و Alb زرد
+      : "#fde68a";
+
+  const flowAnim = {
+    animate: { y: running ? [0, 24, 0] : 0 },
+    transition: { duration, repeat: Infinity, ease: "linear" },
+  };
 
   return (
     <svg viewBox="0 0 800 500" className="w-full h-auto" style={style}>
@@ -118,24 +123,16 @@ function CircuitSVG({ running, highlights, fluidType, duration = "2s", style }) 
         </text>
       </g>
 
-      {/* Arterial line: Fluid Bag → Pump */}
-      <path
-        d="M 650 140 Q 600 140 250 150"
-        stroke={fluidColor}
-        strokeWidth={6}
-        fill="none"
-        opacity={dim("arterial")}
-      />
-      <path
+      {/* Arterial line */}
+      <motion.path
         d="M 650 140 Q 600 140 250 150"
         stroke={fluidColor}
         strokeWidth={2}
-        strokeDasharray="6 8"
         fill="none"
-        style={{
-          opacity: running ? 1 : 0.2,
-          animation: `flowDash ${duration} linear infinite`,
-        }}
+        strokeDasharray="6 8"
+        animate={{ strokeDashoffset: running ? [0, 28] : 0 }}
+        transition={{ duration, repeat: Infinity, ease: "linear" }}
+        opacity={dim("arterial")}
       />
 
       {/* Pump */}
@@ -149,120 +146,71 @@ function CircuitSVG({ running, highlights, fluidType, duration = "2s", style }) 
           strokeWidth={3}
           opacity={dim("pump")}
         />
-        <text x={0} y={5} fontSize={10} fill="#0f172a" textAnchor="middle">
-          Pump
-        </text>
-        {/* Semicircle flow */}
-        <path
+        <text x={0} y={5} fontSize={10} fill="#0f172a" textAnchor="middle">Pump</text>
+        <motion.path
           d="M -20 0 A 20 20 0 0 1 20 0"
           fill="none"
           stroke={fluidColor}
           strokeWidth={4}
           strokeDasharray="6 6"
-          style={{
-            opacity: running ? 1 : 0.2,
-            animation: "pumpFlow 1s linear infinite",
-          }}
+          animate={{ strokeDashoffset: running ? [0, 20] : 0 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
         />
       </g>
 
       {/* Arterial line: Pump → Dialyzer */}
-      <path
-        d="M 250 150 Q 350 150 420 150"
-        stroke={fluidColor}
-        strokeWidth={6}
-        fill="none"
-        opacity={dim("arterial")}
-      />
-      <path
+      <motion.path
         d="M 250 150 Q 350 150 420 150"
         stroke={fluidColor}
         strokeWidth={2}
-        strokeDasharray="6 8"
         fill="none"
-        style={{
-          opacity: running ? 1 : 0.2,
-          animation: `flowDash ${duration} linear infinite`,
-        }}
+        strokeDasharray="6 8"
+        animate={{ strokeDashoffset: running ? [0, 28] : 0 }}
+        transition={{ duration, repeat: Infinity, ease: "linear" }}
+        opacity={dim("arterial")}
       />
 
       {/* Dialyzer */}
       <g transform="translate(420,150)">
-        <rect
-          x={0}
-          y={0}
-          width={70}
-          height={120}
-          rx={10}
-          fill="#fff"
-          stroke="#94a3b8"
-          opacity={dim("dialyzer")}
-        />
-        <rect
-          x={15}
-          y={10}
-          width={10}
-          height={100}
-          rx={5}
-          fill="#fef3c7"
-          style={{
-            opacity: running ? 0.9 : 0.2,
-            animation: `verticalFlow ${duration} linear infinite`,
-          }}
-        />
-        <text x={5} y={60} fontSize={12} fill="#0f172a">
-          Dialyzer
-        </text>
+        <ellipse cx={35} cy={0} rx={35} ry={15} fill="#fff" stroke="#94a3b8" opacity={dim("dialyzer")} />
+        <rect x={0} y={0} width={70} height={120} fill="#fff" stroke="#94a3b8" opacity={dim("dialyzer")} />
+        <ellipse cx={35} cy={120} rx={35} ry={15} fill="#fff" stroke="#94a3b8" opacity={dim("dialyzer")} />
+
+        {[...Array(5)].map((_, i) => (
+          <motion.rect
+            key={i}
+            x={15 + i * 10}
+            y={10}
+            width={6}
+            height={100}
+            rx={3}
+            fill="#fde68a"
+            {...flowAnim}
+          />
+        ))}
+
+        <text x={5} y={60} fontSize={12} fill="#0f172a">Dialyzer</text>
       </g>
 
-      {/* Venous line: Dialyzer → Venous chamber */}
-      <line
-        x1={490}
-        y1={280}
-        x2={200}
-        y2={280}
-        stroke={fluidColor}
-        strokeWidth={6}
+      {/* Venous line */}
+      <motion.line
+        x1={490} y1={280} x2={200} y2={280}
+        stroke={fluidColor} strokeWidth={2} strokeDasharray="6 8"
+        animate={{ strokeDashoffset: running ? [0, 28] : 0 }}
+        transition={{ duration, repeat: Infinity, ease: "linear", repeatType: "reverse" }}
         opacity={dim("venous")}
-      />
-      <line
-        x1={490}
-        y1={280}
-        x2={200}
-        y2={280}
-        stroke={fluidColor}
-        strokeWidth={2}
-        strokeDasharray="6 8"
-        style={{
-          opacity: running ? 1 : 0.2,
-          animation: `flowDash ${duration} linear infinite reverse`,
-        }}
       />
 
       {/* Venous chamber */}
       <rect x={150} y={260} width={40} height={60} rx={8} fill="#fff" stroke="#cbd5e1" opacity={dim("venous")} />
-      <text x={152} y={300} fontSize={10} fill="#2563eb">
-        Ven
-      </text>
-
-      {/* Animations */}
-      <style>{`
-        @keyframes flowDash {
-          from { stroke-dashoffset: 0; }
-          to { stroke-dashoffset: 28; }
-        }
-        @keyframes verticalFlow {
-          0% { transform: translateY(0); }
-          100% { transform: translateY(-24px); }
-        }
-        @keyframes pumpFlow {
-          0% { stroke-dashoffset: 0; }
-          100% { stroke-dashoffset: 20; }
-        }
-      `}</style>
+      <text x={152} y={300} fontSize={10} fill="#2563eb">Ven</text>
     </svg>
   );
 }
+
+
+
+
 
 
 // -------------------- Main Component --------------------
