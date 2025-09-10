@@ -93,11 +93,7 @@ function CircuitSVG({ running, highlights, fluidType, duration = 2, style }) {
   const dim = (part) => (is(part) ? 1 : 0.25);
 
   const fluidColor =
-    fluidType === "NS"
-      ? "#d1fae5"
-      : fluidType === "PC"
-      ? "#ef4444"
-      : "#fde68a";
+    fluidType === "NS" ? "#d1fae5" : fluidType === "PC" ? "#ef4444" : "#fde68a";
 
   const flowAnim = {
     animate: { y: running ? [0, 24, 0] : 0 },
@@ -106,13 +102,46 @@ function CircuitSVG({ running, highlights, fluidType, duration = 2, style }) {
 
   return (
     <svg viewBox="0 0 800 500" className="w-full h-auto" style={style}>
-      <rect x={20} y={50} width={760} height={400} rx={20} fill="#f8fafc" stroke="#e6eef6" />
+      <rect
+        x={20}
+        y={50}
+        width={760}
+        height={400}
+        rx={20}
+        fill="#f8fafc"
+        stroke="#e6eef6"
+      />
 
       {/* Fluid Bag */}
       <g transform="translate(620,0)">
-        <rect x={20} y={20} width={60} height={100} rx={12} fill="#fff" stroke="#cbd5e1" opacity={dim("saline")} />
-        <rect x={25} y={25} width={50} height={70} rx={8} fill={fluidColor} opacity={dim("saline")} />
-        <text x={50} y={60} fontSize={11} fill="#064e3b" textAnchor="middle" dominantBaseline="middle" fontWeight="bold">
+        <rect
+          x={20}
+          y={20}
+          width={60}
+          height={100}
+          rx={12}
+          fill="#fff"
+          stroke="#cbd5e1"
+          opacity={dim("saline")}
+        />
+        <rect
+          x={25}
+          y={25}
+          width={50}
+          height={70}
+          rx={8}
+          fill={fluidColor}
+          opacity={dim("saline")}
+        />
+        <text
+          x={50}
+          y={60}
+          fontSize={11}
+          fill="#064e3b"
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fontWeight="bold"
+        >
           {fluidType === "NS"
             ? "N/S 0.9%"
             : fluidType === "FFP"
@@ -146,7 +175,9 @@ function CircuitSVG({ running, highlights, fluidType, duration = 2, style }) {
           strokeWidth={3}
           opacity={dim("pump")}
         />
-        <text x={0} y={5} fontSize={10} fill="#0f172a" textAnchor="middle">Pump</text>
+        <text x={0} y={5} fontSize={10} fill="#0f172a" textAnchor="middle">
+          Pump
+        </text>
         <motion.path
           d="M -20 0 A 20 20 0 0 1 20 0"
           fill="none"
@@ -172,9 +203,33 @@ function CircuitSVG({ running, highlights, fluidType, duration = 2, style }) {
 
       {/* Dialyzer */}
       <g transform="translate(420,150)">
-        <ellipse cx={35} cy={0} rx={35} ry={15} fill="#fff" stroke="#94a3b8" opacity={dim("dialyzer")} />
-        <rect x={0} y={0} width={70} height={120} fill="#fff" stroke="#94a3b8" opacity={dim("dialyzer")} />
-        <ellipse cx={35} cy={120} rx={35} ry={15} fill="#fff" stroke="#94a3b8" opacity={dim("dialyzer")} />
+        <ellipse
+          cx={35}
+          cy={0}
+          rx={35}
+          ry={15}
+          fill="#fff"
+          stroke="#94a3b8"
+          opacity={dim("dialyzer")}
+        />
+        <rect
+          x={0}
+          y={0}
+          width={70}
+          height={120}
+          fill="#fff"
+          stroke="#94a3b8"
+          opacity={dim("dialyzer")}
+        />
+        <ellipse
+          cx={35}
+          cy={120}
+          rx={35}
+          ry={15}
+          fill="#fff"
+          stroke="#94a3b8"
+          opacity={dim("dialyzer")}
+        />
 
         {[...Array(5)].map((_, i) => (
           <motion.rect
@@ -189,29 +244,47 @@ function CircuitSVG({ running, highlights, fluidType, duration = 2, style }) {
           />
         ))}
 
-        <text x={5} y={60} fontSize={12} fill="#0f172a">Dialyzer</text>
+        <text x={5} y={60} fontSize={12} fill="#0f172a">
+          Dialyzer
+        </text>
       </g>
 
       {/* Venous line */}
       <motion.line
-        x1={490} y1={280} x2={200} y2={280}
-        stroke={fluidColor} strokeWidth={2} strokeDasharray="6 8"
+        x1={490}
+        y1={280}
+        x2={200}
+        y2={280}
+        stroke={fluidColor}
+        strokeWidth={2}
+        strokeDasharray="6 8"
         animate={{ strokeDashoffset: running ? [0, 28] : 0 }}
-        transition={{ duration, repeat: Infinity, ease: "linear", repeatType: "reverse" }}
+        transition={{
+          duration,
+          repeat: Infinity,
+          ease: "linear",
+          repeatType: "reverse",
+        }}
         opacity={dim("venous")}
       />
 
       {/* Venous chamber */}
-      <rect x={150} y={260} width={40} height={60} rx={8} fill="#fff" stroke="#cbd5e1" opacity={dim("venous")} />
-      <text x={152} y={300} fontSize={10} fill="#2563eb">Ven</text>
+      <rect
+        x={150}
+        y={260}
+        width={40}
+        height={60}
+        rx={8}
+        fill="#fff"
+        stroke="#cbd5e1"
+        opacity={dim("venous")}
+      />
+      <text x={152} y={300} fontSize={10} fill="#2563eb">
+        Ven
+      </text>
     </svg>
   );
 }
-
-
-
-
-
 
 // -------------------- Main Component --------------------
 export default function Priming4008S() {
@@ -244,10 +317,7 @@ export default function Priming4008S() {
         <div className="flex-1 bg-white rounded-2xl shadow p-5">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h2 className="text-lg font-semibold">
-                Fresenius 4008S — Priming Trainer
-              </h2>
-            
+              <h2 className="text-lg font-semibold">Priming Trainer</h2>
             </div>
             <div className="flex items-center gap-3 mt-2 lg:mt-0">
               <div
@@ -299,37 +369,33 @@ export default function Priming4008S() {
               </button>
             </div>
 
-         <div>
-  <label className="text-sm font-medium">Flow Rate (mL/min)</label>
-  <div className="text-xs text-slate-500 mb-2">سرعت جریان</div>
-  <div className="flex items-center gap-2">
-    {/* دکمه کاهش */}
-    <button
-      onClick={() => setRate((r) => Math.max(20, r - 5))}
-      className="px-3 py-1 rounded bg-rose-500 text-white text-sm"
-    >
-      ▼
-    </button>
+            <div>
+              <label className="text-sm font-medium">Flow Rate (mL/min)</label>
+              <div className="text-xs text-slate-500 mb-2">سرعت جریان</div>
+              <div className="flex items-center gap-2">
+                {/* دکمه کاهش */}
+                <button
+                  onClick={() => setRate((r) => Math.max(20, r - 5))}
+                  className="px-3 py-1 rounded bg-rose-500 text-white text-sm"
+                >
+                  ▼
+                </button>
 
-    {/* نمایش مقدار */}
-    <div className="text-sm w-16 text-center">{rate} mL/min</div>
+                {/* نمایش مقدار */}
+                <div className="text-sm w-16 text-center">{rate} mL/min</div>
 
-    {/* دکمه افزایش */}
-    <button
-      onClick={() => setRate((r) => Math.min(500, r + 5))}
-      className="px-3 py-1 rounded bg-emerald-500 text-white text-sm"
-    >
-      ▲
-    </button>
-  </div>
-
-</div>
-
+                {/* دکمه افزایش */}
+                <button
+                  onClick={() => setRate((r) => Math.min(500, r + 5))}
+                  className="px-3 py-1 rounded bg-emerald-500 text-white text-sm"
+                >
+                  ▲
+                </button>
+              </div>
+            </div>
 
             <div>
-              <label className="text-sm font-medium">
-             نوع محلول پرایم
-              </label>
+              <label className="text-sm font-medium">نوع محلول پرایم</label>
               <div className="flex gap-2 mt-3">
                 {["NS", "FFP", "Alb", "PC"].map((type) => (
                   <button
@@ -384,7 +450,7 @@ export default function Priming4008S() {
                     onClick={() => setStepIndex((i) => Math.max(0, i - 1))}
                     className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95"
                   >
-                    <HiChevronRight /> 
+                    <HiChevronRight />
                   </button>
                   <button
                     onClick={() =>
@@ -392,7 +458,7 @@ export default function Priming4008S() {
                     }
                     className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95"
                   >
-                    <HiChevronLeft /> 
+                    <HiChevronLeft />
                   </button>
                 </div>
               </div>
@@ -415,7 +481,6 @@ export default function Priming4008S() {
                 ))}
               </div>
             </div>
-            
           </div>
         </aside>
       </div>
