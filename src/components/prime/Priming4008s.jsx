@@ -351,25 +351,32 @@ export default function Priming4008S() {
               </button>
             </div>
 
-            <div>
-              <label className="text-sm font-medium">Flow Rate (mL/min)</label>
-              <div className="text-xs text-slate-500 mb-2">
-                سرعت جریان 
-              </div>
-              <input
-                type="range"
-                min={20}
-                max={500}
-                value={rate}
-                onChange={(e) => setRate(parseInt(e.target.value))}
-                className="w-full"
-              />
-              <div className="flex justify-between text-sm text-slate-600">
-                <div>20</div>
-                <div>{rate} mL/min</div>
-                <div>500</div>
-              </div>
-            </div>
+         <div>
+  <label className="text-sm font-medium">Flow Rate (mL/min)</label>
+  <div className="text-xs text-slate-500 mb-2">سرعت جریان</div>
+  <div className="flex items-center gap-2">
+    {/* دکمه کاهش */}
+    <button
+      onClick={() => setRate((r) => Math.max(20, r - 5))}
+      className="px-3 py-1 rounded bg-rose-500 text-white text-sm"
+    >
+      ▼
+    </button>
+
+    {/* نمایش مقدار */}
+    <div className="text-sm w-16 text-center">{rate} mL/min</div>
+
+    {/* دکمه افزایش */}
+    <button
+      onClick={() => setRate((r) => Math.min(500, r + 5))}
+      className="px-3 py-1 rounded bg-emerald-500 text-white text-sm"
+    >
+      ▲
+    </button>
+  </div>
+
+</div>
+
 
             <div>
               <label className="text-sm font-medium">
