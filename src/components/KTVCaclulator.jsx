@@ -119,7 +119,9 @@ export function KTVCaclulator() {
           </div>
 
           <div>
-            <label className="block font-semibold">مایعات اضافی (ml):</label>
+            <label className="block font-semibold">
+              مایعات اضافی (ادم، تزریق‌ها، تغذیه و...):
+            </label>
             <input
               type="number"
               value={extraFluid}
@@ -139,7 +141,7 @@ export function KTVCaclulator() {
               onClick={handleResetUF}
               className="flex-grow bg-gray-400 hover:bg-gray-500 text-white py-2 px-4 rounded"
             >
-              پاک‌کردن
+              پاک‌ کردن
             </button>
           </div>
 
@@ -167,6 +169,7 @@ export function KTVCaclulator() {
               onChange={(e) => setBunPre(e.target.value)}
               className="p-2 border rounded-lg"
             />
+
             <input
               type="number"
               placeholder="BUN بعد دیالیز"
@@ -232,16 +235,19 @@ export function KTVCaclulator() {
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-4 rounded-xl bg-red-100 text-center shadow md:col-span-3"
+                className={`p-4 rounded-xl text-center shadow md:col-span-3 ${
+                  parseFloat(ktvDaugirdas) >= 1.2
+                    ? "bg-green-100 text-green-800"
+                    : "bg-red-100 text-red-800"
+                }`}
               >
-                <h3 className="font-bold text-red-800">KT/V (Daugirdas)</h3>
+                <h3 className="font-bold">KT/V (Daugirdas)</h3>
                 <p className="text-lg">{ktvDaugirdas}</p>
               </motion.div>
             )}
           </div>
         </div>
       )}
-      
     </div>
   );
 }
