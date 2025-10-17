@@ -172,9 +172,7 @@ const Header = () => {
           <h1 className="text-3xl font-bold mb-3">
              مدیریت عوارض همودیالیز کودکان
           </h1>
-          <p className="text-lg opacity-90 max-w-3xl mx-auto leading-relaxed">
-            راهنمای جامع تشخیص، درمان و پیشگیری عوارض حین همودیالیز در جمعیت pediatric
-          </p>
+          
         </div>
         
         
