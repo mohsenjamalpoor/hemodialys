@@ -460,7 +460,7 @@ export function ComplicationManagement() {
         {/* نتایج */}
         <div className="mb-4 flex justify-between items-center">
           <h2 className="text-xl font-bold text-gray-800">
-            📊 لیست عوارض
+             لیست عوارض
           </h2>
           <span className="text-gray-600 text-sm">
             {filteredComplications.length} مورد یافت شد
