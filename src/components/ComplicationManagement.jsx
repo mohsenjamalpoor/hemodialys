@@ -200,7 +200,7 @@ const SearchFilter = ({ searchTerm, setSearchTerm, selectedCategory, setSelected
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="جستجوی نام عارضه، علائم یا درمان..."
-              className="w-full pr-10 pl-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+              className="w-full outline-0 pr-10 pl-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
             />
             <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
               <FiSearch size={16} />
@@ -217,7 +217,7 @@ const SearchFilter = ({ searchTerm, setSearchTerm, selectedCategory, setSelected
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none bg-white text-sm"
+            className="w-full px-3 py-2 outline-0 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none bg-white text-sm"
           >
             {categories.map(category => (
               <option key={category} value={category}>
@@ -496,26 +496,26 @@ export function ComplicationManagement() {
         {/* اطلاعات تکمیلی */}
         <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-200">
           <h3 className="text-lg font-bold text-gray-800 mb-4 text-center">
-            💡 نکات مهم در مدیریت عوارض کودکان
+             نکات مهم در مدیریت عوارض کودکان
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
             <div className="text-center p-3">
-              <div className="text-2xl mb-2">👶</div>
+          
               <h4 className="font-semibold text-gray-800 text-sm mb-1">ویژگی‌های کودکان</h4>
               <p className="text-gray-600 text-xs">حساسیت بیشتر به تغییرات حجم و الکترولیت</p>
             </div>
             <div className="text-center p-3">
-              <div className="text-2xl mb-2">📏</div>
+             
               <h4 className="font-semibold text-gray-800 text-sm mb-1">دوز دقیق</h4>
               <p className="text-gray-600 text-xs">محاسبه دقیق بر اساس وزن و سطح بدن</p>
             </div>
             <div className="text-center p-3">
-              <div className="text-2xl mb-2">👁️</div>
+            
               <h4 className="font-semibold text-gray-800 text-sm mb-1">پایش مداوم</h4>
               <p className="text-gray-600 text-xs">نظارت دقیق بر علائم حیاتی و نورولوژیک</p>
             </div>
             <div className="text-center p-3">
-              <div className="text-2xl mb-2">👪</div>
+              
               <h4 className="font-semibold text-gray-800 text-sm mb-1">درگیرسازی خانواده</h4>
               <p className="text-gray-600 text-xs">آموزش والدین برای شناسایی علائم هشدار</p>
             </div>
