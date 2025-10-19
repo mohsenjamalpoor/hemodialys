@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { FaCalculator, FaTint, FaSyncAlt, FaWeight } from "react-icons/fa";
 
 export function KTVCaclulator() {
   const [activeCalc, setActiveCalc] = useState("uf");
@@ -56,198 +57,305 @@ export function KTVCaclulator() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto mt-10 p-6 bg-white shadow-xl rounded-2xl">
-      <h2 className="text-2xl font-bold mb-6 text-center text-blue-600">
-        محاسبه‌گر دیالیز (UF + Kt/V)
-      </h2>
-
-      {/* تب انتخابی */}
-      <div className="flex justify-center mb-6 gap-4">
-        <button
-          onClick={() => setActiveCalc("uf")}
-          className={`py-2 px-6 rounded ${
-            activeCalc === "uf" ? "bg-blue-600 text-white" : "bg-gray-200"
-          }`}
-        >
-          محاسبه UF
-        </button>
-        <button
-          onClick={() => setActiveCalc("ktv")}
-          className={`py-2 px-6 rounded ${
-            activeCalc === "ktv" ? "bg-blue-600 text-white" : "bg-gray-200"
-          }`}
-        >
-          محاسبه Kt/V
-        </button>
-      </div>
-
-      {/* بخش UF */}
-      {activeCalc === "uf" && (
-        <div className="space-y-4 text-right">
-          <div>
-            <label className="block font-semibold">وزن بیمار (کیلوگرم):</label>
-            <input
-              type="number"
-              value={weight}
-              onChange={(e) => setWeight(e.target.value)}
-              className="w-full border p-2 rounded text-right"
-            />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50 p-4">
+      <div className="max-w-4xl mx-auto">
+        
+        {/* هدر */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="bg-blue-100 p-3 rounded-full">
+                <FaCalculator className="text-blue-600" size={32} />
+              </div>
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+                  محاسبه‌گر تخصصی همودیالیز
+                </h1>
+                <p className="text-gray-600 mt-1">محاسبات UF و Kt/V برای ارزیابی کفایت دیالیز</p>
+              </div>
+            </div>
           </div>
+        </div>
 
-          <div>
-            <label className="block font-semibold">
-              ورودی مایعات ۲۴ ساعته (ml):
-            </label>
-            <input
-              type="number"
-              value={fluidIntake}
-              onChange={(e) => setFluidIntake(e.target.value)}
-              className="w-full border p-2 rounded text-right"
-            />
-          </div>
-
-          <div>
-            <label className="block font-semibold">
-              حجم ادرار ۲۴ ساعته (ml):
-            </label>
-            <input
-              type="number"
-              value={urineOutput}
-              onChange={(e) => setUrineOutput(e.target.value)}
-              className="w-full border p-2 rounded text-right"
-            />
-          </div>
-
-          <div>
-            <label className="block font-semibold">
-              مایعات اضافی (ادم، تزریق‌ها، تغذیه و...):
-            </label>
-            <input
-              type="number"
-              value={extraFluid}
-              onChange={(e) => setExtraFluid(e.target.value)}
-              className="w-full border p-2 rounded text-right"
-            />
-          </div>
-
-          <div className="flex space-x-2 rtl:space-x-reverse">
-            <button
-              onClick={handleCalculateUF}
-              className="flex-grow bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded"
-            >
-              محاسبه
-            </button>
-            <button
-              onClick={handleResetUF}
-              className="flex-grow bg-gray-400 hover:bg-gray-500 text-white py-2 px-4 rounded"
-            >
-              پاک‌ کردن
-            </button>
-          </div>
-
-          {targetUf !== null && (
-            <div className="bg-blue-50 p-4 rounded border mt-4">
-              <p>
-                💧 UF پیشنهادی: <strong>{targetUf.toFixed(0)} میلی‌لیتر</strong>
-              </p>
-              <p className="text-sm text-gray-700 mt-1">
-                * بر اساس تعادل مایعات و حداکثر مجاز برای وزن وارد شده
+        {/* تب‌های انتخابی */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div
+            onClick={() => setActiveCalc("uf")}
+            className={`bg-gradient-to-r cursor-pointer transition-all duration-300 transform hover:scale-105 hover:shadow-xl rounded-xl shadow-lg p-6 ${
+              activeCalc === "uf" 
+                ? "from-blue-500 to-cyan-600 ring-4 ring-blue-200" 
+                : "from-gray-400 to-gray-500"
+            } text-white`}
+          >
+            <div className="flex flex-col items-center text-center">
+              <div className="bg-white bg-opacity-20 p-3 rounded-full mb-4">
+                <FaTint size={28} />
+              </div>
+              <h2 className="text-lg font-bold mb-2">محاسبه UF</h2>
+              <p className="text-white text-opacity-90 text-sm leading-relaxed">
+                محاسبه حجم مایع مورد نیاز برای خارج کردن
               </p>
             </div>
+          </div>
+
+          <div
+            onClick={() => setActiveCalc("ktv")}
+            className={`bg-gradient-to-r cursor-pointer transition-all duration-300 transform hover:scale-105 hover:shadow-xl rounded-xl shadow-lg p-6 ${
+              activeCalc === "ktv" 
+                ? "from-green-500 to-emerald-600 ring-4 ring-green-200" 
+                : "from-gray-400 to-gray-500"
+            } text-white`}
+          >
+            <div className="flex flex-col items-center text-center">
+              <div className="bg-white bg-opacity-20 p-3 rounded-full mb-4">
+                <FaWeight size={28} />
+              </div>
+              <h2 className="text-lg font-bold mb-2">محاسبه Kt/V</h2>
+              <p className="text-white text-opacity-90 text-sm leading-relaxed">
+                ارزیابی کفایت دیالیز
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* بخش محاسبات */}
+        <div className="bg-white rounded-2xl shadow-lg p-6">
+          
+          {/* بخش UF */}
+          {activeCalc === "uf" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
+              <h3 className="text-xl font-bold text-gray-800 text-center mb-6">
+                محاسبه حجم مایع خارجی (UF)
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="block font-semibold text-gray-700 text-right">
+                    وزن بیمار (کیلوگرم):
+                  </label>
+                  <input
+                    type="number"
+                    value={weight}
+                    onChange={(e) => setWeight(e.target.value)}
+                    className="w-full border border-gray-300 p-3 rounded-xl text-right focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="مثال: 25"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block font-semibold text-gray-700 text-right">
+                    ورودی مایعات ۲۴ ساعته (ml):
+                  </label>
+                  <input
+                    type="number"
+                    value={fluidIntake}
+                    onChange={(e) => setFluidIntake(e.target.value)}
+                    className="w-full border border-gray-300 p-3 rounded-xl text-right focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="مثال: 800"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block font-semibold text-gray-700 text-right">
+                    حجم ادرار ۲۴ ساعته (ml):
+                  </label>
+                  <input
+                    type="number"
+                    value={urineOutput}
+                    onChange={(e) => setUrineOutput(e.target.value)}
+                    className="w-full border border-gray-300 p-3 rounded-xl text-right focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="مثال: 300"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block font-semibold text-gray-700 text-right">
+                    مایعات اضافی (ml):
+                  </label>
+                  <input
+                    type="number"
+                    value={extraFluid}
+                    onChange={(e) => setExtraFluid(e.target.value)}
+                    className="w-full border border-gray-300 p-3 rounded-xl text-right focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="ادم، تزریق‌ها، تغذیه و..."
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-4 rtl:space-x-reverse pt-4">
+                <button
+                  onClick={handleCalculateUF}
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105"
+                >
+                  محاسبه UF
+                </button>
+                <button
+                  onClick={handleResetUF}
+                  className="flex-1 bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-500 hover:to-gray-600 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
+                >
+                  <FaSyncAlt />
+                  پاک‌سازی
+                </button>
+              </div>
+
+              {targetUf !== null && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-6 rounded-xl shadow-lg mt-6"
+                >
+                  <div className="text-center">
+                    <div className="text-3xl font-bold mb-2">
+                      {targetUf.toFixed(0)} ml
+                    </div>
+                    <p className="text-green-100">
+                      💧 UF پیشنهادی برای خارج کردن
+                    </p>
+                    <p className="text-green-200 text-sm mt-2">
+                      * بر اساس تعادل مایعات و حداکثر مجاز برای وزن وارد شده
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+
+          {/* بخش Kt/V */}
+          {activeCalc === "ktv" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
+              <h3 className="text-xl font-bold text-gray-800 text-center mb-6">
+                محاسبه Kt/V (شاخص کفایت دیالیز)
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <label className="block font-semibold text-gray-700 text-right">
+                    BUN قبل دیالیز:
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="مثال: 65"
+                    value={bunPre}
+                    onChange={(e) => setBunPre(e.target.value)}
+                    className="w-full border border-gray-300 p-3 rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block font-semibold text-gray-700 text-right">
+                    BUN بعد دیالیز:
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="مثال: 25"
+                    value={bunPost}
+                    onChange={(e) => setBunPost(e.target.value)}
+                    className="w-full border border-gray-300 p-3 rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block font-semibold text-gray-700 text-right">
+                    مدت دیالیز (ساعت):
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="مثال: 4"
+                    value={time}
+                    onChange={(e) => setTime(e.target.value)}
+                    className="w-full border border-gray-300 p-3 rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block font-semibold text-gray-700 text-right">
+                    UF (لیتر):
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="مثال: 1.2"
+                    value={uf}
+                    onChange={(e) => setUf(e.target.value)}
+                    className="w-full border border-gray-300 p-3 rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block font-semibold text-gray-700 text-right">
+                    وزن بعد دیالیز (کیلوگرم):
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="مثال: 24.5"
+                    value={weightAfter}
+                    onChange={(e) => setWeightAfter(e.target.value)}
+                    className="w-full border border-gray-300 p-3 rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              {/* نتایج Kt/V */}
+              <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {PRU && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-gradient-to-r from-blue-500 to-cyan-600 text-white p-4 rounded-xl text-center shadow-lg"
+                  >
+                    <h3 className="font-bold text-blue-100">PRU</h3>
+                    <p className="text-2xl font-bold mt-2">{PRU}%</p>
+                  </motion.div>
+                )}
+                {ktvPRU1 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-4 rounded-xl text-center shadow-lg"
+                  >
+                    <h3 className="font-bold text-green-100">KT/V (PRU1)</h3>
+                    <p className="text-2xl font-bold mt-2">{ktvPRU1}</p>
+                  </motion.div>
+                )}
+                {ktvPRU2 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4 rounded-xl text-center shadow-lg"
+                  >
+                    <h3 className="font-bold text-amber-100">KT/V (PRU2)</h3>
+                    <p className="text-2xl font-bold mt-2">{ktvPRU2}</p>
+                  </motion.div>
+                )}
+                {ktvDaugirdas && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`p-4 rounded-xl text-center shadow-lg md:col-span-2 ${
+                      parseFloat(ktvDaugirdas) >= 1.2
+                        ? "bg-gradient-to-r from-green-500 to-emerald-600"
+                        : "bg-gradient-to-r from-red-500 to-pink-600"
+                    } text-white`}
+                  >
+                    <h3 className="font-bold">KT/V (Daugirdas)</h3>
+                    <p className="text-3xl font-bold mt-2">{ktvDaugirdas}</p>
+                    <p className="text-sm mt-2 opacity-90">
+                      {parseFloat(ktvDaugirdas) >= 1.2 ? "✅ کفایت مناسب" : "⚠️ نیاز به بهبود"}
+                    </p>
+                  </motion.div>
+                )}
+              </div>
+            </motion.div>
           )}
         </div>
-      )}
-
-      {/* بخش Kt/V */}
-      {activeCalc === "ktv" && (
-        <div className="space-y-4 text-right">
-          <div className="grid grid-cols-2 gap-4">
-            <input
-              type="number"
-              placeholder="BUN قبل دیالیز"
-              value={bunPre}
-              onChange={(e) => setBunPre(e.target.value)}
-              className="p-2 border rounded-lg"
-            />
-
-            <input
-              type="number"
-              placeholder="BUN بعد دیالیز"
-              value={bunPost}
-              onChange={(e) => setBunPost(e.target.value)}
-              className="p-2 border rounded-lg"
-            />
-            <input
-              type="number"
-              placeholder="مدت دیالیز (ساعت)"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className="p-2 border rounded-lg"
-            />
-            <input
-              type="number"
-              placeholder="UF (لیتر)"
-              value={uf}
-              onChange={(e) => setUf(e.target.value)}
-              className="p-2 border rounded-lg"
-            />
-            <input
-              type="number"
-              placeholder="وزن بعد دیالیز (کیلوگرم)"
-              value={weightAfter}
-              onChange={(e) => setWeightAfter(e.target.value)}
-              className="p-2 border rounded-lg"
-            />
-          </div>
-
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-            {PRU && (
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-4 rounded-xl bg-blue-100 text-center shadow"
-              >
-                <h3 className="font-bold text-blue-800">PRU</h3>
-                <p className="text-lg">{PRU} %</p>
-              </motion.div>
-            )}
-            {ktvPRU1 && (
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-4 rounded-xl bg-green-100 text-center shadow"
-              >
-                <h3 className="font-bold text-green-800">KT/V (PRU1)</h3>
-                <p className="text-lg">{ktvPRU1}</p>
-              </motion.div>
-            )}
-            {ktvPRU2 && (
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-4 rounded-xl bg-yellow-100 text-center shadow"
-              >
-                <h3 className="font-bold text-yellow-800">KT/V (PRU2)</h3>
-                <p className="text-lg">{ktvPRU2}</p>
-              </motion.div>
-            )}
-            {ktvDaugirdas && (
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`p-4 rounded-xl text-center shadow md:col-span-3 ${
-                  parseFloat(ktvDaugirdas) >= 1.2
-                    ? "bg-green-100 text-green-800"
-                    : "bg-red-100 text-red-800"
-                }`}
-              >
-                <h3 className="font-bold">KT/V (Daugirdas)</h3>
-                <p className="text-lg">{ktvDaugirdas}</p>
-              </motion.div>
-            )}
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

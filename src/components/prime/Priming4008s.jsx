@@ -498,3 +498,87 @@ export default function Priming4008S() {
     </div>
   );
 }
+// import React, { useState } from "react";
+// import { motion, AnimatePresence } from "framer-motion";
+
+// const hotspots = [
+//   {
+//     id: 1,
+//     top: "13%",
+//     left: "50%",
+//     text: "این بخش نمایشگر دستگاه دیالیز است که اطلاعات بیمار و جریان خون را نشان می‌دهد.",
+//   },
+//   {
+//     id: 2,
+//     top: "30%",
+//     left: "20%",
+//     text: "این قسمت ورودی خون از بدن به دستگاه است.",
+//   },
+//   {
+//     id: 3,
+//     top: "48%",
+//     left: "56%",
+//     text: "اینجا فیلتر دیالیز قرار دارد که مواد زائد را از خون جدا می‌کند.",
+//   },
+//   {
+//     id: 4,
+//     bottom: "19%",
+//     left: "36%",
+//     text: "محلول دیالیز در این قسمت قرار دارد.",
+//   },
+//   {
+//     id: 5,
+//     top: "32%",
+//     right: "18%",
+//     text: "بیمار به دستگاه متصل است تا خون او تصفیه شود.",
+//   },
+// ];
+
+// export default function DialysisMachineInteractive() {
+//   const [active, setActive] = useState(null);
+
+//   return (
+//     <div className="flex items-center justify-center min-h-screen bg-sky-100">
+//       {/* کانتینر ثابت برای کنترل موقعیت‌ها */}
+//       <div className="relative w-[500px] h-[520px]">
+//         {/* تصویر اصلی */}
+//         <img
+//           src="/9b329bac-957e-49b8-a9b4-aa0c7c38cb65.png"
+//           alt="Dialysis Machine"
+//           className="w-full h-full object-contain rounded-xl shadow-lg"
+//         />
+
+//         {/* دکمه‌های پلاس */}
+//         {hotspots.map((spot) => (
+//           <div key={spot.id} className="absolute" style={spot}>
+//             <button
+//               onClick={() => setActive(active === spot.id ? null : spot.id)}
+//               className="bg-sky-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-md hover:bg-sky-600 transition"
+//             >
+//               +
+//             </button>
+
+//             <AnimatePresence>
+//               {active === spot.id && (
+//                 <motion.div
+//                   initial={{ opacity: 0, y: -10 }}
+//                   animate={{ opacity: 1, y: -20 }}
+//                   exit={{ opacity: 0, y: -10 }}
+//                   transition={{ duration: 0.2 }}
+//                   className="absolute left-8 top-0 bg-white shadow-lg p-3 rounded-xl w-52 text-sm text-gray-700 z-10"
+//                 >
+//                   {spot.text}
+//                 </motion.div>
+//               )}
+//             </AnimatePresence>
+//           </div>
+//         ))}
+
+//         {/* دکمه‌ی تغییر واحد */}
+//         <button className="absolute bottom-[8%] right-[8%] bg-sky-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-sky-700">
+//           Switch to SI Units
+//         </button>
+//       </div>
+//     </div>
+//   );
+// }
