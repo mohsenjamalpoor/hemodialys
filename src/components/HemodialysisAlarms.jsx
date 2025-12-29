@@ -186,7 +186,7 @@ export default function HemodialysisAlarms() {
                   <div className="bg-white bg-opacity-20 p-3 rounded-full mb-4">
                     {alarm.icon}
                   </div>
-                  <h2 className="text-lg font-bold mb-2">{alarm.label}</h2>
+                  <h2 className="text-lg font-bold mb-2">{alarm.title}</h2>
                   <p className="text-white text-opacity-90 text-sm leading-relaxed">
                     کلیک برای مشاهده راهنمای عیب‌یابی
                   </p>
