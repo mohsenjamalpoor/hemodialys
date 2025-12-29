@@ -184,15 +184,7 @@ export default function HemodialysisTraining() {
           </div>
         )}
 
-        {/* راهنمای پایین صفحه */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mt-6">
-          <div className="text-center">
-            <h3 className="text-lg font-bold text-gray-800 mb-2">راهنمای استفاده</h3>
-            <p className="text-gray-600">
-              برای مشاهده جزئیات هر موضوع، روی کارت مربوطه کلیک کنید. اطلاعات ارائه شده بر اساس آخرین استانداردهای پزشکی می‌باشد.
-            </p>
-          </div>
-        </div>
+     
 
       </div>
     </div>

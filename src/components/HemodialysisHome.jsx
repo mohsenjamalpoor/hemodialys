@@ -8,7 +8,7 @@ import {
   FaExclamationTriangle,
   FaHeartbeat,
   FaClinicMedical,
-  FaLungs
+ 
 } from "react-icons/fa";
 
 export function HemodialysisHome() {
@@ -55,13 +55,7 @@ export function HemodialysisHome() {
       description: "مدیریت عوارض حین همودیالیز",
       color: "from-teal-500 to-green-600"
     },
-    {
-      to: "/hemo/peritonealDialysis",
-      icon: <FaLungs size={28} />,
-      label: "آموزش دیالیز صفاقی در اطفال",
-      description: "راهنمای کامل دیالیز صفاقی اطفال",
-      color: "from-violet-500 to-purple-600"
-    },
+
   ];
 
   return (
