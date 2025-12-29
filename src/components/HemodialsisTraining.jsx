@@ -7,7 +7,7 @@ import {
   FaExclamationTriangle, 
   FaHeartbeat, 
   FaAppleAlt,
-  FaBook,
+
   FaGraduationCap
 } from "react-icons/fa";
 
