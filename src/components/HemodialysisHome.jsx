@@ -24,7 +24,7 @@ export function HemodialysisHome() {
       to: "/hemo/ktv",
       icon: <FaCalculator size={28} />,
       label: "محاسبه Kt/V و UF",
-      description: "محاسبات تخصصی همودیالیز",
+      description: "بررسی کفایت همودیالیز",
       color: "from-green-500 to-emerald-600"
     },
     { 
