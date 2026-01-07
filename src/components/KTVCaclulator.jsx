@@ -422,7 +422,7 @@ export function KTVCaclulator() {
                       </div>
                       
                       <div className="bg-gray-50 p-3 rounded-lg">
-                        <p className="text-xs text-gray-600 mb-1">مرجع:</p>
+                        <p className="text-xs text-gray-600 mb-1">منبع:</p>
                         <p className="text-sm text-gray-700">
                           Daugirdas JT et al. Handbook of Dialysis. 5th ed. Wolters Kluwer; 2015.
                         </p>
@@ -460,7 +460,7 @@ export function KTVCaclulator() {
                     className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-center"
                   >
                     <p className="text-yellow-700 font-medium">
-                      ⚠️ هیچ فرمولی انتخاب نشده است. روی فرمول مورد نظر کلیک کنید.
+                       هیچ فرمولی انتخاب نشده است. روی فرمول مورد نظر کلیک کنید.
                     </p>
                   </motion.div>
                 )}
