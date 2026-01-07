@@ -11,7 +11,7 @@ import {
   FaUserMd,
   FaClock,
   FaSignOutAlt,
-  FaStethoscope,
+ 
   FaVial,
   FaTint,
   FaWeight,

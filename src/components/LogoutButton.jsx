@@ -1,4 +1,4 @@
-// components/LogoutButton.jsx
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaSignOutAlt } from 'react-icons/fa';
