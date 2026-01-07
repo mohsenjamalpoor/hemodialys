@@ -105,8 +105,8 @@ function CircuitSVG({ running, highlights, fluidType, duration = 2, style }) {
       <rect
         x={20}
         y={50}
-        width={760}
-        height={400}
+        width={750}
+        height={350}
         rx={20}
         fill="#f8fafc"
         stroke="#e6eef6"
@@ -315,25 +315,7 @@ export default function Priming4008S() {
       <div className="flex flex-col lg:flex-row-reverse gap-6">
         {/* Simulation Panel */}
         <div className="flex-1 bg-white rounded-2xl shadow p-5">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h2 className="text-lg font-semibold">Priming Trainer</h2>
-            </div>
-            <div className="flex items-center gap-3 mt-2 lg:mt-0">
-              <div
-                className={`px-3 py-1 rounded-full text-sm ${
-                  alarmOn
-                    ? "bg-rose-500 text-white"
-                    : "bg-slate-100 text-slate-700"
-                }`}
-              >
-                {alarmOn ? "Alarm — هشدار" : "System OK"}
-              </div>
-              <div className="text-sm text-slate-500">
-                Flow: {running ? "On" : "Paused"}
-              </div>
-            </div>
-          </div>
+
           <div style={flowVars}>
             <CircuitSVG
               running={running}
@@ -498,87 +480,4 @@ export default function Priming4008S() {
     </div>
   );
 }
-// import React, { useState } from "react";
-// import { motion, AnimatePresence } from "framer-motion";
 
-// const hotspots = [
-//   {
-//     id: 1,
-//     top: "13%",
-//     left: "50%",
-//     text: "این بخش نمایشگر دستگاه دیالیز است که اطلاعات بیمار و جریان خون را نشان می‌دهد.",
-//   },
-//   {
-//     id: 2,
-//     top: "30%",
-//     left: "20%",
-//     text: "این قسمت ورودی خون از بدن به دستگاه است.",
-//   },
-//   {
-//     id: 3,
-//     top: "48%",
-//     left: "56%",
-//     text: "اینجا فیلتر دیالیز قرار دارد که مواد زائد را از خون جدا می‌کند.",
-//   },
-//   {
-//     id: 4,
-//     bottom: "19%",
-//     left: "36%",
-//     text: "محلول دیالیز در این قسمت قرار دارد.",
-//   },
-//   {
-//     id: 5,
-//     top: "32%",
-//     right: "18%",
-//     text: "بیمار به دستگاه متصل است تا خون او تصفیه شود.",
-//   },
-// ];
-
-// export default function DialysisMachineInteractive() {
-//   const [active, setActive] = useState(null);
-
-//   return (
-//     <div className="flex items-center justify-center min-h-screen bg-sky-100">
-//       {/* کانتینر ثابت برای کنترل موقعیت‌ها */}
-//       <div className="relative w-[500px] h-[520px]">
-//         {/* تصویر اصلی */}
-//         <img
-//           src="/9b329bac-957e-49b8-a9b4-aa0c7c38cb65.png"
-//           alt="Dialysis Machine"
-//           className="w-full h-full object-contain rounded-xl shadow-lg"
-//         />
-
-//         {/* دکمه‌های پلاس */}
-//         {hotspots.map((spot) => (
-//           <div key={spot.id} className="absolute" style={spot}>
-//             <button
-//               onClick={() => setActive(active === spot.id ? null : spot.id)}
-//               className="bg-sky-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-md hover:bg-sky-600 transition"
-//             >
-//               +
-//             </button>
-
-//             <AnimatePresence>
-//               {active === spot.id && (
-//                 <motion.div
-//                   initial={{ opacity: 0, y: -10 }}
-//                   animate={{ opacity: 1, y: -20 }}
-//                   exit={{ opacity: 0, y: -10 }}
-//                   transition={{ duration: 0.2 }}
-//                   className="absolute left-8 top-0 bg-white shadow-lg p-3 rounded-xl w-52 text-sm text-gray-700 z-10"
-//                 >
-//                   {spot.text}
-//                 </motion.div>
-//               )}
-//             </AnimatePresence>
-//           </div>
-//         ))}
-
-//         {/* دکمه‌ی تغییر واحد */}
-//         <button className="absolute bottom-[8%] right-[8%] bg-sky-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-sky-700">
-//           Switch to SI Units
-//         </button>
-//       </div>
-//     </div>
-//   );
-// }
