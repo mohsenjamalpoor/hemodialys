@@ -11,7 +11,7 @@ export function Login() {
   const location = useLocation();
 
   // کدهای نظام پزشکی معتبر (در حالت واقعی باید از سرور چک شود)
-  const validCodes = ['656565', '987654', '456789'];
+  const validCodes = ['656565', '192025', '456789'];
 
   const handleLogin = (e) => {
     e.preventDefault();
