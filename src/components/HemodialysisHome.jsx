@@ -14,7 +14,7 @@ import {
 export function HemodialysisHome() {
   const navItems = [
     { 
-      to: "/hemo/dialysisAssistant", 
+      to: "/hemo/hemodialysisPediatrics", 
       icon: <FaChild size={28} />, 
       label: "همودیالیز در اطفال",
       description: "راهنمای کامل همودیالیز کودکان",

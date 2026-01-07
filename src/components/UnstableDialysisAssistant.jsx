@@ -1,73 +1,82 @@
-// UnstableDialysisAssistant.jsx
-import React, { useState } from "react";
+import React from "react";
+import { Link } from "react-router-dom";
+import { 
+  FaArrowLeft, 
+  FaBed, 
+  FaExclamationTriangle, 
+  FaHeartbeat,
+  FaShieldAlt 
+} from "react-icons/fa";
 import { DialysisAssistant } from "./DialysisAssistant";
-import { FaExclamationTriangle, FaBed, FaHeartbeat } from "react-icons/fa";
 
 export function UnstableDialysisAssistant() {
   return (
-    <div className="space-y-6">
-      {/* هشدار ویژه برای Unstable */}
-      <div className="bg-red-50 border border-red-300 rounded-xl p-4 mb-6">
-        <div className="flex items-start gap-3">
-          <div className="bg-red-100 p-2 rounded-full mt-1">
-            <FaExclamationTriangle className="text-red-600" />
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 p-4">
+      <div className="max-w-6xl mx-auto">
+       
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="bg-red-100 p-3 rounded-full">
+                <FaBed className="text-red-600" size={32} />
+              </div>
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+                  همودیالیز اطفال - وضعیت ناپایدار / اینتوبه
+                </h1>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">
+                    وضعیت ناپایدار
+                  </span>
+                  <FaExclamationTriangle className="text-red-500" />
+                  <span className="text-gray-600">نیاز به پایش دقیق</span>
+                </div>
+              </div>
+            </div>
+            <Link
+              to="/hemo/dialysisAssistant"
+              className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              <FaArrowLeft />
+              <span>بازگشت به انتخاب وضعیت</span>
+            </Link>
           </div>
-          <div>
-            <h2 className="text-xl font-bold text-red-800">
-              همودیالیز اطفال - وضعیت ناپایدار / اینتوبه
-            </h2>
-            <p className="text-red-700 mb-2">
-              ⚠️ توجه: این تنظیمات برای بیماران بحرانی است
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
-              <div className="flex items-center gap-2 bg-white p-2 rounded-lg">
-                <FaBed className="text-red-500" />
-                <span className="text-sm">تحت ونتیلاتور</span>
-              </div>
-              <div className="flex items-center gap-2 bg-white p-2 rounded-lg">
-                <FaHeartbeat className="text-red-500" />
-                <span className="text-sm">ناپایدار همودینامیک</span>
-              </div>
-              <div className="flex items-center gap-2 bg-white p-2 rounded-lg">
-                <span className="text-red-500 font-bold">!</span>
-                <span className="text-sm">نیاز به پایش دقیق</span>
+          
+        
+          <div className="mt-6 bg-red-50 border border-red-200 rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              <FaShieldAlt className="text-red-500 mt-1" />
+              <div>
+                <h3 className="font-bold text-red-800 mb-2">⚠️ پروتکل ویژه وضعیت ناپایدار:</h3>
+                <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                  <li className="flex items-center gap-2">
+                    <FaHeartbeat className="text-red-400" />
+                    <span>Qb کاهش یافته (حداکثر 3-4 ml/kg/min)</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <FaHeartbeat className="text-red-400" />
+                    <span>UF Rate محدود (5-10 ml/kg/hr)</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <FaHeartbeat className="text-red-400" />
+                    <span>زمان دیالیز کوتاه‌تر (1-3 ساعت)</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <FaHeartbeat className="text-red-400" />
+                    <span>پایش دقیق هر 15 دقیقه</span>
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* کامپوننت اصلی با تنظیمات Unstable */}
-      <DialysisAssistant 
-        defaultHemodynamicStatus="unstable"
-        isUnstable={true}
-      />
-
-      {/* پروتکل ویژه برای بیماران ناپایدار */}
-      <div className="bg-yellow-50 border border-yellow-300 rounded-xl p-4 mt-6">
-        <h3 className="font-bold text-yellow-800 mb-3">
-          پروتکل ویژه بیماران ناپایدار:
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white p-3 rounded-lg border">
-            <h4 className="font-bold text-red-700 text-sm mb-2">تغییرات ضروری:</h4>
-            <ul className="text-xs text-gray-700 space-y-1">
-              <li>• Qb کاهش یافته (حداکثر ۳-۴ ml/kg/min)</li>
-              <li>• UF Rate محدود (۵-۱۰ ml/kg/hr)</li>
-              <li>• زمان دیالیز کوتاه‌تر</li>
-              <li>• پایش هر ۱۵ دقیقه</li>
-            </ul>
-          </div>
-          <div className="bg-white p-3 rounded-lg border">
-            <h4 className="font-bold text-red-700 text-sm mb-2">مراقبت‌ها:</h4>
-            <ul className="text-xs text-gray-700 space-y-1">
-              <li>• پایش مداوم فشار خون</li>
-              <li>• تنظیم مایعات وریدی</li>
-              <li>• آمادگی برای افت فشار</li>
-              <li>• ارتباط با ICU</li>
-            </ul>
-          </div>
-        </div>
+   
+        <DialysisAssistant 
+          defaultHemodynamicStatus="unstable"
+          isUnstable={true}
+          showOnlyPediatric={true}
+        />
       </div>
     </div>
   );

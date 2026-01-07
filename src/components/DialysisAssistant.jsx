@@ -1,56 +1,43 @@
 // DialysisAssistant.jsx
 import React, { useState, useEffect, useCallback } from "react";
-import { 
-  IoWater, 
+import {
+  IoWater,
   IoAlertCircle,
   IoCheckmarkCircle,
   IoCloseCircle,
-  IoWarningOutline
+  IoWarningOutline,
 } from "react-icons/io5";
-import { 
-  GrPowerCycle
-} from "react-icons/gr";
-import { 
-  GoStopwatch,
-  GoAlert 
-} from "react-icons/go";
-import { 
-  LuSyringe,
-  LuActivity
-} from "react-icons/lu";
-import { 
-  GiChemicalTank,
-  GiHeartBeats,
-  GiBlood
-} from "react-icons/gi";
-import { 
+import { GrPowerCycle } from "react-icons/gr";
+import { GoStopwatch, GoAlert } from "react-icons/go";
+import { LuSyringe, LuActivity } from "react-icons/lu";
+import { GiChemicalTank, GiHeartBeats, GiBlood } from "react-icons/gi";
+import {
   FaTint,
   FaExclamationTriangle,
   FaWeight,
   FaTemperatureHigh,
-  FaVial
+  FaVial,
 } from "react-icons/fa";
-import { 
+import {
   MdBloodtype,
   MdBatteryAlert,
-  MdOutlineMonitorHeart
+  MdOutlineMonitorHeart,
 } from "react-icons/md";
-import { 
-  TbDropletFilled,
-  TbTemperature
-} from "react-icons/tb";
+import { TbDropletFilled, TbTemperature } from "react-icons/tb";
 import { filters } from "../utils/filters";
 import { EducationalNotes } from "./EducationalNotes";
 
-export function DialysisAssistant({ 
-  defaultHemodynamicStatus = "stable", 
+export function DialysisAssistant({
+  defaultHemodynamicStatus = "stable",
   isUnstable = false,
-  showOnlyPediatric = true 
+  showOnlyPediatric = true,
 }) {
   // State برای ورودی‌ها
   const [weight, setWeight] = useState("");
   const [clinicalStatus, setClinicalStatus] = useState("none");
-  const [hemodynamicStatus, setHemodynamicStatus] = useState(defaultHemodynamicStatus);
+  const [hemodynamicStatus, setHemodynamicStatus] = useState(
+    defaultHemodynamicStatus
+  );
   const [plt, setPlt] = useState("");
   const [inr, setInr] = useState("");
   const [pt, setPt] = useState("");
@@ -67,7 +54,7 @@ export function DialysisAssistant({
   const [dialysateK, setDialysateK] = useState("3.0");
   const [dialysateNa, setDialysateNa] = useState("140");
   const [dialysateHCO3, setDialysateHCO3] = useState("35");
-  
+
   // State برای خروجی‌ها و وضعیت‌ها
   const [submitted, setSubmitted] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
@@ -105,45 +92,52 @@ export function DialysisAssistant({
   // محاسبات اصلی
   const calculateQb = useCallback(() => {
     if (numericWeight <= 0) return { min: 0, max: 0, standard: 0 };
-    
+
     let baseMin = numericWeight * 3;
     let baseMax = numericWeight * 5;
-    
+
     let adjustment = 0;
     if (clinicalStatus === "acute") {
       adjustment = 50;
     } else if (clinicalStatus === "chronic") {
       adjustment = 100;
     }
-    
+
     let standardQb = baseMin + adjustment;
     if (hemodynamicStatus === "unstable") {
       standardQb *= 0.75;
       baseMax *= 0.8;
     }
-    
+
     let ageFactor = 1;
     if (numericWeight < 5) {
       ageFactor = 0.9;
     } else if (numericWeight < 15) {
       ageFactor = 0.95;
     }
-    
+
     let accessFactor = 1;
     if (accessType === "catheter" && numericAccessFlow > 0) {
       accessFactor = Math.min(numericAccessFlow / (standardQb * 1.5), 1);
     }
-    
+
     const min = Math.round(baseMin * ageFactor);
     const max = Math.round(baseMax * ageFactor * accessFactor);
     const standard = Math.round(standardQb * ageFactor * accessFactor);
-    
+
     return { min, max, standard };
-  }, [numericWeight, clinicalStatus, hemodynamicStatus, accessType, numericAccessFlow]);
+  }, [
+    numericWeight,
+    clinicalStatus,
+    hemodynamicStatus,
+    accessType,
+    numericAccessFlow,
+  ]);
 
   const qbRange = calculateQb();
 
-  const hypotension = (numericBpS > 0 && numericBpS < 90) || (numericBpD > 0 && numericBpD < 50);
+  const hypotension =
+    (numericBpS > 0 && numericBpS < 90) || (numericBpD > 0 && numericBpD < 50);
   const hypertension = numericBpS > 140 || numericBpD > 90;
   const fever = numericTemp > 37.5;
 
@@ -159,25 +153,25 @@ export function DialysisAssistant({
   const calculateUFR = useCallback(() => {
     let baseMin = numericWeight * 10;
     let baseMax = numericWeight * 15;
-    
+
     if (hemodynamicStatus === "unstable") {
       baseMin = numericWeight * 5;
       baseMax = numericWeight * 10;
     }
-    
+
     if (hypotension) {
       baseMin *= 0.8;
       baseMax *= 0.8;
     }
-    
+
     if (hypertension) {
       baseMax = Math.min(baseMax, numericWeight * 20);
     }
-    
+
     return {
       min: Math.round(baseMin),
       max: Math.round(baseMax),
-      recommended: Math.round((baseMin + baseMax) / 2)
+      recommended: Math.round((baseMin + baseMax) / 2),
     };
   }, [numericWeight, hemodynamicStatus, hypotension, hypertension]);
 
@@ -216,30 +210,32 @@ export function DialysisAssistant({
   // محاسبات هپارین
   const calculateHeparin = useCallback(() => {
     if (!canUseHeparin) return null;
-    
+
     let bolusMin = numericWeight * 15;
     let bolusMax = numericWeight * 20;
     let infusionMin = numericWeight * 20;
     let infusionMax = numericWeight * 30;
-    
+
     if (numericWeight < 10) {
       bolusMin = numericWeight * 10;
       bolusMax = numericWeight * 15;
       infusionMin = numericWeight * 15;
       infusionMax = numericWeight * 25;
     }
-    
+
     if (hemodynamicStatus === "unstable") {
       bolusMin *= 0.8;
       bolusMax *= 0.8;
       infusionMin *= 0.8;
       infusionMax *= 0.8;
     }
-    
+
     return {
       bolus: `${Math.round(bolusMin)} - ${Math.round(bolusMax)} واحد`,
-      infusion: `${Math.round(infusionMin)} - ${Math.round(infusionMax)} واحد/ساعت`,
-      monitoring: "کنترل PTT هر 4-6 ساعت"
+      infusion: `${Math.round(infusionMin)} - ${Math.round(
+        infusionMax
+      )} واحد/ساعت`,
+      monitoring: "کنترل PTT هر 4-6 ساعت",
     };
   }, [numericWeight, canUseHeparin, hemodynamicStatus]);
 
@@ -248,14 +244,14 @@ export function DialysisAssistant({
   // محاسبات سیترات
   const calculateCitrate = useCallback(() => {
     if (!shouldUseRegionalCitrate) return null;
-    
+
     const acdaRate = numericWeight * 1.7;
     const calciumRate = numericWeight * 0.4;
-    
+
     return {
       acdaRate: `${acdaRate.toFixed(1)} ml/hr`,
       calciumRate: `${calciumRate.toFixed(1)} mEq/hr`,
-      monitoring: "کنترل کلسیم یونیزه هر 2 ساعت"
+      monitoring: "کنترل کلسیم یونیزه هر 2 ساعت",
     };
   }, [numericWeight, shouldUseRegionalCitrate]);
 
@@ -268,7 +264,7 @@ export function DialysisAssistant({
   if (pltIsVeryLow) {
     criticalWarnings.push({
       icon: <GiBlood className="text-red-600" />,
-      text: "⚠️ پلاکت بسیار پایین (<20,000) - خطر خونریزی بالا"
+      text: "⚠️ پلاکت بسیار پایین (<20,000) - خطر خونریزی بالا",
     });
   } else if (pltIsLow) {
     warnings.push("⚠️ پلاکت پایین (<50,000) - خطر خونریزی افزایش یافته");
@@ -277,7 +273,7 @@ export function DialysisAssistant({
   if (inrIsVeryHigh) {
     criticalWarnings.push({
       icon: <MdBloodtype className="text-red-600" />,
-      text: "⚠️ INR بسیار بالا (>3) - ریسک خونریزی جدی"
+      text: "⚠️ INR بسیار بالا (>3) - ریسک خونریزی جدی",
     });
   } else if (inrIsHigh) {
     warnings.push("⚠️ INR بالا (>1.5) - احتیاط در ضد انعقاد");
@@ -286,7 +282,7 @@ export function DialysisAssistant({
   if (hypotension) {
     criticalWarnings.push({
       icon: <MdOutlineMonitorHeart className="text-red-600" />,
-      text: "⚠️ فشار خون پایین - ریسک افت فشار حین دیالیز"
+      text: "⚠️ فشار خون پایین - ریسک افت فشار حین دیالیز",
     });
   } else if (numericBpS > 0 && numericBpS < 100) {
     warnings.push("⚠️ فشار خون سیستولیک در حد پایین");
@@ -303,7 +299,7 @@ export function DialysisAssistant({
   if (numericHb > 0 && numericHb < 7) {
     criticalWarnings.push({
       icon: <FaTint className="text-red-600" />,
-      text: "⚠️ هموگلوبین بسیار پایین - نیاز به تزریق خون"
+      text: "⚠️ هموگلوبین بسیار پایین - نیاز به تزریق خون",
     });
   } else if (numericHb > 0 && numericHb < 10) {
     warnings.push("⚠️ هموگلوبین پایین - پایش دقیق همودینامیک");
@@ -316,7 +312,7 @@ export function DialysisAssistant({
   if (numericAlbumin > 0 && numericAlbumin < 2.5) {
     criticalWarnings.push({
       icon: <TbDropletFilled className="text-red-600" />,
-      text: "⚠️ آلبومین بسیار پایین (<2.5 g/dL) - ریسک ادم و افت فشار"
+      text: "⚠️ آلبومین بسیار پایین (<2.5 g/dL) - ریسک ادم و افت فشار",
     });
   } else if (numericAlbumin > 0 && numericAlbumin < 3.5) {
     warnings.push("⚠️ آلبومین پایین - احتیاط در تنظیم مایعات");
@@ -327,18 +323,18 @@ export function DialysisAssistant({
     const matched = filters.filter(
       (f) => numericWeight >= f.minWeight && numericWeight <= f.maxWeight
     );
-    
+
     if (matched.length === 0) return [];
-    
+
     if (hemodynamicStatus === "unstable") {
       const unstableFilters = matched.filter((f) => f.preferredForUnstable);
       if (unstableFilters.length > 0) return unstableFilters;
     }
-    
+
     if (clinicalStatus === "acute") {
       return matched.sort((a, b) => parseFloat(a.koa) - parseFloat(b.koa));
     }
-    
+
     return matched;
   }, [numericWeight, hemodynamicStatus, clinicalStatus]);
 
@@ -347,41 +343,41 @@ export function DialysisAssistant({
   // زمان دیالیز
   const calculateDialysisTime = useCallback(() => {
     if (numericWeight <= 0) return "";
-    
+
     if (clinicalStatus === "acute") {
       if (hemodynamicStatus === "unstable") {
         return {
           time: "1-2 ساعت",
           note: "دیالیز کوتاه و آهسته با پایش دقیق",
-          color: "text-red-600"
+          color: "text-red-600",
         };
       }
       return {
         time: "2-3 ساعت",
         note: "بسته به وضعیت بالینی",
-        color: "text-orange-600"
+        color: "text-orange-600",
       };
     }
-    
+
     if (clinicalStatus === "chronic") {
       if (hemodynamicStatus === "unstable") {
         return {
           time: "2-3 ساعت",
           note: "مزمن + ناپایدار",
-          color: "text-orange-600"
+          color: "text-orange-600",
         };
       }
       return {
         time: "3-4 ساعت",
         note: "مزمن + پایدار",
-        color: "text-green-600"
+        color: "text-green-600",
       };
     }
-    
+
     return {
       time: "3-4 ساعت",
       note: "ارزیابی بالینی نیاز است",
-      color: "text-blue-600"
+      color: "text-blue-600",
     };
   }, [clinicalStatus, hemodynamicStatus, numericWeight]);
 
@@ -390,7 +386,7 @@ export function DialysisAssistant({
   // محاسبات دیگر
   const calculateCircuitVolume = useCallback(() => {
     if (numericWeight <= 0) return 0;
-    
+
     let volume = 0;
     if (numericWeight < 5) {
       volume = 50;
@@ -401,11 +397,11 @@ export function DialysisAssistant({
     } else {
       volume = 200;
     }
-    
+
     if (hemodynamicStatus === "unstable") {
       volume *= 0.8;
     }
-    
+
     return Math.round(volume);
   }, [numericWeight, hemodynamicStatus]);
 
@@ -434,7 +430,7 @@ export function DialysisAssistant({
       } else {
         setPcAction("none");
       }
-      
+
       if (inrIsVeryHigh) {
         setFfpAction("prime");
       } else if (inrIsHigh) {
@@ -442,14 +438,21 @@ export function DialysisAssistant({
       } else {
         setFfpAction("none");
       }
-      
+
       if (hypotension || numericAlbumin < 2.5) {
         setAlbuminAction("prime");
       } else {
         setAlbuminAction("none");
       }
     }
-  }, [numericWeight, numericHb, inrIsVeryHigh, inrIsHigh, hypotension, numericAlbumin]);
+  }, [
+    numericWeight,
+    numericHb,
+    inrIsVeryHigh,
+    inrIsHigh,
+    hypotension,
+    numericAlbumin,
+  ]);
 
   // هندلرها
   const handleCalculate = useCallback(() => {
@@ -457,20 +460,26 @@ export function DialysisAssistant({
       alert("لطفاً وزن بیمار را وارد کنید");
       return;
     }
-    
+
     if (showOnlyPediatric && numericWeight > 40 && !weightWarningConfirmed) {
       setShowWeightWarning(true);
       return;
     }
-    
+
     setSubmitted(true);
     setPreviousSessionData({
       weight: numericWeight,
       qb: qbRange,
       ufr: ufrRange,
-      timestamp: new Date().toLocaleString('fa-IR')
+      timestamp: new Date().toLocaleString("fa-IR"),
     });
-  }, [numericWeight, showOnlyPediatric, weightWarningConfirmed, qbRange, ufrRange]);
+  }, [
+    numericWeight,
+    showOnlyPediatric,
+    weightWarningConfirmed,
+    qbRange,
+    ufrRange,
+  ]);
 
   const handleWeightWarningConfirm = useCallback(() => {
     setWeightWarningConfirmed(true);
@@ -521,18 +530,21 @@ export function DialysisAssistant({
   }, [previousSessionData]);
 
   // محاسبه حجم تزریق
-  const calculateTransfusionVolume = useCallback((product) => {
-    switch(product) {
-      case 'pc':
-        return Math.round(numericWeight * 5);
-      case 'ffp':
-        return Math.round(numericWeight * 10);
-      case 'albumin':
-        return 100;
-      default:
-        return 0;
-    }
-  }, [numericWeight]);
+  const calculateTransfusionVolume = useCallback(
+    (product) => {
+      switch (product) {
+        case "pc":
+          return Math.round(numericWeight * 5);
+        case "ffp":
+          return Math.round(numericWeight * 10);
+        case "albumin":
+          return 100;
+        default:
+          return 0;
+      }
+    },
+    [numericWeight]
+  );
 
   // رندر وضعیت ایمنی
   const renderSafetyStatus = useCallback(() => {
@@ -543,11 +555,13 @@ export function DialysisAssistant({
             <IoAlertCircle className="text-red-600 text-xl ml-2" />
             <span className="font-bold text-red-700">وضعیت بحرانی</span>
           </div>
-          <p className="text-red-600 text-sm mt-1">نیاز به پایش ICU و اقدامات ویژه</p>
+          <p className="text-red-600 text-sm mt-1">
+            نیاز به پایش ICU و اقدامات ویژه
+          </p>
         </div>
       );
     }
-    
+
     if (warnings.length > 0) {
       return (
         <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-4">
@@ -555,18 +569,22 @@ export function DialysisAssistant({
             <IoWarningOutline className="text-yellow-600 text-xl ml-2" />
             <span className="font-bold text-yellow-700">نیاز به احتیاط</span>
           </div>
-          <p className="text-yellow-600 text-sm mt-1">پایش دقیق حین دیالیز ضروری است</p>
+          <p className="text-yellow-600 text-sm mt-1">
+            پایش دقیق حین دیالیز ضروری است
+          </p>
         </div>
       );
     }
-    
+
     return (
       <div className="bg-green-100 border-l-4 border-green-500 p-4 mb-4">
         <div className="flex items-center">
           <IoCheckmarkCircle className="text-green-600 text-xl ml-2" />
           <span className="font-bold text-green-700">وضعیت ایمن</span>
         </div>
-        <p className="text-green-600 text-sm mt-1">شرایط برای دیالیز مناسب است</p>
+        <p className="text-green-600 text-sm mt-1">
+          شرایط برای دیالیز مناسب است
+        </p>
       </div>
     );
   }, [criticalWarnings, warnings]);
@@ -582,16 +600,17 @@ export function DialysisAssistant({
                 <FaExclamationTriangle className="text-yellow-500 text-2xl ml-3" />
                 <h3 className="text-xl font-bold text-gray-800">هشدار وزن</h3>
               </div>
-              
+
               <div className="mb-6">
                 <p className="text-gray-700 mb-3">
-                  وزن بیمار ({numericWeight} کیلوگرم) بیش از ۴۰ کیلوگرم است. این ابزار برای بیماران اطفال طراحی شده است.
+                  وزن بیمار ({numericWeight} کیلوگرم) بیش از ۴۰ کیلوگرم است. این
+                  ابزار برای بیماران اطفال طراحی شده است.
                 </p>
                 <p className="text-gray-700">
                   آیا مایل به ادامه با این وزن هستید؟
                 </p>
               </div>
-              
+
               <div className="flex gap-3">
                 <button
                   onClick={handleWeightWarningConfirm}
@@ -619,8 +638,14 @@ export function DialysisAssistant({
               همیار دیالیز کودکان
             </h2>
             <div className="flex flex-wrap items-center gap-2">
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${isUnstable ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
-                {isUnstable ? 'وضعیت ناپایدار' : 'وضعیت پایدار'}
+              <span
+                className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  isUnstable
+                    ? "bg-red-100 text-red-800"
+                    : "bg-green-100 text-green-800"
+                }`}
+              >
+                {isUnstable ? "وضعیت ناپایدار" : "وضعیت پایدار"}
               </span>
               {showOnlyPediatric && (
                 <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
@@ -629,7 +654,7 @@ export function DialysisAssistant({
               )}
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             {previousSessionData && (
               <button
@@ -643,7 +668,7 @@ export function DialysisAssistant({
               onClick={() => setShowAdvanced(!showAdvanced)}
               className="px-4 py-2 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-lg text-sm font-medium transition-colors"
             >
-              {showAdvanced ? 'تنظیمات ساده' : 'تنظیمات پیشرفته'}
+              {showAdvanced ? "تنظیمات ساده" : "تنظیمات پیشرفته"}
             </button>
           </div>
         </div>
@@ -658,7 +683,7 @@ export function DialysisAssistant({
           <FaWeight className="ml-2 text-blue-600" />
           اطلاعات پایه بیمار
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* وزن */}
           <div>
@@ -710,7 +735,9 @@ export function DialysisAssistant({
               <option value="unstable">اینتوبه / ناپایدار</option>
             </select>
             {isUnstable && (
-              <p className="text-xs text-gray-500 mt-1">بر اساس انتخاب وضعیت ناپایدار تنظیم شده است</p>
+              <p className="text-xs text-gray-500 mt-1">
+                بر اساس انتخاب وضعیت ناپایدار تنظیم شده است
+              </p>
             )}
           </div>
 
@@ -801,7 +828,9 @@ export function DialysisAssistant({
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block mb-2 text-sm text-gray-600">سیستولیک</label>
+              <label className="block mb-2 text-sm text-gray-600">
+                سیستولیک
+              </label>
               <input
                 type="number"
                 min={0}
@@ -813,7 +842,9 @@ export function DialysisAssistant({
               />
             </div>
             <div>
-              <label className="block mb-2 text-sm text-gray-600">دیاستولیک</label>
+              <label className="block mb-2 text-sm text-gray-600">
+                دیاستولیک
+              </label>
               <input
                 type="number"
                 min={0}
@@ -834,10 +865,12 @@ export function DialysisAssistant({
               <FaVial className="ml-2 text-purple-600" />
               تنظیمات پیشرفته آزمایشگاهی
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <label className="block mb-2 text-sm text-gray-600">PLT (×10³/µL)</label>
+                <label className="block mb-2 text-sm text-gray-600">
+                  PLT (×10³/µL)
+                </label>
                 <input
                   type="number"
                   min={0}
@@ -848,7 +881,7 @@ export function DialysisAssistant({
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                 />
               </div>
-              
+
               <div>
                 <label className="block mb-2 text-sm text-gray-600">INR</label>
                 <input
@@ -861,9 +894,11 @@ export function DialysisAssistant({
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                 />
               </div>
-              
+
               <div>
-                <label className="block mb-2 text-sm text-gray-600">PT (ثانیه)</label>
+                <label className="block mb-2 text-sm text-gray-600">
+                  PT (ثانیه)
+                </label>
                 <input
                   type="number"
                   min={0}
@@ -874,9 +909,11 @@ export function DialysisAssistant({
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                 />
               </div>
-              
+
               <div>
-                <label className="block mb-2 text-sm text-gray-600">PTT (ثانیه)</label>
+                <label className="block mb-2 text-sm text-gray-600">
+                  PTT (ثانیه)
+                </label>
                 <input
                   type="number"
                   min={0}
@@ -888,10 +925,12 @@ export function DialysisAssistant({
                 />
               </div>
             </div>
-            
+
             {/* نوع دسترسی */}
             <div className="mt-6">
-              <h4 className="text-md font-bold text-gray-800 mb-3">نوع دسترسی عروقی</h4>
+              <h4 className="text-md font-bold text-gray-800 mb-3">
+                نوع دسترسی عروقی
+              </h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <select
                   value={accessType}
@@ -903,10 +942,12 @@ export function DialysisAssistant({
                   <option value="avf">فیستول آرتریوونوس</option>
                   <option value="graft">گرافت</option>
                 </select>
-                
+
                 {accessType === "catheter" && (
                   <div>
-                    <label className="block mb-2 text-sm text-gray-600">جریان دسترسی (ml/min)</label>
+                    <label className="block mb-2 text-sm text-gray-600">
+                      جریان دسترسی (ml/min)
+                    </label>
                     <input
                       type="number"
                       min={0}
@@ -920,13 +961,17 @@ export function DialysisAssistant({
                 )}
               </div>
             </div>
-            
+
             {/* تنظیمات دیالیزات */}
             <div className="mt-6">
-              <h4 className="text-md font-bold text-gray-800 mb-3">تنظیمات دیالیزات</h4>
+              <h4 className="text-md font-bold text-gray-800 mb-3">
+                تنظیمات دیالیزات
+              </h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
-                  <label className="block mb-2 text-sm text-gray-600">کلسیم (mmol/L)</label>
+                  <label className="block mb-2 text-sm text-gray-600">
+                    کلسیم (mmol/L)
+                  </label>
                   <select
                     value={dialysateCa}
                     onChange={(e) => setDialysateCa(e.target.value)}
@@ -937,9 +982,11 @@ export function DialysisAssistant({
                     <option value="1.75">1.75</option>
                   </select>
                 </div>
-                
+
                 <div>
-                  <label className="block mb-2 text-sm text-gray-600">پتاسیم (mmol/L)</label>
+                  <label className="block mb-2 text-sm text-gray-600">
+                    پتاسیم (mmol/L)
+                  </label>
                   <select
                     value={dialysateK}
                     onChange={(e) => setDialysateK(e.target.value)}
@@ -952,9 +999,11 @@ export function DialysisAssistant({
                     <option value="4.0">4.0</option>
                   </select>
                 </div>
-                
+
                 <div>
-                  <label className="block mb-2 text-sm text-gray-600">سدیم (mmol/L)</label>
+                  <label className="block mb-2 text-sm text-gray-600">
+                    سدیم (mmol/L)
+                  </label>
                   <input
                     type="number"
                     min={130}
@@ -965,9 +1014,11 @@ export function DialysisAssistant({
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                   />
                 </div>
-                
+
                 <div>
-                  <label className="block mb-2 text-sm text-gray-600">بی‌کربنات (mmol/L)</label>
+                  <label className="block mb-2 text-sm text-gray-600">
+                    بی‌کربنات (mmol/L)
+                  </label>
                   <input
                     type="number"
                     min={20}
@@ -988,23 +1039,27 @@ export function DialysisAssistant({
           <button
             onClick={handleCalculate}
             disabled={!weight}
-            className={`flex-1 py-3 px-6 rounded-lg font-bold text-white transition-all ${!weight ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 active:scale-95'}`}
+            className={`flex-1 py-3 px-6 rounded-lg font-bold text-white transition-all ${
+              !weight
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700 active:scale-95"
+            }`}
           >
             محاسبه تنظیمات
           </button>
-          
+
           <button
             onClick={handleReset}
             className="flex-1 py-3 px-6 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-bold transition-colors"
           >
             پاک‌کردن فرم
           </button>
-          
+
           <button
             onClick={() => setShowNotes(!showNotes)}
             className="flex-1 py-3 px-6 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-lg font-bold transition-colors"
           >
-            {showNotes ? 'مخفی کردن نکات' : 'نمایش نکات آموزشی'}
+            {showNotes ? "مخفی کردن نکات" : "نمایش نکات آموزشی"}
           </button>
         </div>
       </div>
@@ -1021,9 +1076,14 @@ export function DialysisAssistant({
               </h3>
               <div className="space-y-3">
                 {criticalWarnings.map((warning, idx) => (
-                  <div key={idx} className="flex items-start p-3 bg-white rounded-lg border border-red-200">
+                  <div
+                    key={idx}
+                    className="flex items-start p-3 bg-white rounded-lg border border-red-200"
+                  >
                     {warning.icon}
-                    <span className="mr-2 font-medium text-red-700">{warning.text}</span>
+                    <span className="mr-2 font-medium text-red-700">
+                      {warning.text}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -1033,7 +1093,9 @@ export function DialysisAssistant({
           {/* هشدارهای معمولی */}
           {warnings.length > 0 && (
             <div className="bg-yellow-50 border border-yellow-300 rounded-2xl p-5">
-              <h3 className="text-lg font-bold text-yellow-800 mb-3">توصیه‌های احتیاطی</h3>
+              <h3 className="text-lg font-bold text-yellow-800 mb-3">
+                توصیه‌های احتیاطی
+              </h3>
               <ul className="space-y-2">
                 {warnings.map((warning, idx) => (
                   <li key={idx} className="flex items-center text-yellow-700">
@@ -1060,9 +1122,11 @@ export function DialysisAssistant({
                   <div>
                     <p className="text-red-700 mb-1">تزریق حین دیالیز:</p>
                     <p className="text-lg font-bold text-red-800">
-                      {calculateTransfusionVolume('pc')} سی‌سی
+                      {calculateTransfusionVolume("pc")} سی‌سی
                     </p>
-                    <p className="text-sm text-red-600">(۵ سی‌سی به ازای هر کیلوگرم)</p>
+                    <p className="text-sm text-red-600">
+                      (۵ سی‌سی به ازای هر کیلوگرم)
+                    </p>
                   </div>
                 )}
               </div>
@@ -1076,14 +1140,18 @@ export function DialysisAssistant({
                   <h4 className="font-bold text-yellow-800">FFP</h4>
                 </div>
                 {ffpAction === "prime" ? (
-                  <p className="text-yellow-700">⚡ مدار را با FFP پرایم کنید</p>
+                  <p className="text-yellow-700">
+                    ⚡ مدار را با FFP پرایم کنید
+                  </p>
                 ) : (
                   <div>
                     <p className="text-yellow-700 mb-1">تزریق حین دیالیز:</p>
                     <p className="text-lg font-bold text-yellow-800">
-                      {calculateTransfusionVolume('ffp')} سی‌سی
+                      {calculateTransfusionVolume("ffp")} سی‌سی
                     </p>
-                    <p className="text-sm text-yellow-600">(۱۰ سی‌سی به ازای هر کیلوگرم)</p>
+                    <p className="text-sm text-yellow-600">
+                      (۱۰ سی‌سی به ازای هر کیلوگرم)
+                    </p>
                   </div>
                 )}
               </div>
@@ -1102,7 +1170,9 @@ export function DialysisAssistant({
                   <div>
                     <p className="text-green-700 mb-1">تزریق حین دیالیز:</p>
                     <p className="text-lg font-bold text-green-800">۱۰ گرم</p>
-                    <p className="text-sm text-green-600">(تقریباً ۱۰۰ سی‌سی)</p>
+                    <p className="text-sm text-green-600">
+                      (تقریباً ۱۰۰ سی‌سی)
+                    </p>
                   </div>
                 )}
               </div>
@@ -1115,7 +1185,7 @@ export function DialysisAssistant({
               <GrPowerCycle className="ml-2" />
               تنظیمات اصلی دیالیز
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* سرعت پمپ خون */}
               <div className="bg-white p-4 rounded-xl border shadow-sm">
@@ -1126,11 +1196,15 @@ export function DialysisAssistant({
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-gray-600">محدوده:</span>
-                    <span className="font-bold">{qbRange.min} - {qbRange.max} ml/min</span>
+                    <span className="font-bold">
+                      {qbRange.min} - {qbRange.max} ml/min
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">پیشنهادی:</span>
-                    <span className="font-bold text-lg text-blue-700">{qbRange.standard} ml/min</span>
+                    <span className="font-bold text-lg text-blue-700">
+                      {qbRange.standard} ml/min
+                    </span>
                   </div>
                   {hemodynamicStatus === "unstable" && (
                     <p className="text-sm text-red-600 bg-red-50 p-2 rounded">
@@ -1154,10 +1228,13 @@ export function DialysisAssistant({
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-gray-600">پیشنهادی:</span>
-                    <span className="font-bold text-lg text-blue-700">{qdSuggested} ml/min</span>
+                    <span className="font-bold text-lg text-blue-700">
+                      {qdSuggested} ml/min
+                    </span>
                   </div>
                   <p className="text-sm text-gray-600">
-                    نسبت Qd/Qb: {hemodynamicStatus === "unstable" ? "1.5:1" : "2:1"}
+                    نسبت Qd/Qb:{" "}
+                    {hemodynamicStatus === "unstable" ? "1.5:1" : "2:1"}
                   </p>
                 </div>
               </div>
@@ -1171,11 +1248,15 @@ export function DialysisAssistant({
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-gray-600">محدوده:</span>
-                    <span className="font-bold">{ufrRange.min} - {ufrRange.max} ml/hr</span>
+                    <span className="font-bold">
+                      {ufrRange.min} - {ufrRange.max} ml/hr
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">پیشنهادی:</span>
-                    <span className="font-bold text-lg text-blue-700">{ufrRange.recommended} ml/hr</span>
+                    <span className="font-bold text-lg text-blue-700">
+                      {ufrRange.recommended} ml/hr
+                    </span>
                   </div>
                   <p className="text-sm text-gray-600">
                     {Math.round(ufrRange.recommended / numericWeight)} ml/kg/hr
@@ -1191,27 +1272,35 @@ export function DialysisAssistant({
               <LuSyringe className="ml-2" />
               پروتکل ضد انعقاد
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* توصیه ضد انعقاد */}
               <div className="bg-white p-4 rounded-xl border shadow-sm">
-                <h4 className="font-bold text-green-700 mb-3">توصیه ضد انعقاد</h4>
-                
+                <h4 className="font-bold text-green-700 mb-3">
+                  توصیه ضد انعقاد
+                </h4>
+
                 {shouldUseRegionalCitrate ? (
                   <div className="space-y-3">
                     <div className="flex items-center">
                       <IoCheckmarkCircle className="text-green-600 ml-2" />
-                      <span className="font-bold text-green-700">سیترات منطقه‌ای توصیه می‌شود</span>
+                      <span className="font-bold text-green-700">
+                        سیترات منطقه‌ای توصیه می‌شود
+                      </span>
                     </div>
                     {citrateDose && (
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <span>میزان ACD-A:</span>
-                          <span className="font-bold">{citrateDose.acdaRate}</span>
+                          <span className="font-bold">
+                            {citrateDose.acdaRate}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span>میزان کلسیم:</span>
-                          <span className="font-bold">{citrateDose.calciumRate}</span>
+                          <span className="font-bold">
+                            {citrateDose.calciumRate}
+                          </span>
                         </div>
                       </div>
                     )}
@@ -1220,7 +1309,9 @@ export function DialysisAssistant({
                   <div className="space-y-3">
                     <div className="flex items-center">
                       <IoCheckmarkCircle className="text-green-600 ml-2" />
-                      <span className="font-bold text-green-700">هپارین قابل استفاده است</span>
+                      <span className="font-bold text-green-700">
+                        هپارین قابل استفاده است
+                      </span>
                     </div>
                     {heparinDose && (
                       <div className="space-y-2">
@@ -1230,7 +1321,9 @@ export function DialysisAssistant({
                         </div>
                         <div className="flex justify-between">
                           <span>Infusion:</span>
-                          <span className="font-bold">{heparinDose.infusion}</span>
+                          <span className="font-bold">
+                            {heparinDose.infusion}
+                          </span>
                         </div>
                       </div>
                     )}
@@ -1239,16 +1332,22 @@ export function DialysisAssistant({
                   <div className="space-y-3">
                     <div className="flex items-center">
                       <IoCloseCircle className="text-red-600 ml-2" />
-                      <span className="font-bold text-red-700">هپارین ممنوع است</span>
+                      <span className="font-bold text-red-700">
+                        هپارین ممنوع است
+                      </span>
                     </div>
                     {canUseNoAnticoagulation ? (
-                      <p className="text-red-600">بدون ضد انعقاد با پایش دقیق</p>
+                      <p className="text-red-600">
+                        بدون ضد انعقاد با پایش دقیق
+                      </p>
                     ) : (
-                      <p className="text-red-600">سیترات منطقه‌ای یا بدون ضد انعقاد</p>
+                      <p className="text-red-600">
+                        سیترات منطقه‌ای یا بدون ضد انعقاد
+                      </p>
                     )}
                   </div>
                 )}
-                
+
                 {heparinEligibilityMessage && (
                   <p className="text-sm text-red-600 mt-3 bg-red-50 p-2 rounded">
                     {heparinEligibilityMessage}
@@ -1258,7 +1357,9 @@ export function DialysisAssistant({
 
               {/* پایش */}
               <div className="bg-white p-4 rounded-xl border shadow-sm">
-                <h4 className="font-bold text-green-700 mb-3">پایش حین دیالیز</h4>
+                <h4 className="font-bold text-green-700 mb-3">
+                  پایش حین دیالیز
+                </h4>
                 <ul className="space-y-2 text-sm text-gray-700">
                   <li className="flex items-center">
                     <LuActivity className="ml-2 text-green-600" />
@@ -1287,7 +1388,7 @@ export function DialysisAssistant({
               <GiChemicalTank className="ml-2" />
               صافی‌های پیشنهادی
             </h3>
-            
+
             {matchedFilters.length === 0 ? (
               <div className="bg-white p-4 rounded-xl border">
                 <p className="text-red-600 text-center">صافی مناسب یافت نشد</p>
@@ -1295,20 +1396,29 @@ export function DialysisAssistant({
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {matchedFilters.map((f, idx) => (
-                  <div key={idx} className={`bg-white p-4 rounded-xl border shadow-sm ${f.preferredForUnstable ? 'ring-2 ring-purple-300' : ''}`}>
+                  <div
+                    key={idx}
+                    className={`bg-white p-4 rounded-xl border shadow-sm ${
+                      f.preferredForUnstable ? "ring-2 ring-purple-300" : ""
+                    }`}
+                  >
                     <div className="flex justify-between items-start mb-3">
-                      <h4 className="font-bold text-purple-800 text-lg">{f.name}</h4>
+                      <h4 className="font-bold text-purple-800 text-lg">
+                        {f.name}
+                      </h4>
                       {f.preferredForUnstable && (
                         <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">
                           مناسب ناپایدار
                         </span>
                       )}
                     </div>
-                    
+
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-600">وزن:</span>
-                        <span className="font-medium">{f.minWeight}-{f.maxWeight} kg</span>
+                        <span className="font-medium">
+                          {f.minWeight}-{f.maxWeight} kg
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">KOA:</span>
@@ -1323,11 +1433,15 @@ export function DialysisAssistant({
                         <span className="font-medium">{f.tmp}</span>
                       </div>
                     </div>
-                    
-                    <p className="text-xs text-gray-600 mt-3">{f.description}</p>
-                    
+
+                    <p className="text-xs text-gray-600 mt-3">
+                      {f.description}
+                    </p>
+
                     <div className="mt-4 pt-3 border-t">
-                      <p className="text-xs font-medium text-purple-700">{f.suitableFor}</p>
+                      <p className="text-xs font-medium text-purple-700">
+                        {f.suitableFor}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -1356,7 +1470,7 @@ export function DialysisAssistant({
                 {circuitVolume} ml
               </p>
               <p className="text-sm text-gray-600">
-                {Math.round(circuitVolume / numericWeight * 10) / 10} ml/kg
+                {Math.round((circuitVolume / numericWeight) * 10) / 10} ml/kg
               </p>
             </div>
 
@@ -1370,13 +1484,21 @@ export function DialysisAssistant({
                 {dialysateTemperature}
               </p>
               <p className="text-sm text-gray-600">
-                {fever ? 'کاهش یافته بخاطر تب' : 'دمای استاندارد'}
+                {fever ? "کاهش یافته بخاطر تب" : "دمای استاندارد"}
               </p>
             </div>
           </div>
 
           {/* نکات آموزشی */}
           {showNotes && <EducationalNotes />}
+
+          {/* دکمه نمایش نکات */}
+          <button
+            onClick={() => setShowNotes(!showNotes)}
+            className="flex-1 py-3 px-6 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-lg font-bold transition-colors"
+          >
+            {showNotes ? "مخفی کردن نکات" : "نمایش نکات آموزشی"}
+          </button>
         </div>
       )}
     </div>
