@@ -97,20 +97,7 @@ export function HemodialysisHome() {
       description: "مدیریت عوارض حین همودیالیز",
       color: "from-teal-500 to-green-600",
     },
-    {
-      to: "/hemo/dialysisAssistant/stable",
-      icon: <FaStethoscope size={28} />,
-      label: "دستیار دیالیز پایدار",
-      description: "پایش بیماران پایدار",
-      color: "from-indigo-500 to-purple-600",
-    },
-    {
-      to: "/hemo/dialysisAssistant/unstable",
-      icon: <FaExclamationTriangle size={28} />,
-      label: "دستیار دیالیز ناپایدار",
-      description: "مدیریت بیماران ناپایدار",
-      color: "from-red-500 to-rose-600",
-    },
+   
     {
       to: "#",
       icon: <FaVial size={28} />,
