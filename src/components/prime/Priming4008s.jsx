@@ -341,14 +341,7 @@ export default function Priming4008S() {
               >
                 {running ? "Pause / توقف" : "Start Flow / شروع"}
               </button>
-              <button
-                onClick={() => setAlarmOn((a) => !a)}
-                className={`px-3 py-2 rounded-xl border ${
-                  alarmOn ? "bg-rose-50 border-rose-400" : "bg-white"
-                }`}
-              >
-                زنگ
-              </button>
+           
             </div>
 
             <div>
