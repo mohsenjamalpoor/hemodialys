@@ -2,8 +2,7 @@
 import React, { useState } from "react";
 import { FaBook, FaTimes, FaChevronDown, FaChevronUp } from "react-icons/fa";
 
-export function EducationalNotes() {
-  const [isOpen, setIsOpen] = useState(false);
+export function EducationalNotes({ onClose }) { 
   const [expandedSections, setExpandedSections] = useState({});
 
   const toggleSection = (sectionId) => {
@@ -61,20 +60,6 @@ export function EducationalNotes() {
     }
   ];
 
-  if (!isOpen) {
-    return (
-      <div className="mt-6">
-        <button
-          onClick={() => setIsOpen(true)}
-          className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-        >
-          <FaBook className="text-xl" />
-          <span className="text-lg font-bold">نمایش نکات آموزشی دیالیز اطفال</span>
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div className="mt-6 bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-2xl shadow-lg overflow-hidden">
       <div className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white p-5 flex justify-between items-center">
@@ -82,12 +67,14 @@ export function EducationalNotes() {
           <FaBook className="text-2xl" />
           <h3 className="text-xl font-bold">نکات آموزشی دیالیز اطفال</h3>
         </div>
-        <button
-          onClick={() => setIsOpen(false)}
-          className="text-white hover:text-gray-200 transition-colors"
-        >
-          <FaTimes className="text-xl" />
-        </button>
+        {onClose && ( 
+          <button
+            onClick={onClose}
+            className="text-white hover:text-gray-200 transition-colors"
+          >
+            <FaTimes className="text-xl" />
+          </button>
+        )}
       </div>
       
       <div className="p-5 space-y-4">
@@ -119,14 +106,16 @@ export function EducationalNotes() {
         ))}
       </div>
       
-      <div className="bg-purple-100 p-4 text-center">
-        <button
-          onClick={() => setIsOpen(false)}
-          className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
-        >
-          بستن نکات آموزشی
-        </button>
-      </div>
+      {onClose && (
+        <div className="bg-purple-100 p-4 text-center">
+          <button
+            onClick={onClose}
+            className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+          >
+            بستن نکات آموزشی
+          </button>
+        </div>
+      )}
     </div>
   );
 }

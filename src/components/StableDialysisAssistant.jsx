@@ -28,7 +28,7 @@ export function StableDialysisAssistant() {
               </div>
             </div>
             <Link
-              to="/hemo/dialysisAssistant"
+              to="/hemo/hemodialysisPediatrics"
               className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors"
             >
               <FaArrowLeft />
