@@ -122,19 +122,19 @@ export function HemodialysisPediatrics() {
               <h4 className="font-bold text-red-700 mb-2">ناپایدار/اینتوبه (Unstable)</h4>
               <ul className="text-sm text-gray-700 space-y-2">
                 <li className="flex items-start">
-                  <span className="text-red-500 ml-2">⚠️</span>
+                  <span className="text-red-500 ml-2">✓</span>
                   <span>تحت ونتیلاتور</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-red-500 ml-2">⚠️</span>
+                  <span className="text-red-500 ml-2">✓</span>
                   <span>همودینامیک ناپایدار</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-red-500 ml-2">⚠️</span>
+                  <span className="text-red-500 ml-2">✓</span>
                   <span>نیاز به اینوتروپ</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-red-500 ml-2">⚠️</span>
+                  <span className="text-red-500 ml-2">✓</span>
                   <span>دیالیز اورژانسی</span>
                 </li>
               </ul>

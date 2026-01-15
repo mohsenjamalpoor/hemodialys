@@ -351,7 +351,7 @@ export function HemodialysisHome() {
             
             <div className="text-sm text-blue-100">
               <p>تعداد ماژول‌های فعال: {navItems.length}</p>
-              <p className="mt-1">پشتیبانی فنی: داخلی 09101868614</p>
+              <p className="mt-1">پشتیبانی فنی:  09101868614</p>
             </div>
           </div>
         </div>
