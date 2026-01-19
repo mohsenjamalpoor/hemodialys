@@ -77,7 +77,7 @@ export function HemodialysisHome() {
       color: "from-blue-500 to-cyan-600",
     },
     {
-      to: "/hemo/priming4008S",
+      to: "/hemo/hemodialysisPrime",
       icon: <FaCog size={28} />,
       label: "پرایم کردن دستگاه",
       description: "راهنمای پرایم کردن دستگاه همودیالیز",
@@ -294,7 +294,7 @@ export function HemodialysisHome() {
                 
                 <div className="space-y-4">
                   <div className="bg-blue-50 p-4 rounded-lg">
-                    <h4 className="font-bold text-blue-700 mb-2">📋 نحوه استفاده</h4>
+                    <h4 className="font-bold text-blue-700 mb-2"> نحوه استفاده</h4>
                     <ul className="text-gray-700 space-y-2 text-sm">
                       <li>• برای دسترسی به هر ماژول روی کارت مربوطه کلیک کنید</li>
                       <li>• کد نظام پزشکی در بالای صفحه نمایش داده می‌شود</li>
@@ -304,7 +304,7 @@ export function HemodialysisHome() {
                   </div>
                   
                   <div className="bg-green-50 p-4 rounded-lg">
-                    <h4 className="font-bold text-green-700 mb-2">🎯 ماژول‌های اصلی</h4>
+                    <h4 className="font-bold text-green-700 mb-2"> ماژول‌های اصلی</h4>
                     <ul className="text-gray-700 space-y-2 text-sm">
                       <li>• <span className="font-medium">همودیالیز در اطفال:</span> راهنمای جامع پروتکل‌ها</li>
                       <li>• <span className="font-medium">محاسبه Kt/V:</span> بررسی کفایت دیالیز</li>
@@ -314,7 +314,7 @@ export function HemodialysisHome() {
                   </div>
                   
                   <div className="bg-yellow-50 p-4 rounded-lg">
-                    <h4 className="font-bold text-yellow-700 mb-2">⚠️ نکات مهم</h4>
+                    <h4 className="font-bold text-yellow-700 mb-2"> نکات مهم</h4>
                     <ul className="text-gray-700 space-y-2 text-sm">
                       <li>• قبل از اقدام پزشکی، اطلاعات را مجدداً بررسی کنید</li>
                       <li>• در صورت بروز مشکل فنی با پشتیبانی تماس بگیرید</li>
@@ -336,7 +336,7 @@ export function HemodialysisHome() {
           </div>
         )}
 
-        {/* بخش پایینی */}
+        {/* بخش footer */}
         <div className="mt-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl shadow-lg p-6 text-white">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">

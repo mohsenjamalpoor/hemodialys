@@ -47,7 +47,7 @@ export function UnstableDialysisAssistant() {
             <div className="flex items-start gap-3">
               <FaShieldAlt className="text-red-500 mt-1" />
               <div>
-                <h3 className="font-bold text-red-800 mb-2">⚠️ پروتکل ویژه وضعیت ناپایدار:</h3>
+                <h3 className="font-bold text-red-800 mb-2"> پروتکل ویژه وضعیت ناپایدار:</h3>
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                   <li className="flex items-center gap-2">
                     <FaHeartbeat className="text-red-400" />

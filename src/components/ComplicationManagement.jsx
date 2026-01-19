@@ -1,5 +1,8 @@
 import React, { useState, useMemo } from 'react';
+import { BiHeart } from 'react-icons/bi';
 import { FiX, FiSearch, FiFilter } from 'react-icons/fi';
+import { GiBlood, GiBloodyStash, GiBloodySword } from 'react-icons/gi';
+import { MdBloodtype } from 'react-icons/md';
 
 const complicationsData = [
   {
@@ -244,7 +247,7 @@ const ComplicationCard = ({ complication, onSelect }) => {
 
   const getCategoryIcon = (category) => {
     const icons = {
-      'قلبی': '🫀',
+      'قلبی': <BiHeart className='text-red-700 mb-4'size={26}/>,
       'عضلانی': '💪',
       'گوارشی': '🤢',
       'عصبی': '🧠',
@@ -253,7 +256,7 @@ const ComplicationCard = ({ complication, onSelect }) => {
       'الکترولیتی': '⚡',
       'متابولیک': '🌡️',
       'دسترسی عروقی': '💉',
-      'هماتولوژیک': '🩸',
+      'هماتولوژیک': <MdBloodtype className='text-red-700 mb-4' size={26}/>,
       'پوستی': '👤'
     };
     return icons[category] || '📋';
@@ -264,6 +267,7 @@ const ComplicationCard = ({ complication, onSelect }) => {
       className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg cursor-pointer transition-all duration-300 hover:translate-y-[-2px]"
       onClick={() => onSelect(complication)}
     >
+
       <div className="p-4">
         {/* هدر کارت */}
         <div className="flex items-start justify-between mb-3">
@@ -293,7 +297,6 @@ const ComplicationCard = ({ complication, onSelect }) => {
         {/* علائم شایع */}
         <div className="mb-3">
           <h4 className="font-semibold text-gray-700 text-sm mb-1 flex items-center">
-            <span className="ml-1">📋</span>
             علائم شایع:
           </h4>
           <p className="text-gray-600 text-sm line-clamp-2">
@@ -304,11 +307,10 @@ const ComplicationCard = ({ complication, onSelect }) => {
         {/* اطلاعات پایین کارت */}
         <div className="flex justify-between items-center pt-3 border-t border-gray-200">
           <span className="text-xs text-gray-500">
-            📊 {complication.prevalence}
+             {complication.prevalence}
           </span>
           <button className="text-blue-600 hover:text-blue-700 font-medium text-xs flex items-center transition-colors">
             مشاهده جزئیات
-            <span className="mr-1 text-xs">←</span>
           </button>
         </div>
       </div>
@@ -328,7 +330,7 @@ const ComplicationDetail = ({ complication, onClose }) => {
           <div className="flex justify-between items-start">
             <div className="flex items-center space-x-3 space-x-reverse">
               <div className="text-2xl">
-                {complication.category === 'قلبی' ? '🫀' : 
+                {complication.category === 'قلبی' ? <BiHeart className='text-white mb-4'size={26}/> : 
                  complication.category === 'عضلانی' ? '💪' :
                  complication.category === 'گوارشی' ? '🤢' :
                  complication.category === 'عصبی' ? '🧠' :
@@ -337,7 +339,7 @@ const ComplicationDetail = ({ complication, onClose }) => {
                  complication.category === 'الکترولیتی' ? '⚡' :
                  complication.category === 'متابولیک' ? '🌡️' :
                  complication.category === 'دسترسی عروقی' ? '💉' :
-                 complication.category === 'هماتولوژیک' ? '🩸' :
+                 complication.category === 'هماتولوژیک' ? <MdBloodtype className='text-white mb-4' size={26}/> :
                  complication.category === 'پوستی' ? '👤' : '📋'}
               </div>
               <div>
@@ -374,8 +376,7 @@ const ComplicationDetail = ({ complication, onClose }) => {
 
           {/* علائم بالینی */}
           <div className="bg-orange-50 rounded-lg p-3">
-            <h3 className="text-base font-semibold text-orange-700 mb-2 flex items-center">
-              <span className="ml-2">📋</span>
+            <h3 className="text-base font-semibold text-orange-700 mb-2 mr-2 flex items-center">
               علائم بالینی
             </h3>
             <p className="text-gray-700 text-sm leading-relaxed bg-white rounded p-3 shadow-sm">
@@ -385,8 +386,7 @@ const ComplicationDetail = ({ complication, onClose }) => {
 
           {/* علل ایجاد */}
           <div className="bg-red-50 rounded-lg p-3">
-            <h3 className="text-base font-semibold text-red-700 mb-2 flex items-center">
-              <span className="ml-2">⚠️</span>
+            <h3 className="text-base font-semibold text-red-700 mb-2 mr-2 flex items-center">
               علل ایجاد عارضه
             </h3>
             <p className="text-gray-700 text-sm leading-relaxed bg-white rounded p-3 shadow-sm">
@@ -396,8 +396,7 @@ const ComplicationDetail = ({ complication, onClose }) => {
 
           {/* درمان فوری */}
           <div className="bg-green-50 rounded-lg p-3">
-            <h3 className="text-base font-semibold text-green-700 mb-2 flex items-center">
-              <span className="ml-2">💊</span>
+            <h3 className="text-base font-semibold text-green-700 mb-2 mr-2 flex items-center">
               درمان فوری
             </h3>
             <div className="bg-white rounded p-3 shadow-sm">
@@ -409,8 +408,7 @@ const ComplicationDetail = ({ complication, onClose }) => {
 
           {/* پیشگیری */}
           <div className="bg-blue-50 rounded-lg p-3">
-            <h3 className="text-base font-semibold text-blue-700 mb-2 flex items-center">
-              <span className="ml-2">🛡️</span>
+            <h3 className="text-base font-semibold text-blue-700 mb-2 mr-2 flex items-center">
               روش‌های پیشگیری
             </h3>
             <p className="text-gray-700 text-sm leading-relaxed bg-white rounded p-3 shadow-sm">

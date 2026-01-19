@@ -6,7 +6,6 @@ import {
   FaHeartbeat, 
   FaBed, 
   FaExclamationTriangle,
-  FaArrowRight 
 } from "react-icons/fa";
 
 export function HemodialysisPediatrics() {
@@ -25,7 +24,7 @@ export function HemodialysisPediatrics() {
                   همودیالیز اطفال
                 </h1>
                 <p className="text-gray-600 mt-1">
-                  انتخاب وضعیت بیمار برای محاسبه تنظیمات دیالیز
+                  انتخاب وضعیت بیمار برای محاسبه تنظیمات دستگاه  همودیالیز
                 </p>
               </div>
             </div>
@@ -57,10 +56,7 @@ export function HemodialysisPediatrics() {
                   بدون نیاز به ونتیلاتور<br />
                   فشار خون مناسب
                 </p>
-                <div className="flex items-center justify-center gap-2 mt-4">
-                  <span>ورود به تنظیمات</span>
-                  <FaArrowRight />
-                </div>
+               
               </div>
             </div>
           </Link>
@@ -81,10 +77,7 @@ export function HemodialysisPediatrics() {
                   همودینامیک ناپایدار<br />
                   نیاز به اینوتروپ
                 </p>
-                <div className="flex items-center justify-center gap-2 mt-4">
-                  <span>ورود به تنظیمات</span>
-                  <FaArrowRight />
-                </div>
+                
               </div>
             </div>
           </Link>

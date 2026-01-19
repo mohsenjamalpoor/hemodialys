@@ -1,4 +1,4 @@
-// DialysisCalculations.jsx
+
 import React, { useMemo } from "react";
 
 export const useDialysisCalculations = ({
@@ -747,7 +747,7 @@ export const DialysisCalculationsDisplay = ({ calculations }) => {
                   <div className="flex justify-between">
                     <span className="text-gray-600">حجم پیشنهادی:</span>
                     <span className="font-bold text-lg text-red-700">
-                      {decidePcTransfusion.volume} ml
+                      {decidePcTransfusion.volume } ml
                     </span>
                   </div>
                   <p className="text-xs text-gray-600 mt-2">
@@ -911,7 +911,7 @@ export const DialysisCalculationsDisplay = ({ calculations }) => {
                 <div className="flex items-center">
                   <span className="text-green-600 ml-2">✓</span>
                   <span className="font-bold text-green-700">
-                    سیترات منطقه‌ای توصیه می‌شود
+                    سیترات  توصیه می‌شود
                   </span>
                 </div>
                 {citrateDose && (
@@ -968,7 +968,7 @@ export const DialysisCalculationsDisplay = ({ calculations }) => {
                   </p>
                 ) : (
                   <p className="text-red-600">
-                    سیترات منطقه‌ای یا بدون ضد انعقاد
+                    سیترات یا بدون ضد انعقاد
                   </p>
                 )}
               </div>

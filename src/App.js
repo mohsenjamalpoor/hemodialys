@@ -11,6 +11,8 @@ import { KTVCaclulator } from "./components/KTVCaclulator";
 import { HemodialysisPediatrics } from "./components/HemodialysisPediatrics";
 import { StableDialysisAssistant } from "./components/StableDialysisAssistant";
 import { UnstableDialysisAssistant } from "./components/UnstableDialysisAssistant";
+import { HemodialysisPrime } from "./components/HemodialsisPrime";
+import HemodialsisFilmPrime from "./components/HemodialsisFilmPrime";
 
 function App() {
   return (
@@ -26,6 +28,21 @@ function App() {
         <Route path="/hemo" element={
           <ProtectedRoute>
             <HemodialysisHome />
+          </ProtectedRoute>
+        } />
+        <Route path="/hemo/hemodialysisPrime" element={
+          <ProtectedRoute>
+            <HemodialysisPrime />
+          </ProtectedRoute>
+        } />
+           <Route path="/hemo/priming4008" element={
+          <ProtectedRoute>
+            <Priming4008S />
+          </ProtectedRoute>
+        } />
+          <Route path="/hemo/hemodialsisFilmPrime" element={
+          <ProtectedRoute>
+            <HemodialsisFilmPrime />
           </ProtectedRoute>
         } />
         

@@ -10,8 +10,10 @@ import {
   FaInfoCircle,
   FaTimes,
   FaChevronDown,
-  FaChevronUp
+  FaChevronUp,
+  FaArrowLeft
 } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 export function KTVCaclulator() {
   const [activeCalc, setActiveCalc] = useState("uf");
@@ -197,6 +199,13 @@ export function KTVCaclulator() {
                 <p className="text-gray-600 mt-1">محاسبات UF و Kt/V برای ارزیابی کفایت دیالیز</p>
               </div>
             </div>
+             <Link
+              to="/hemo"
+              className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              <FaArrowLeft />
+              <span>بازگشت</span>
+            </Link>
           </div>
         </div>
 
@@ -321,7 +330,7 @@ export function KTVCaclulator() {
                   className="flex-1 bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-500 hover:to-gray-600 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
                 >
                   <FaSyncAlt />
-                  پاک‌سازی
+             پاک کردن
                 </button>
               </div>
 
@@ -408,7 +417,7 @@ export function KTVCaclulator() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           <div className="flex items-center justify-between">
                             <span className="text-gray-700">spKt/V:</span>
-                            <span className="font-bold text-green-600">≥ 1.2</span>
+                            <span className="font-bold text-green-600 ml-8">≥ 1.2</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-gray-700">eKt/V:</span>
@@ -416,7 +425,7 @@ export function KTVCaclulator() {
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-gray-700">PRU:</span>
-                            <span className="font-bold text-green-600">≥ 65%</span>
+                            <span className="font-bold text-green-600 ml-8">≥ 65%</span>
                           </div>
                         </div>
                       </div>

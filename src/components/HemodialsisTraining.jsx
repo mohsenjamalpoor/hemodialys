@@ -8,8 +8,10 @@ import {
   FaHeartbeat, 
   FaAppleAlt,
 
-  FaGraduationCap
+  FaGraduationCap,
+  FaArrowLeft
 } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 export default function HemodialysisTraining() {
   const [selectedTopic, setSelectedTopic] = useState(null);
@@ -112,6 +114,13 @@ export default function HemodialysisTraining() {
                 <p className="text-gray-600 mt-1">مرجع کامل آموزش‌های تخصصی همودیالیز کودکان</p>
               </div>
             </div>
+                <Link
+              to="/hemo"
+              className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              <FaArrowLeft />
+              <span>بازگشت</span>
+            </Link>
           </div>
         </div>
 

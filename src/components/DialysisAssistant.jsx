@@ -384,7 +384,7 @@ export function DialysisAssistant({
                 onChange={(e) => setWeight(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg text-right focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               />
-              <span className="absolute left-3 top-3 text-gray-500">kg</span>
+              <span className="absolute left-8 top-3 text-gray-500">kg</span>
             </div>
           </div>
 
@@ -476,7 +476,7 @@ export function DialysisAssistant({
                 onChange={(e) => setHb(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg text-right focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               />
-              <span className="absolute left-3 top-3 text-gray-500">g/dL</span>
+              <span className="absolute left-8 top-3 text-gray-500">g/dL</span>
             </div>
           </div>
 
@@ -496,7 +496,7 @@ export function DialysisAssistant({
                 onChange={(e) => setHct(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg text-right focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               />
-              <span className="absolute left-3 top-3 text-gray-500">%</span>
+              <span className="absolute left-8 top-3 text-gray-500">%</span>
             </div>
           </div>
 
@@ -515,7 +515,7 @@ export function DialysisAssistant({
                 onChange={(e) => setAlbumin(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg text-right focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               />
-              <span className="absolute left-3 top-3 text-gray-500">g/dL</span>
+              <span className="absolute left-8 top-3 text-gray-500">g/dL</span>
             </div>
           </div>
 
@@ -535,7 +535,7 @@ export function DialysisAssistant({
                 onChange={(e) => setTemperature(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg text-right focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               />
-              <TbTemperature className="absolute left-3 top-3 text-gray-500" />
+              <TbTemperature className="absolute left-8 top-3 text-gray-500" />
             </div>
           </div>
         </div>
