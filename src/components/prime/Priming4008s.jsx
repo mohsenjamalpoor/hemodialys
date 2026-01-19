@@ -1,7 +1,21 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { HiChevronRight } from "react-icons/hi";
-import { HiChevronLeft } from "react-icons/hi";
+import { HiChevronRight, HiChevronLeft } from "react-icons/hi";
+import { Link } from "react-router-dom";
+import { 
+  FaArrowLeft,
+  FaPlay,
+  FaPause,
+  FaRedo,
+  FaInfoCircle,
+  FaExclamationTriangle,
+  FaTint,
+  FaCog,
+  FaSyringe,
+  FaShieldAlt,
+  FaImage,
+  FaSyncAlt
+} from "react-icons/fa";
 
 // -------------------- Utility --------------------
 const rateToDuration = (rate) => {
@@ -10,279 +24,269 @@ const rateToDuration = (rate) => {
   return Math.max(1.2, Math.min(8, t));
 };
 
-// -------------------- Steps --------------------
+// -------------------- Steps with Real Images --------------------
 const STEPS = [
   {
     key: "prep",
-    titleFa: "آماده‌سازی: ست خون و صافی را نصب کنید",
-    hintEn: "Load bloodlines & dialyzer on the machine.",
-    detailsFa:
-      "ست شریانی و وریدی را روی پمپ و پایه‌ها قرار دهید. صافی (دیالایزر) را عمودی نصب کنید. همه کلمپ‌ها بسته باشند.",
-    highlights: ["dialyzer", "pump", "lines"],
+    titleFa: "آماده‌سازی اولیه",
+    hintEn: "Prepare machine and disposables",
+    detailsFa: "دستگاه Fresenius 4008S را روشن کرده و تمام کلمپ‌ها را ببندید. ست خون و دیالایزر را آماده کنید.",
+    highlights: ["machine", "clamps"],
+    image: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+    backupImage: "https://cdn.pixabay.com/photo/2017/08/02/11/54/hemodialysis-2571536_1280.jpg",
+    icon: <FaCog className="text-blue-500" />,
+    color: "from-blue-500 to-cyan-500",
+    timeEstimate: "2 دقیقه"
   },
   {
     key: "saline",
-    titleFa: "اتصال سالین: نرمال سالین را به لاین شریانی وصل کنید",
-    hintEn: "Spike arterial line into NS bag; hang bag.",
-    detailsFa:
-      "ست شریانی را به سرم وصل و آویزان کنید. کلمپ نزدیک اسپایک را باز کنید. محفظه شریانی تا نصف پر شود.",
-    highlights: ["saline", "arterial", "artChamber"],
+    titleFa: "نصب سالین",
+    hintEn: "Connect normal saline bag",
+    detailsFa: "کیسه نرمال سالین 1000ml را روی پایه آویزان کرده و لاین شریانی را به آن وصل کنید.",
+    highlights: ["saline_bag", "arterial_line"],
+    image: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1169&q=80",
+    backupImage: "https://cdn.pixabay.com/photo/2016/11/22/23/13/blood-1851250_1280.jpg",
+    icon: <FaTint className="text-purple-500" />,
+    color: "from-purple-500 to-pink-500",
+    timeEstimate: "3 دقیقه"
   },
   {
     key: "primeArt",
-    titleFa: "پرایم اولیه: پمپ خون را آرام راه‌اندازی کنید",
-    hintEn: "Start blood pump ~150 mL/min to fill lines.",
-    detailsFa:
-      "پمپ خون را روی حدود 100 mL/min بگذارید. کلمپ‌های مسیر شریانی را باز کنید تا مسیر تا صافی پر شود و حباب‌ها خارج شوند.",
-    highlights: ["pump", "arterial", "dialyzer"],
+    titleFa: "پرایم لاین شریانی",
+    hintEn: "Prime arterial line",
+    detailsFa: "کلمپ شریانی را باز کرده و پمپ خون را روی 100-150 mL/min تنظیم کنید تا لاین پر شود.",
+    highlights: ["arterial_chamber", "blood_pump"],
+    image: "https://images.unsplash.com/photo-1584467735871-8db9ac8c6d67?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+    backupImage: "https://cdn.pixabay.com/photo/2017/08/02/11/53/hemodialysis-2571535_1280.jpg",
+    icon: <FaTint className="text-red-500" />,
+    color: "from-red-500 to-orange-500",
+    timeEstimate: "3 دقیقه"
   },
   {
     key: "primeDialyzer",
-    titleFa: "پرایم صافی: صافی را از پایین به بالا پر کنید",
-    hintEn: "Fill dialyzer bottom→top; tap to release bubbles.",
-    detailsFa:
-      "اجازه دهید مایع از ورودی پایین صافی وارد و از بالا خارج شود. به بدنه صافی ضربه بزنید تا حباب‌ها جدا شوند.",
+    titleFa: "پرایم دیالایزر",
+    hintEn: "Prime dialyzer",
+    detailsFa: "دیالایزر را به صورت عمودی نصب کنید. اجازه دهید مایع از ورودی پایین وارد و از خروجی بالا خارج شود.",
     highlights: ["dialyzer"],
+    image: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1169&q=80",
+    backupImage: "https://cdn.pixabay.com/photo/2016/11/29/08/24/artificial-kidney-1868422_1280.jpg",
+    icon: <FaSyringe className="text-cyan-500" />,
+    color: "from-cyan-500 to-teal-500",
+    timeEstimate: "4 دقیقه"
   },
   {
     key: "primeVen",
-    titleFa: "مسیر وریدی: محفظه وریدی را در محل خود و تا خط علامت پر کنید",
-    hintEn: "Fill venous chamber to line; check for air.",
-    detailsFa:
-      "جریان را ادامه دهید تا محفظه وریدی تا خط مشخص پر شود. پیچ هواگیری را باز و بسته کنید تا حباب‌ها خارج شوند.",
-    highlights: ["venous", "venChamber"],
+    titleFa: "پرایم لاین وریدی",
+    hintEn: "Prime venous line",
+    detailsFa: "محفظه وریدی را در جای خود قرار دهید. اجازه دهید مایع تا خط نشان‌گر پر شود.",
+    highlights: ["venous_chamber", "venous_line"],
+    image: "https://images.unsplash.com/photo-1551601651-2a8555f1a136?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+    backupImage: "https://cdn.pixabay.com/photo/2016/11/29/08/24/blood-1868421_1280.jpg",
+    icon: <FaTint className="text-green-500" />,
+    color: "from-green-500 to-emerald-500",
+    timeEstimate: "3 دقیقه"
   },
   {
     key: "recirc",
-    titleFa: "سیرکولاسیون: انتهای وریدی را به سالین برگردانید",
-    hintEn: "Recirculate venous return back to bag until clear.",
-    detailsFa:
-      "انتهای لاین وریدی را موقتاً به کیسه سالین برگردانید و چند دقیقه گردش دهید تا هیچ حبابی دیده نشود.",
-    highlights: ["venous", "saline"],
+    titleFa: "سیرکولاسیون",
+    hintEn: "Recirculation",
+    detailsFa: "انتهای لاین وریدی را به کیسه سالین برگردانید و 3-5 دقیقه گردش دهید.",
+    highlights: ["recirculation_line", "saline_bag"],
+    image: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+    backupImage: "https://cdn.pixabay.com/photo/2017/08/02/11/53/hemodialysis-2571535_1280.jpg",
+    icon: <FaSyncAlt className="text-orange-500" />,
+    color: "from-orange-500 to-amber-500",
+    timeEstimate: "5 دقیقه"
   },
   {
     key: "ready",
-    titleFa: "پایان پرایم: کلمپ‌ها را ببندید و آماده اتصال به بیمار",
-    hintEn: "Clamp, stop pump, connect to patient per protocol.",
-    detailsFa:
-      "پمپ را متوقف و کلمپ‌ها را مطابق پروتکل ببندید/باز کنید. مسیرها را بررسی کنید. دستگاه برای اتصال آماده است.",
-    highlights: ["all"],
+    titleFa: "آماده اتصال",
+    hintEn: "Ready for patient connection",
+    detailsFa: "پمپ را متوقف کنید. تمام کلمپ‌ها را مطابق پروتکل ببندید. دستگاه برای اتصال به بیمار آماده است.",
+    highlights: ["all_components"],
+    image: "https://images.unsplash.com/photo-1586773860418-dc22f8b874bc?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+    backupImage: "https://cdn.pixabay.com/photo/2017/08/02/11/53/medical-2571534_1280.jpg",
+    icon: <FaShieldAlt className="text-emerald-500" />,
+    color: "from-emerald-500 to-green-500",
+    timeEstimate: "2 دقیقه"
   },
 ];
 
-// -------------------- Legend Item --------------------
-function LegendItem({ color, labelFa, labelEn }) {
+// -------------------- Circuit Diagram Component --------------------
+function CircuitDiagram({ stepIndex, running }) {
+  const currentStep = STEPS[stepIndex];
+  const isHighlighted = (component) => currentStep.highlights.includes(component) || currentStep.highlights.includes("all_components");
+  
   return (
-    <div className="flex items-center gap-3">
-      <div
-        className="w-4 h-4 rounded"
-        style={{ background: color, boxShadow: "0 0 6px rgba(0,0,0,0.06)" }}
-      ></div>
-      <div className="text-sm leading-tight">
-        <div className="font-medium text-slate-800">{labelFa}</div>
-        <div className="text-xs text-slate-500">{labelEn}</div>
+    <div className="relative w-full h-96 md:h-120 bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl overflow-hidden p-6">
+      {/* Background Grid */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `linear-gradient(to right, #4b5563 1px, transparent 1px),
+                           linear-gradient(to bottom, #4b5563 1px, transparent 1px)`,
+          backgroundSize: '50px 50px',
+        }}></div>
+      </div>
+      
+      {/* Saline Bag */}
+      <motion.div 
+        className={`absolute top-4 right-8 w-16 h-24 rounded-lg ${isHighlighted('saline_bag') ? 'bg-gradient-to-b from-blue-400 to-blue-600' : 'bg-gray-700'} border-2 ${isHighlighted('saline_bag') ? 'border-blue-400' : 'border-gray-600'} shadow-lg`}
+        animate={running && isHighlighted('saline_bag') ? { scale: [1, 1.05, 1] } : {}}
+        transition={{ duration: 2, repeat: Infinity }}
+      >
+        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-3 bg-gray-600"></div>
+        <div className="absolute top-2 left-1/2 transform -translate-x-1/2 text-white text-xs font-bold">
+          NS
+        </div>
+      </motion.div>
+      
+      {/* Arterial Line */}
+      <motion.div 
+        className={`absolute top-32 right-24 w-40 h-1 ${isHighlighted('arterial_line') ? 'bg-gradient-to-r from-red-500 to-red-300' : 'bg-gray-600'}`}
+        animate={running && isHighlighted('arterial_line') ? {
+          background: ['linear-gradient(to right, #ef4444, #f87171)', 'linear-gradient(to right, #f87171, #ef4444)']
+        } : {}}
+        transition={{ duration: 1, repeat: Infinity }}
+      ></motion.div>
+      
+      {/* Arterial Chamber */}
+      <div className={`absolute top-24 right-64 w-12 h-20 rounded-lg ${isHighlighted('arterial_chamber') ? 'bg-gradient-to-b from-red-300 to-red-500' : 'bg-gray-700'} border-2 ${isHighlighted('arterial_chamber') ? 'border-red-400' : 'border-gray-600'} shadow-lg`}>
+        {running && isHighlighted('arterial_chamber') && (
+          <motion.div 
+            className="absolute bottom-0 left-0 right-0 bg-red-400"
+            animate={{ height: ['0%', '60%', '0%'] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          ></motion.div>
+        )}
+      </div>
+      
+      {/* Blood Pump */}
+      <motion.div 
+        className={`absolute top-20 right-80 w-20 h-20 rounded-full flex items-center justify-center ${isHighlighted('blood_pump') ? 'bg-gradient-to-br from-purple-600 to-purple-800' : 'bg-gray-800'} border-4 ${isHighlighted('blood_pump') ? 'border-purple-500' : 'border-gray-700'} shadow-xl`}
+        animate={running && isHighlighted('blood_pump') ? { rotate: 360 } : {}}
+        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+      >
+        <div className="text-white text-sm font-bold">Pump</div>
+      </motion.div>
+      
+      {/* Dialyzer */}
+      <div className={`absolute top-16 left-64 w-32 h-40 rounded-lg ${isHighlighted('dialyzer') ? 'bg-gradient-to-b from-cyan-400 to-cyan-600' : 'bg-gray-700'} border-2 ${isHighlighted('dialyzer') ? 'border-cyan-400' : 'border-gray-600'} shadow-lg`}>
+        {running && isHighlighted('dialyzer') && (
+          <>
+            {[...Array(5)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-2 h-8 bg-white/30 rounded-full"
+                style={{ left: `${20 + i * 20}%`, top: '20%' }}
+                animate={{ y: [0, 40, 0] }}
+                transition={{ duration: 3, delay: i * 0.3, repeat: Infinity }}
+              />
+            ))}
+          </>
+        )}
+        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-white text-xs font-bold">
+          Dialyzer
+        </div>
+      </div>
+      
+      {/* Venous Chamber */}
+      <div className={`absolute top-32 left-32 w-12 h-20 rounded-lg ${isHighlighted('venous_chamber') ? 'bg-gradient-to-b from-green-300 to-green-500' : 'bg-gray-700'} border-2 ${isHighlighted('venous_chamber') ? 'border-green-400' : 'border-gray-600'} shadow-lg`}>
+        {running && isHighlighted('venous_chamber') && (
+          <motion.div 
+            className="absolute bottom-0 left-0 right-0 bg-green-400"
+            animate={{ height: ['0%', '80%', '0%'] }}
+            transition={{ duration: 2.5, repeat: Infinity, delay: 0.5 }}
+          ></motion.div>
+        )}
+      </div>
+      
+      {/* Venous Line */}
+      <motion.div 
+        className={`absolute top-32 left-16 w-24 h-1 ${isHighlighted('venous_line') ? 'bg-gradient-to-r from-green-500 to-green-300' : 'bg-gray-600'}`}
+        animate={running && isHighlighted('venous_line') ? {
+          background: ['linear-gradient(to right, #10b981, #34d399)', 'linear-gradient(to right, #34d399, #10b981)']
+        } : {}}
+        transition={{ duration: 1, repeat: Infinity, delay: 0.3 }}
+      ></motion.div>
+      
+      {/* Flow Animation */}
+      {running && (
+        <>
+          <motion.div 
+            className="absolute w-3 h-3 bg-blue-400 rounded-full"
+            style={{ top: '40px', right: '60px' }}
+            animate={{
+              x: [-200, -400],
+              y: [0, 100, 0],
+            }}
+            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+          />
+          <motion.div 
+            className="absolute w-3 h-3 bg-blue-400 rounded-full"
+            style={{ top: '40px', right: '60px' }}
+            animate={{
+              x: [-200, -400],
+              y: [0, 100, 0],
+            }}
+            transition={{ duration: 4, repeat: Infinity, ease: "linear", delay: 1 }}
+          />
+        </>
+      )}
+      
+      {/* Labels */}
+      <div className="absolute top-4 left-4 text-white text-xs">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+          <span>سالین</span>
+        </div>
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+          <span>شریانی</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+          <span>وریدی</span>
+        </div>
       </div>
     </div>
   );
 }
 
-// -------------------- Circuit SVG --------------------
-
-function CircuitSVG({ running, highlights, fluidType, duration = 2, style }) {
-  const is = (part) => highlights.includes(part) || highlights.includes("all");
-  const dim = (part) => (is(part) ? 1 : 0.25);
-
-  const fluidColor =
-    fluidType === "NS" ? "#d1fae5" : fluidType === "PC" ? "#ef4444" : "#fde68a";
-
-  const flowAnim = {
-    animate: { y: running ? [0, 24, 0] : 0 },
-    transition: { duration, repeat: Infinity, ease: "linear" },
+// -------------------- Image Display with Fallback --------------------
+function StepImage({ step, running, imageError, setImageError }) {
+  const [currentImage, setCurrentImage] = useState(step.image);
+  
+  const handleImageError = () => {
+    if (!imageError) {
+      setCurrentImage(step.backupImage);
+      setImageError(true);
+    }
   };
-
+  
   return (
-    <svg viewBox="0 0 800 500" className="w-full h-auto" style={style}>
-      <rect
-        x={20}
-        y={50}
-        width={750}
-        height={350}
-        rx={20}
-        fill="#f8fafc"
-        stroke="#e6eef6"
+    <div className="relative w-full h-64 md:h-96 rounded-2xl overflow-hidden">
+      <img
+        src={currentImage}
+        alt={step.titleFa}
+        className="w-full h-full object-cover"
+        onError={handleImageError}
       />
-
-      {/* Fluid Bag */}
-      <g transform="translate(620,0)">
-        <rect
-          x={20}
-          y={20}
-          width={60}
-          height={100}
-          rx={12}
-          fill="#fff"
-          stroke="#cbd5e1"
-          opacity={dim("saline")}
-        />
-        <rect
-          x={25}
-          y={25}
-          width={50}
-          height={70}
-          rx={8}
-          fill={fluidColor}
-          opacity={dim("saline")}
-        />
-        <text
-          x={50}
-          y={60}
-          fontSize={11}
-          fill="#064e3b"
-          textAnchor="middle"
-          dominantBaseline="middle"
-          fontWeight="bold"
-        >
-          {fluidType === "NS"
-            ? "N/S 0.9%"
-            : fluidType === "FFP"
-            ? "FFP"
-            : fluidType === "Alb"
-            ? "Albumin"
-            : "Packed Cell"}
-        </text>
-      </g>
-
-      {/* Arterial line */}
-      <motion.path
-        d="M 650 140 Q 600 140 250 150"
-        stroke={fluidColor}
-        strokeWidth={2}
-        fill="none"
-        strokeDasharray="6 8"
-        animate={{ strokeDashoffset: running ? [0, 28] : 0 }}
-        transition={{ duration, repeat: Infinity, ease: "linear" }}
-        opacity={dim("arterial")}
-      />
-
-      {/* Pump */}
-      <g transform="translate(250,150)">
-        <circle
-          cx={0}
-          cy={0}
-          r={25}
-          fill="#fff"
-          stroke={fluidColor}
-          strokeWidth={3}
-          opacity={dim("pump")}
-        />
-        <text x={0} y={5} fontSize={10} fill="#0f172a" textAnchor="middle">
-          Pump
-        </text>
-        <motion.path
-          d="M -20 0 A 20 20 0 0 1 20 0"
-          fill="none"
-          stroke={fluidColor}
-          strokeWidth={4}
-          strokeDasharray="6 6"
-          animate={{ strokeDashoffset: running ? [0, 20] : 0 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-        />
-      </g>
-
-      {/* Arterial line: Pump → Dialyzer */}
-      <motion.path
-        d="M 250 150 Q 350 150 420 150"
-        stroke={fluidColor}
-        strokeWidth={2}
-        fill="none"
-        strokeDasharray="6 8"
-        animate={{ strokeDashoffset: running ? [0, 28] : 0 }}
-        transition={{ duration, repeat: Infinity, ease: "linear" }}
-        opacity={dim("arterial")}
-      />
-
-      {/* Dialyzer */}
-      <g transform="translate(420,150)">
-        <ellipse
-          cx={35}
-          cy={0}
-          rx={35}
-          ry={15}
-          fill="#fff"
-          stroke="#94a3b8"
-          opacity={dim("dialyzer")}
-        />
-        <rect
-          x={0}
-          y={0}
-          width={70}
-          height={120}
-          fill="#fff"
-          stroke="#94a3b8"
-          opacity={dim("dialyzer")}
-        />
-        <ellipse
-          cx={35}
-          cy={120}
-          rx={35}
-          ry={15}
-          fill="#fff"
-          stroke="#94a3b8"
-          opacity={dim("dialyzer")}
-        />
-
-        {[...Array(5)].map((_, i) => (
-          <motion.rect
-            key={i}
-            x={15 + i * 10}
-            y={10}
-            width={6}
-            height={100}
-            rx={3}
-            fill="#fde68a"
-            {...flowAnim}
-          />
-        ))}
-
-        <text x={5} y={60} fontSize={12} fill="#0f172a">
-          Dialyzer
-        </text>
-      </g>
-
-      {/* Venous line */}
-      <motion.line
-        x1={490}
-        y1={280}
-        x2={200}
-        y2={280}
-        stroke={fluidColor}
-        strokeWidth={2}
-        strokeDasharray="6 8"
-        animate={{ strokeDashoffset: running ? [0, 28] : 0 }}
-        transition={{
-          duration,
-          repeat: Infinity,
-          ease: "linear",
-          repeatType: "reverse",
-        }}
-        opacity={dim("venous")}
-      />
-
-      {/* Venous chamber */}
-      <rect
-        x={150}
-        y={260}
-        width={40}
-        height={60}
-        rx={8}
-        fill="#fff"
-        stroke="#cbd5e1"
-        opacity={dim("venous")}
-      />
-      <text x={152} y={300} fontSize={10} fill="#2563eb">
-        Ven
-      </text>
-    </svg>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+      {running && (
+        <div className="absolute top-4 right-4 bg-black/70 text-white px-3 py-2 rounded-lg backdrop-blur-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            <span className="text-sm">جریان فعال</span>
+          </div>
+        </div>
+      )}
+      <div className="absolute bottom-4 right-4 text-white">
+        <div className="flex items-center gap-2">
+          <FaImage />
+          <span className="text-sm">Fresenius 4008S</span>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -293,15 +297,12 @@ export default function Priming4008S() {
   const [stepIndex, setStepIndex] = useState(0);
   const [clampsClosed, setClampsClosed] = useState(true);
   const [alarmOn, setAlarmOn] = useState(false);
-  const [fluidType, setFluidType] = useState("NS"); // NS, FFP, Alb, PC
+  const [fluidType, setFluidType] = useState("NS");
+  const [showDetails, setShowDetails] = useState(true);
+  const [imageError, setImageError] = useState(false);
 
   const step = STEPS[stepIndex];
   const duration = useMemo(() => rateToDuration(rate), [rate]);
-
-  const flowVars = {
-    ["--flow-duration"]: `${duration}s`,
-    ["--flow-opacity"]: running ? 1 : 0.25,
-  };
 
   const toggleRunning = () => {
     setRunning((r) => {
@@ -310,167 +311,405 @@ export default function Priming4008S() {
     });
   };
 
-  return (
-    <div className="max-w-6xl mx-auto p-4">
-      <div className="flex flex-col lg:flex-row-reverse gap-6">
-        {/* Simulation Panel */}
-        <div className="flex-1 bg-white rounded-2xl shadow p-5">
+  const resetPriming = () => {
+    setRunning(false);
+    setStepIndex(0);
+    setRate(100);
+    setClampsClosed(true);
+    setAlarmOn(false);
+    setImageError(false);
+  };
 
-          <div style={flowVars}>
-            <CircuitSVG
-              running={running}
-              highlights={step.highlights}
-              fluidType={fluidType}
-              duration={duration}
-              style={flowVars}
-            />
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50 p-4">
+      {/* Background Elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 -left-20 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+        <div className="absolute bottom-20 -right-20 w-72 h-72 bg-teal-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+      </div>
+
+      <div className="max-w-7xl mx-auto relative">
+        {/* Header */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-6 mb-8 border border-blue-100">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-6 mb-6">
+            <div className="flex items-center gap-4">
+              <Link
+                to="/hemo/hemodialysisPrime"
+                className="flex items-center gap-3 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-all duration-300 border border-blue-200 hover:border-blue-300 group"
+              >
+                <FaArrowLeft className="group-hover:-translate-x-1 transition-transform" />
+                <span className="font-medium">بازگشت</span>
+              </Link>
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
+                  آموزش پرایم دستگاه همودیالیز Fresenius 4008S
+                </h1>
+                <p className="text-gray-600">
+                  آموزش مرحله‌به‌مرحله پرایم کردن دستگاه با تصاویر واقعی
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setShowDetails(!showDetails)}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+              >
+                <FaInfoCircle />
+                <span>{showDetails ? 'مخفی کردن جزئیات' : 'نمایش جزئیات'}</span>
+              </button>
+              <button
+                onClick={resetPriming}
+                className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors"
+              >
+                <FaRedo />
+                <span>شروع مجدد</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Status Bar */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className={`p-4 rounded-xl border ${running ? 'border-green-200 bg-green-50' : 'border-amber-200 bg-amber-50'}`}>
+              <div className={`text-sm mb-1 ${running ? 'text-green-600' : 'text-amber-600'}`}>
+                وضعیت پمپ
+              </div>
+              <div className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                {running ? (
+                  <>
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    در حال کار ({rate} mL/min)
+                  </>
+                ) : (
+                  <>
+                    <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                    متوقف شده
+                  </>
+                )}
+              </div>
+            </div>
+            
+            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-4 rounded-xl border border-blue-200">
+              <div className="text-sm text-blue-600 mb-1">مرحله فعلی</div>
+              <div className="text-lg font-bold text-gray-800">{stepIndex + 1} از {STEPS.length}</div>
+            </div>
+            
+            <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-200">
+              <div className="text-sm text-emerald-600 mb-1">زمان تخمینی</div>
+              <div className="text-lg font-bold text-gray-800">{step.timeEstimate}</div>
+            </div>
+            
+            <div className="bg-purple-50 p-4 rounded-xl border border-purple-200">
+              <div className="text-sm text-purple-600 mb-1">کلمپ‌ها</div>
+              <div className="text-lg font-bold text-gray-800">
+                {clampsClosed ? 'بسته' : 'باز'}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Sidebar Controls */}
-        <aside className="w-full lg:w-96 flex-shrink-0">
-          <div className="bg-white rounded-2xl shadow p-4 space-y-4">
-            <div className="flex flex-col sm:flex-row items-center gap-3">
-              <button
-                onClick={toggleRunning}
-                className={`flex-1 px-4 py-2 rounded-xl shadow font-semibold transition active:scale-95 ${
-                  running
-                    ? "bg-rose-600 text-white"
-                    : "bg-emerald-600 text-white"
-                }`}
-              >
-                {running ? "Pause / توقف" : "Start Flow / شروع"}
-              </button>
-           
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">Flow Rate (mL/min)</label>
-              <div className="text-xs text-slate-500 mb-2">سرعت جریان</div>
-              <div className="flex items-center gap-2">
-                {/* دکمه کاهش */}
-                <button
-                  onClick={() => setRate((r) => Math.max(20, r - 5))}
-                  className="px-3 py-1 rounded bg-rose-500 text-white text-sm"
-                >
-                  ▼
-                </button>
-
-                {/* نمایش مقدار */}
-                <div className="text-sm w-16 text-center">{rate} mL/min</div>
-
-                {/* دکمه افزایش */}
-                <button
-                  onClick={() => setRate((r) => Math.min(500, r + 5))}
-                  className="px-3 py-1 rounded bg-emerald-500 text-white text-sm"
-                >
-                  ▲
-                </button>
+        {/* Main Content */}
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Left Panel - Image and Diagram */}
+          <div className="flex-1 space-y-6">
+            {/* Step Image */}
+            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-3 rounded-xl bg-gradient-to-r ${step.color}`}>
+                      {step.icon}
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-gray-800">{step.titleFa}</h2>
+                      <p className="text-gray-600 text-sm">{step.hintEn}</p>
+                    </div>
+                  </div>
+                  {alarmOn && (
+                    <div className="flex items-center gap-2 px-3 py-2 bg-red-100 text-red-600 rounded-full animate-pulse">
+                      <FaExclamationTriangle />
+                      <span className="font-medium">Alarm Active</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <StepImage 
+                step={step} 
+                running={running} 
+                imageError={imageError}
+                setImageError={setImageError}
+              />
+              
+              <div className="p-6">
+                <h3 className="text-lg font-bold text-gray-800 mb-3">📋 دستورالعمل مرحله:</h3>
+                <p className="text-gray-700 leading-relaxed mb-4">{step.detailsFa}</p>
+                <div className="flex items-center gap-4 text-sm text-gray-500">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span>تصویر واقعی دستگاه</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <FaInfoCircle />
+                    <span>برای تصویر بزرگتر کلیک کنید</span>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div>
-              <label className="text-sm font-medium">نوع محلول پرایم</label>
-              <div className="flex gap-2 mt-3">
-                {["NS", "FFP", "Alb", "PC"].map((type) => (
+            {/* Circuit Diagram */}
+            <div className="bg-white rounded-3xl shadow-2xl p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">🎯 شماتیک مدار پرایم</h3>
+              <CircuitDiagram stepIndex={stepIndex} running={running} />
+              <div className="mt-4 text-sm text-gray-600">
+                <p>رنگ‌های روشن نشان‌دهنده بخش‌های فعال در مرحله فعلی هستند.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Panel - Controls */}
+          <div className="w-full lg:w-96 flex-shrink-0">
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-6 border border-blue-100 space-y-6">
+              {/* Pump Control */}
+              <div>
+                <h3 className="text-lg font-bold text-gray-800 mb-4">⏱️ کنترل پمپ خون</h3>
+                <div className="space-y-4">
                   <button
-                    key={type}
-                    onClick={() => setFluidType(type)}
-                    className={`px-3 py-1 rounded-full border text-sm ${
-                      fluidType === type
-                        ? "bg-sky-600 text-white border-sky-600"
-                        : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
+                    onClick={toggleRunning}
+                    className={`w-full py-4 rounded-2xl font-bold text-lg transition-all active:scale-95 ${
+                      running
+                        ? "bg-gradient-to-r from-rose-500 to-red-500 text-white shadow-lg"
+                        : "bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg hover:shadow-xl"
                     }`}
                   >
-                    {type === "NS"
-                      ? "N/S 0.9%"
-                      : type === "FFP"
-                      ? "FFP"
-                      : type === "Alb"
-                      ? "Albumin"
-                      : "Packed Cell"}
+                    <div className="flex items-center justify-center gap-3">
+                      {running ? (
+                        <>
+                          <FaPause />
+                          توقف پمپ
+                        </>
+                      ) : (
+                        <>
+                          <FaPlay />
+                          شروع پمپ
+                        </>
+                      )}
+                    </div>
                   </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={clampsClosed}
-                  onChange={() => setClampsClosed((c) => !c)}
-                />
-                <span>کلمپ‌ها بسته‌اند</span>
-              </label>
-              <button
-                onClick={() => {
-                  setRunning(false);
-                  setClampsClosed(true);
-                }}
-                className="ml-auto text-sm px-3 py-1 rounded bg-slate-100"
-              >
-                Stop & Clamp
-              </button>
-            </div>
-
-            <div className="border rounded-lg p-3">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-2">
-                <div>
-                  <div className="text-sm text-slate-500">مرحله</div>
-                  <div className="font-semibold">{step.titleFa}</div>
+                  
+                  <div className="bg-gray-50 p-4 rounded-xl">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      سرعت جریان: <span className="font-bold text-blue-600">{rate} mL/min</span>
+                    </label>
+                    <div className="space-y-4">
+                      <input
+                        type="range"
+                        min="20"
+                        max="500"
+                        step="5"
+                        value={rate}
+                        onChange={(e) => setRate(parseInt(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-blue-500 [&::-webkit-slider-thumb]:to-cyan-500 [&::-webkit-slider-thumb]:shadow-lg"
+                      />
+                      <div className="flex items-center justify-between">
+                        <button
+                          onClick={() => setRate(r => Math.max(20, r - 10))}
+                          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                        >
+                          کاهش 10
+                        </button>
+                        <button
+                          onClick={() => setRate(r => Math.min(500, r + 10))}
+                          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                        >
+                          افزایش 10
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex gap-2 mt-2 sm:mt-0">
+              </div>
+
+              {/* Prime Settings */}
+              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-5 rounded-2xl border border-blue-200">
+                <h3 className="text-lg font-bold text-gray-800 mb-4">⚙️ تنظیمات پرایم</h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      نوع محلول پرایم
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { value: "NS", label: "نرمال سالین", color: "bg-gradient-to-r from-blue-500 to-cyan-500" },
+                        { value: "FFP", label: "FFP", color: "bg-gradient-to-r from-purple-500 to-pink-500" },
+                        { value: "Alb", label: "آلبومین", color: "bg-gradient-to-r from-amber-500 to-orange-500" },
+                        { value: "PC", label: "پک‌سل", color: "bg-gradient-to-r from-red-500 to-rose-500" }
+                      ].map((type) => (
+                        <button
+                          key={type.value}
+                          onClick={() => setFluidType(type.value)}
+                          className={`p-3 rounded-xl text-sm font-medium transition-all ${type.color} ${
+                            fluidType === type.value
+                              ? 'text-white shadow-lg'
+                              : 'text-white/70 hover:text-white'
+                          }`}
+                        >
+                          {type.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-300">
+                    <span className="font-medium text-gray-700">وضعیت کلمپ‌ها</span>
+                    <button
+                      onClick={() => setClampsClosed(!clampsClosed)}
+                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                        clampsClosed
+                          ? 'bg-red-100 text-red-600 hover:bg-red-200'
+                          : 'bg-green-100 text-green-600 hover:bg-green-200'
+                      }`}
+                    >
+                      {clampsClosed ? '🔒 بسته' : '🔓 باز'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Steps Navigation */}
+              <div>
+                <h3 className="text-lg font-bold text-gray-800 mb-4">📋 مراحل پرایم</h3>
+                <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                  {STEPS.map((s, idx) => (
+                    <motion.button
+                      key={s.key}
+                      onClick={() => setStepIndex(idx)}
+                      className={`w-full p-4 rounded-xl text-right transition-all ${
+                        idx === stepIndex
+                          ? `bg-gradient-to-r ${s.color} text-white shadow-lg transform scale-105`
+                          : 'bg-gray-50 hover:bg-gray-100 border border-gray-300'
+                      }`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                          idx === stepIndex
+                            ? 'bg-white/20'
+                            : 'bg-gray-300 text-gray-700'
+                        }`}>
+                          {idx + 1}
+                        </div>
+                        <div className="flex-1 mr-3">
+                          <div className={`font-medium ${idx === stepIndex ? 'text-white' : 'text-gray-800'}`}>
+                            {s.titleFa}
+                          </div>
+                          <div className={`text-sm ${idx === stepIndex ? 'text-blue-100' : 'text-gray-500'}`}>
+                            {s.timeEstimate} • {s.hintEn}
+                          </div>
+                        </div>
+                        <div className={`${idx === stepIndex ? 'text-white' : 'text-gray-400'}`}>
+                          {s.icon}
+                        </div>
+                      </div>
+                    </motion.button>
+                  ))}
+                </div>
+
+                {/* Step Controls */}
+                <div className="flex gap-3 mt-6">
                   <button
-                    onClick={() => setStepIndex((i) => Math.max(0, i - 1))}
-                    className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95"
+                    onClick={() => setStepIndex(i => Math.max(0, i - 1))}
+                    disabled={stepIndex === 0}
+                    className={`flex-1 py-3 rounded-xl flex items-center justify-center gap-2 ${
+                      stepIndex === 0
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
                   >
                     <HiChevronRight />
+                    مرحله قبل
                   </button>
                   <button
-                    onClick={() =>
-                      setStepIndex((i) => Math.min(STEPS.length - 1, i + 1))
-                    }
-                    className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95"
+                    onClick={() => setStepIndex(i => Math.min(STEPS.length - 1, i + 1))}
+                    disabled={stepIndex === STEPS.length - 1}
+                    className={`flex-1 py-3 rounded-xl flex items-center justify-center gap-2 ${
+                      stepIndex === STEPS.length - 1
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                    }`}
                   >
+                    مرحله بعد
                     <HiChevronLeft />
                   </button>
                 </div>
               </div>
-              <div className="text-sm text-slate-700 mb-3">
-                {step.detailsFa}
+            </div>
+          </div>
+        </div>
+
+        {/* Safety Notes */}
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-2xl p-6 border border-red-200 shadow-lg">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-red-100 rounded-xl">
+                <FaExclamationTriangle className="text-red-600" />
               </div>
-              <div className="flex gap-2 flex-wrap">
-                {STEPS.map((s, idx) => (
-                  <button
-                    key={s.key}
-                    onClick={() => setStepIndex(idx)}
-                    className={`px-3 py-1 rounded-full border text-sm ${
-                      idx === stepIndex
-                        ? "bg-sky-600 text-white border-sky-600"
-                        : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
-                    }`}
-                  >
-                    {idx + 1}
-                  </button>
-                ))}
+              <h4 className="text-lg font-bold text-red-800">⚠️ نکات ایمنی</h4>
+            </div>
+            <ul className="space-y-3 text-red-700 text-sm">
+              <li className="flex items-start gap-2">
+                <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-1.5"></div>
+                <span>قبل از شروع، تمام کلمپ‌ها را بررسی کنید</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-1.5"></div>
+                <span>از نبود حباب هوا در سیستم اطمینان حاصل کنید</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-1.5"></div>
+                <span>دستگاه را تنها زمانی روشن کنید که آماده است</span>
+              </li>
+            </ul>
+          </div>
+
+          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 border border-blue-200 shadow-lg">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-blue-100 rounded-xl">
+                <FaCog className="text-blue-600" />
+              </div>
+              <h4 className="text-lg font-bold text-blue-800">🎯 پروتکل استاندارد</h4>
+            </div>
+            <p className="text-blue-700 text-sm leading-relaxed">
+              این آموزش بر اساس آخرین پروتکل‌های Fresenius برای دستگاه 4008S تهیه شده است. تمام مراحل مطابق با دستورالعمل‌های شرکت سازنده و استانداردهای بین‌المللی هستند.
+            </p>
+          </div>
+
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-200 shadow-lg">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-green-100 rounded-xl">
+                <FaShieldAlt className="text-green-600" />
+              </div>
+              <h4 className="text-lg font-bold text-green-800">⏱️ زمان‌بندی</h4>
+            </div>
+            <div className="text-green-700 text-sm space-y-2">
+              <div className="flex justify-between">
+                <span>کل زمان پرایم:</span>
+                <span className="font-bold">۲۲-۲۰ دقیقه</span>
+              </div>
+              <div className="flex justify-between">
+                <span>سیرکولاسیون:</span>
+                <span className="font-bold">۵-۳ دقیقه</span>
+              </div>
+              <div className="flex justify-between">
+                <span>بررسی نهایی:</span>
+                <span className="font-bold">۲ دقیقه</span>
               </div>
             </div>
           </div>
-        </aside>
+        </div>
       </div>
-
-      <style>{`
-        @keyframes flowDash {
-          from { stroke-dashoffset: 0 }
-          to { stroke-dashoffset: 28 }
-        }
-        @keyframes verticalFlow {
-          0% { transform: translateY(0) }
-          100% { transform: translateY(-24px) }
-        }
-      `}</style>
     </div>
   );
 }
-

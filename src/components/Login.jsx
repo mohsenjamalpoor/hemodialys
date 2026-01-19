@@ -1,7 +1,7 @@
 // components/Login.jsx
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaUserMd, FaKey, FaHospital } from 'react-icons/fa';
+import { FaUserMd, FaKey, FaHospital, FaIdCard } from 'react-icons/fa';
 
 export function Login() {
   const [code, setCode] = useState('');
@@ -10,8 +10,21 @@ export function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // کدهای نظام پزشکی معتبر (در حالت واقعی باید از سرور چک شود)
-  const validCodes = ['636465', '192025', '456789'];
+  // پایگاه داده پزشکان (کد نظام پزشکی به نام و تخصص)
+  const doctorsDatabase = {
+    '636465': { 
+      id: 1, 
+      name: 'دکتر  جمالپور', 
+      specialty: 'نفرولوژیست اطفال',
+      code: '636465'
+    },
+    '192025': { 
+      id: 2, 
+      name: 'دکتر  حیدری', 
+      specialty: 'نفرولوژیست',
+      code: '192025'
+    },
+  };
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -20,10 +33,14 @@ export function Login() {
 
     // شبیه‌سازی تاخیر برای عملیات ورود
     setTimeout(() => {
-      if (validCodes.includes(code)) {
-        // ذخیره وضعیت ورود در localStorage
+      const doctor = doctorsDatabase[code];
+      if (doctor) {
+        // ذخیره اطلاعات پزشک در localStorage
         localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('medicalCode', code);
+        localStorage.setItem('doctorName', doctor.name);
+        localStorage.setItem('doctorSpecialty', doctor.specialty);
+        localStorage.setItem('doctorCode', doctor.code);
+        localStorage.setItem('doctorId', doctor.id);
         
         // اگر از صفحه خاصی ریدایرکت شده بودیم، به همان صفحه برگردیم
         const from = location.state?.from?.pathname || '/hemo';
@@ -60,7 +77,7 @@ export function Login() {
               </label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  <FaUserMd className="text-gray-400" />
+                  <FaIdCard className="text-gray-400" />
                 </div>
                 <input
                   id="medicalCode"
@@ -79,6 +96,8 @@ export function Login() {
                 کد 6 رقمی نظام پزشکی خود را وارد کنید
               </p>
             </div>
+
+         
 
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
@@ -107,21 +126,6 @@ export function Login() {
                   </>
                 )}
               </button>
-            </div>
-
-        
-
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">
-                    سیستم همودیالیز کودکان
-                  </span>
-                </div>
-              </div>
             </div>
           </form>
         </div>

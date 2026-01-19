@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { 
   FaArrowLeft, 
-  FaExclamationTriangle,
+
   FaCog,
   FaPlay,
   FaCheckCircle,
@@ -65,39 +65,22 @@ export function HemodialysisPrime() {
           <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
             <div className="flex-1">
               <div className="flex items-center gap-4 mb-6">
-                <div className="relative">
+                <div>
                   <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-4 rounded-2xl shadow-lg">
-                    <FiSettings className="text-white" size={36} />
-                  </div>
-                  <div className="absolute -top-2 -right-2 bg-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse">
-                    NEW
+                    <FiSettings className="text-white" size={30} />
                   </div>
                 </div>
                 <div>
-                  <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2 bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-                    🎯 پرایم و ست کردن دستگاه همودیالیز
-                  </h1>
-                  <p className="text-gray-600 text-lg">
-                    آموزش جامع و تخصصی پرایم انواع دستگاه‌های دیالیز با استانداردهای جهانی
+                  <span className="text-3xl md:text-4xl font-bold text-gray-800 mb-4 bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                     پرایم و ست کردن دستگاه همودیالیز
+                  </span>
+                  <p className="text-gray-600 mt-3 text-lg">
+                    آموزش جامع و تخصصی پرایم انواع دستگاه‌های همو دیالیز   
                   </p>
                 </div>
               </div>
 
-              {/* آمارها */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-                {stats.map((stat, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-gray-100 shadow-sm"
-                  >
-                    <div className="text-2xl font-bold text-blue-600 mb-1">{stat.value}</div>
-                    <div className="text-sm text-gray-600">{stat.label}</div>
-                  </motion.div>
-                ))}
-              </div>
+           
             </div>
 
             <div className="lg:w-auto">
@@ -134,12 +117,9 @@ export function HemodialysisPrime() {
                 <div className="relative z-10 p-8 h-full">
                   <div className="flex flex-col items-center text-center h-full">
                     {/* Icon with Animation */}
-                    <div className="relative mb-8">
+                    <div className=" mb-8">
                       <div className="bg-white/20 backdrop-blur-sm p-6 rounded-2xl shadow-lg">
                         <FaCog className="text-white" size={36} />
-                      </div>
-                      <div className="absolute -top-2 -right-2 bg-white text-emerald-600 text-sm font-bold px-3 py-1 rounded-full animate-bounce">
-                        🔥
                       </div>
                     </div>
 
@@ -163,7 +143,7 @@ export function HemodialysisPrime() {
                     {/* CTA Button */}
                     <div className="w-full">
                       <div className="inline-flex items-center gap-3 px-8 py-4 bg-white text-emerald-600 rounded-xl font-bold text-lg hover:bg-gray-50 transition-all duration-300 transform group-hover:scale-105 shadow-lg">
-                        <span>شروع آموزش</span>
+                        <span>شروع پرایم</span>
                         <FaPlay className="mr-1" />
                       </div>
                     </div>
@@ -193,12 +173,9 @@ export function HemodialysisPrime() {
                 <div className="relative z-10 p-8 h-full">
                   <div className="flex flex-col items-center text-center h-full">
                     {/* Icon with Animation */}
-                    <div className="relative mb-8">
+                    <div className=" mb-8">
                       <div className="bg-white/20 backdrop-blur-sm p-6 rounded-2xl shadow-lg">
                         <FiFilm className="text-white" size={36} />
-                      </div>
-                      <div className="absolute -top-2 -right-2 bg-white text-blue-600 text-sm font-bold px-3 py-1 rounded-full animate-pulse">
-                        🎬
                       </div>
                     </div>
 
@@ -241,7 +218,7 @@ export function HemodialysisPrime() {
           className="mb-12"
         >
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">✨ چرا آموزش‌های ما؟</h2>
+            <h2 className="text-3xl font-bold text-gray-800 mb-4"> چرا آموزش‌های ما؟</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
               آموزش‌های تخصصی طراحی شده توسط متخصصان همودیالیز با سال‌ها تجربه عملی
             </p>
@@ -277,7 +254,7 @@ export function HemodialysisPrime() {
               <FiAlertTriangle className="text-amber-600" size={28} />
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">🎯 راهنمای انتخاب مناسب</h3>
+              <h3 className="text-2xl font-bold text-gray-800 mb-2"> راهنمای انتخاب مناسب</h3>
               <p className="text-gray-600">
                 بر اساس سطح تخصص و نیاز خود، بهترین روش یادگیری را انتخاب کنید
               </p>
@@ -345,34 +322,6 @@ export function HemodialysisPrime() {
           </div>
         </motion.div>
 
-        {/* Footer CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-          className="mt-12 text-center"
-        >
-          <div className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-3xl p-8 shadow-2xl">
-            <h3 className="text-2xl font-bold mb-4">🎓 آماده یادگیری حرفه‌ای هستید؟</h3>
-            <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
-              همین حالا شروع کنید و به جمع متخصصان همودیالیز بپیوندید
-            </p>
-            <div className="flex flex-wrap gap-4 justify-center">
-              <Link
-                to="/hemo/priming4008"
-                className="px-8 py-3 bg-white text-blue-600 rounded-xl font-bold hover:bg-gray-100 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-              >
-                شروع آموزش پرایم
-              </Link>
-              <Link
-                to="/hemo/hemodialsisFilmPrime"
-                className="px-8 py-3 bg-blue-800 text-white rounded-xl font-bold hover:bg-blue-900 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-              >
-                مشاهده ویدیوها
-              </Link>
-            </div>
-          </div>
-        </motion.div>
       </div>
     </div>
   );

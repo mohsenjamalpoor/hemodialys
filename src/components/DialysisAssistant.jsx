@@ -372,7 +372,8 @@ export function DialysisAssistant({
           {/* وزن */}
           <div>
             <label className="block mb-2 font-medium text-gray-700">
-              وزن بیمار (کیلوگرم) *
+              وزن بیمار (کیلوگرم) 
+                <span className="text-red-500 mr-1">*</span>
             </label>
             <div className="relative">
               <input
