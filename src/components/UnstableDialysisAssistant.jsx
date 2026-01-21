@@ -33,13 +33,15 @@ export function UnstableDialysisAssistant() {
                 </div>
               </div>
             </div>
-            <Link
-              to="/hemo/hemodialysisPediatrics"
-              className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors"
-            >
-              <FaArrowLeft />
-              <span>بازگشت </span>
-            </Link>
+          <div className="lg:w-auto">
+              <Link
+                to="/hemo/hemodialysisPediatrics"
+                className="flex items-center gap-3 px-6 py-3 bg-white text-blue-600 rounded-xl hover:bg-blue-50 transition-all duration-300 border border-blue-200 hover:border-blue-300 hover:shadow-lg group"
+              >
+                <FaArrowLeft className="group-hover:-translate-x-1 transition-transform" />
+                <span className="font-medium">بازگشت </span>
+              </Link>
+            </div>
           </div>
           
         

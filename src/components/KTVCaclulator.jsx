@@ -199,13 +199,15 @@ export function KTVCaclulator() {
                 <p className="text-gray-600 mt-1">محاسبات UF و Kt/V برای ارزیابی کفایت دیالیز</p>
               </div>
             </div>
-             <Link
-              to="/hemo"
-              className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors"
-            >
-              <FaArrowLeft />
-              <span>بازگشت</span>
-            </Link>
+              <div className="lg:w-auto">
+              <Link
+                to="/hemo"
+                className="flex items-center gap-3 px-6 py-3 bg-white text-blue-600 rounded-xl hover:bg-blue-50 transition-all duration-300 border border-blue-200 hover:border-blue-300 hover:shadow-lg group"
+              >
+                <FaArrowLeft className="group-hover:-translate-x-1 transition-transform" />
+                <span className="font-medium">بازگشت </span>
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -273,7 +275,7 @@ export function KTVCaclulator() {
                     type="number"
                     value={weight}
                     onChange={(e) => setWeight(e.target.value)}
-                    className="w-full border border-gray-300 p-3 rounded-xl text-right focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full border border-gray-300 p-3 rounded-xl text-right focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="مثال: 25"
                   />
                 </div>
@@ -286,7 +288,7 @@ export function KTVCaclulator() {
                     type="number"
                     value={fluidIntake}
                     onChange={(e) => setFluidIntake(e.target.value)}
-                    className="w-full border border-gray-300 p-3 rounded-xl text-right focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full border border-gray-300 p-3 rounded-xl text-right focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="مثال: 800"
                   />
                 </div>
@@ -299,7 +301,7 @@ export function KTVCaclulator() {
                     type="number"
                     value={urineOutput}
                     onChange={(e) => setUrineOutput(e.target.value)}
-                    className="w-full border border-gray-300 p-3 rounded-xl text-right focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full border border-gray-300 p-3 rounded-xl text-right focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="مثال: 300"
                   />
                 </div>
@@ -312,7 +314,7 @@ export function KTVCaclulator() {
                     type="number"
                     value={extraFluid}
                     onChange={(e) => setExtraFluid(e.target.value)}
-                    className="w-full border border-gray-300 p-3 rounded-xl text-right focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full border border-gray-300 p-3 rounded-xl text-right focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="ادم، تزریق‌ها، تغذیه و..."
                   />
                 </div>
@@ -345,10 +347,10 @@ export function KTVCaclulator() {
                       {targetUf.toFixed(0)} ml
                     </div>
                     <p className="text-green-100">
-                      💧 UF پیشنهادی برای خارج کردن
+                       UF پیشنهادی برای خارج کردن
                     </p>
                     <p className="text-green-200 text-sm mt-2">
-                      * بر اساس تعادل مایعات و حداکثر مجاز برای وزن وارد شده
+                       بر اساس تعادل مایعات و حداکثر مجاز برای وزن وارد شده
                     </p>
                   </div>
                 </motion.div>
@@ -631,7 +633,7 @@ export function KTVCaclulator() {
                             placeholder="مثال: 65"
                             value={bunPre}
                             onChange={(e) => setBunPre(e.target.value)}
-                            className="w-full border border-gray-300 p-3 rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            className="w-full border border-gray-300 p-3 rounded-xl text-right focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                           />
                           {(isFormulaSelected("spKtV") || showAllFormulas) && (
                             <p className="text-xs text-green-600 mt-1 text-right">مورد نیاز برای spKt/V</p>
@@ -647,7 +649,7 @@ export function KTVCaclulator() {
                             placeholder="مثال: 25"
                             value={bunPost}
                             onChange={(e) => setBunPost(e.target.value)}
-                            className="w-full border border-gray-300 p-3 rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            className="w-full border border-gray-300 p-3 rounded-xl text-right focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                           />
                           {(isFormulaSelected("spKtV") || showAllFormulas) && (
                             <p className="text-xs text-green-600 mt-1 text-right">مورد نیاز برای spKt/V</p>
@@ -663,7 +665,7 @@ export function KTVCaclulator() {
                             placeholder="مثال: 4"
                             value={time}
                             onChange={(e) => setTime(e.target.value)}
-                            className="w-full border border-gray-300 p-3 rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            className="w-full border border-gray-300 p-3 rounded-xl text-right focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                           />
                           {(isFormulaSelected("spKtV") || isFormulaSelected("eKtV") || showAllFormulas) && (
                             <p className="text-xs text-green-600 mt-1 text-right">مورد نیاز برای spKt/V و eKt/V</p>
@@ -680,7 +682,7 @@ export function KTVCaclulator() {
                             placeholder="مثال: 1.2"
                             value={ufKtv}
                             onChange={(e) => setUfKtv(e.target.value)}
-                            className="w-full border border-gray-300 p-3 rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            className="w-full border border-gray-300 p-3 rounded-xl text-right focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                           />
                           {(isFormulaSelected("spKtV") || showAllFormulas) && (
                             <p className="text-xs text-green-600 mt-1 text-right">مورد نیاز برای spKt/V</p>
@@ -696,7 +698,7 @@ export function KTVCaclulator() {
                             placeholder="مثال: 24.5"
                             value={weightAfter}
                             onChange={(e) => setWeightAfter(e.target.value)}
-                            className="w-full border border-gray-300 p-3 rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            className="w-full border border-gray-300 p-3 rounded-xl text-right focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                           />
                           {(isFormulaSelected("spKtV") || isFormulaSelected("ureaVolume") || showAllFormulas) && (
                             <p className="text-xs text-green-600 mt-1 text-right">مورد نیاز برای spKt/V و حجم اوره</p>
@@ -711,7 +713,7 @@ export function KTVCaclulator() {
                             <select
                               value={dialysisSessions}
                               onChange={(e) => setDialysisSessions(e.target.value)}
-                              className="w-full border border-gray-300 p-3 rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              className="w-full border border-gray-300 p-3 rounded-xl text-right focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                             >
                               <option value="2">2 جلسه</option>
                               <option value="3">3 جلسه</option>
@@ -745,7 +747,7 @@ export function KTVCaclulator() {
                           <select
                             value={gender}
                             onChange={(e) => setGender(e.target.value)}
-                            className="w-full border border-gray-300 p-3 rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            className="w-full border border-gray-300 p-3 rounded-xl text-right focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                           >
                             <option value="male">مرد</option>
                             <option value="female">زن</option>
@@ -762,7 +764,7 @@ export function KTVCaclulator() {
                             placeholder="مثال: 45"
                             value={age}
                             onChange={(e) => setAge(e.target.value)}
-                            className="w-full border border-gray-300 p-3 rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            className="w-full border border-gray-300 p-3 rounded-xl text-right focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                           />
                           <p className="text-xs text-green-600 mt-1 text-right">مورد نیاز برای حجم اوره</p>
                         </div>
@@ -776,7 +778,7 @@ export function KTVCaclulator() {
                             placeholder="مثال: 170"
                             value={height}
                             onChange={(e) => setHeight(e.target.value)}
-                            className="w-full border border-gray-300 p-3 rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            className="w-full border border-gray-300 p-3 rounded-xl text-right focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                           />
                           <p className="text-xs text-green-600 mt-1 text-right">مورد نیاز برای حجم اوره</p>
                         </div>

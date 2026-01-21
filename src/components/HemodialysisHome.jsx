@@ -132,48 +132,11 @@ export function HemodialysisHome() {
       color: "from-teal-500 to-green-600",
       status: "active"
     },
-    {
-      to: "/hemo/prescriptions",
-      icon: <FaPrescriptionBottleAlt size={28} />,
-      label: "داروهای تجویزی",
-      description: "پروتکل دارویی و دوزهای استاندارد",
-      color: "from-indigo-500 to-purple-600",
-      status: "active"
-    },
-    {
-      to: "/hemo/bloodTests",
-      icon: <FaVial size={28} />,
-      label: "آزمایش‌های لازم",
-      description: "درخواست و تفسیر آزمایشات",
-      color: "from-yellow-500 to-orange-600",
-      status: "active"
-    },
-    {
-      to: "/hemo/fluidManagement",
-      icon: <FaTint size={28} />,
-      label: "مدیریت مایعات",
-      description: "برنامه مایع‌درمانی و محدودیت‌ها",
-      color: "from-cyan-500 to-teal-600",
-      status: "active"
-    },
-    {
-      to: "/hemo/nutrition",
-      icon: <FaWeight size={28} />,
-      label: "وزن‌گیری و تغذیه",
-      description: "مدیریت وزن و برنامه تغذیه‌ای",
-      color: "from-pink-500 to-rose-600",
-      status: "active"
-    },
-  
+    
+ 
+   
 
-    {
-      to: "/hemo/emergency",
-      icon: <FaProcedures size={28} />,
-      label: "اورژانس همودیالیز",
-      description: "مدیریت شرایط اورژانس در دیالیز",
-      color: "from-red-600 to-rose-700",
-      status: "active"
-    },
+   
    
   ];
 

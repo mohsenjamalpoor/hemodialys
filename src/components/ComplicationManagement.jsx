@@ -225,11 +225,7 @@ const Header = () => {
     <header className="bg-gradient-to-r from-blue-600 to-purple-700 text-white shadow-lg">
       <div className="container mx-auto px-4 py-6">
         <div className="text-center">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <MdOutlineEmergency className="text-4xl text-yellow-300 animate-pulse" />
-            <FaExclamationTriangle className="text-4xl text-red-300" />
-            <FaProcedures className="text-4xl text-white" />
-          </div>
+          
           
           <h1 className="text-3xl font-bold mb-3 flex items-center justify-center gap-2">
             مدیریت عوارض همودیالیز کودکان
@@ -242,20 +238,7 @@ const Header = () => {
           </p>
         </div>
         
-        <div className="flex flex-wrap justify-center gap-3 mt-6">
-          <div className="flex items-center gap-2 bg-blue-500 bg-opacity-20 px-3 py-1 rounded-full">
-            <FaHandHoldingMedical className="text-blue-200" />
-            <span className="text-blue-100 text-sm">کودکان</span>
-          </div>
-          <div className="flex items-center gap-2 bg-purple-500 bg-opacity-20 px-3 py-1 rounded-full">
-            <FaNotesMedical className="text-purple-200" />
-            <span className="text-purple-100 text-sm">فوری</span>
-          </div>
-          <div className="flex items-center gap-2 bg-red-500 bg-opacity-20 px-3 py-1 rounded-full">
-            <FaSkull className="text-red-200" />
-            <span className="text-red-100 text-sm">اورژانسی</span>
-          </div>
-        </div>
+     
       </div>
     </header>
   );
