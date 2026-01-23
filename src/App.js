@@ -13,6 +13,7 @@ import { StableDialysisAssistant } from "./components/StableDialysisAssistant";
 import { UnstableDialysisAssistant } from "./components/UnstableDialysisAssistant";
 import { HemodialysisPrime } from "./components/HemodialsisPrime";
 import HemodialsisFilmPrime from "./components/HemodialsisFilmPrime";
+import MedicalRecords from "./components/MedicalRecords";
 
 function App() {
   return (
@@ -33,6 +34,11 @@ function App() {
         <Route path="/hemo/hemodialysisPrime" element={
           <ProtectedRoute>
             <HemodialysisPrime />
+          </ProtectedRoute>
+        } />
+         <Route path="/hemo/medicalRecords" element={
+          <ProtectedRoute>
+            <MedicalRecords />
           </ProtectedRoute>
         } />
            <Route path="/hemo/priming4008" element={

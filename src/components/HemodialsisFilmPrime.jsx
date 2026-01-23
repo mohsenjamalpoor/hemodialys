@@ -47,7 +47,7 @@ export function HemodialsisFilmPrime() {
       likes: 245,
       isFeatured: true,
       rating: 4.8,
-      instructor: "دکتر احمدی",
+      instructor: "دکتر حیدری",
       instructorAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=ahmadi",
       level: "مقدماتی",
       progress: 85,
@@ -71,7 +71,7 @@ export function HemodialsisFilmPrime() {
       likes: 189,
       isFeatured: false,
       rating: 4.5,
-      instructor: "مهندس کریمی",
+      instructor: "مهندس جمالپور",
       instructorAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=karimi",
       level: "متوسط",
       progress: 60,
@@ -95,7 +95,7 @@ export function HemodialsisFilmPrime() {
       likes: 456,
       isFeatured: false,
       rating: 4.7,
-      instructor: "پرستار رضایی",
+      instructor: "پرستار جمالپور",
       instructorAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=rezaei",
       level: "متوسط",
       progress: 100,
@@ -119,7 +119,7 @@ export function HemodialsisFilmPrime() {
       likes: 123,
       isFeatured: true,
       rating: 4.6,
-      instructor: "دکتر محمدی",
+      instructor: "دکتر حیدری",
       instructorAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=mohammadi",
       level: "پیشرفته",
       progress: 30,
@@ -143,7 +143,7 @@ export function HemodialsisFilmPrime() {
       likes: 312,
       isFeatured: false,
       rating: 4.9,
-      instructor: "مهندس نجفی",
+      instructor: "مهندس جمالپور",
       instructorAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=najafi",
       level: "پیشرفته",
       progress: 0,
@@ -167,7 +167,7 @@ export function HemodialsisFilmPrime() {
       likes: 287,
       isFeatured: true,
       rating: 4.8,
-      instructor: "دکتر علیزاده",
+      instructor: "دکتر حیدری",
       instructorAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=alizadeh",
       level: "متوسط",
       progress: 45,
@@ -329,7 +329,15 @@ export function HemodialsisFilmPrime() {
       {/* Navigation Bar */}
       <div className="bg-white rounded-2xl shadow-lg p-4 mb-6">
         <div className="flex items-center justify-between">
+         
+          
           <div className="flex items-center gap-4">
+            <button className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl hover:shadow-lg transition-all">
+              <FaDownload className="inline ml-2" />
+              اپلیکیشن موبایل
+            </button>
+          </div>
+           <div className="flex items-center gap-4">
             <Link
               to="/hemo/hemodialysisPrime"
               className="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-colors"
@@ -338,8 +346,6 @@ export function HemodialsisFilmPrime() {
               <span className="font-medium">بازگشت</span>
             </Link>
           </div>
-          
-        
         </div>
       </div>
 
@@ -353,20 +359,7 @@ export function HemodialsisFilmPrime() {
             <p className="text-blue-100 mb-6 leading-relaxed">
               بزرگترین کتابخانه ویدیوهای آموزشی دیالیز با کیفیت 4K و توضیحات کامل فارسی
             </p>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <FaUser className="text-white/80" />
-                <span>۶ مربی متخصص</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <BsCameraVideo className="text-white/80" />
-                <span>{videos.length}+ ویدیو</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <FaCertificate className="text-white/80" />
-                <span>گواهینامه معتبر</span>
-              </div>
-            </div>
+           
           </div>
           
           <div className="w-full lg:w-auto">

@@ -133,7 +133,14 @@ export function HemodialysisHome() {
       status: "active"
     },
     
- 
+   {
+      to: "/hemo/medicalRecords",
+      icon: <FaHeartbeat size={28} />,
+      label: " پرونده های پزشکی بیماران",
+      description: "مدیریت عوارض حین همودیالیز",
+      color: "from-teal-500 to-green-600",
+      status: "active"
+    },
    
 
    
@@ -166,7 +173,7 @@ export function HemodialysisHome() {
               </div>
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
-                  بخش همودیالیز کودکان
+                   دیالیز کودکان
                 </h1>
                 <p className="text-gray-600 mt-1">سامانه تخصصی مراقبت و درمان نارسایی کلیه در اطفال</p>
               </div>
