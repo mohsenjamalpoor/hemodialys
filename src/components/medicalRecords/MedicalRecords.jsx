@@ -90,6 +90,18 @@ export default function MedicalRecords() {
   const [notification, setNotification] = useState({ message: '', type: 'success' });
   const [dropdownOpen, setDropdownOpen] = useState(null);
 
+  // لیست رنگ‌های ثابت برای آواتارها
+  const avatarColors = [
+    'bg-blue-500',
+    'bg-green-500', 
+    'bg-purple-500',
+    'bg-pink-500',
+    'bg-orange-500',
+    'bg-teal-500',
+    'bg-indigo-500',
+    'bg-cyan-500',
+  ];
+
   // بارگذاری اطلاعات
   useEffect(() => {
     const savedName = localStorage.getItem("doctorName") || "دکتر احمدی";
@@ -289,14 +301,15 @@ export default function MedicalRecords() {
     closeModal();
   };
 
-  // رندر آواتار
-  const renderAvatar = (name) => {
-    const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-pink-500', 'bg-orange-500'];
-    const color = colors[Math.floor(Math.random() * colors.length)];
+  // رندر آواتار با رنگ ثابت بر اساس ID بیمار
+  const renderAvatar = (patient) => {
+    // استفاده از شناسه بیمار برای انتخاب رنگ ثابت از لیست
+    const colorIndex = patient.id ? (patient.id % avatarColors.length) : 0;
+    const color = avatarColors[colorIndex];
     
     return (
       <div className={`${color} w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg`}>
-        {name.charAt(0)}
+        {patient.fullName.charAt(0)}
       </div>
     );
   };
@@ -458,9 +471,6 @@ export default function MedicalRecords() {
                 افزودن بیمار جدید
               </button>
               
-              <div className="hidden md:block text-sm text-gray-600">
-                <p>کد پزشک: <span className="font-mono font-bold text-blue-600">{doctorInfo.code}</span></p>
-              </div>
             </div>
           </div>
         </div>
@@ -494,7 +504,7 @@ export default function MedicalRecords() {
                 <div className="p-5">
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-3">
-                      {renderAvatar(patient.fullName)}
+                      {renderAvatar(patient)}
                       <div>
                         <h3 className="font-bold text-lg text-gray-800">{patient.fullName}</h3>
                         <div className="flex items-center gap-2 mt-1">
@@ -524,7 +534,7 @@ export default function MedicalRecords() {
                             className="w-full text-right px-4 py-3 hover:bg-gray-50 flex items-center gap-2 justify-end"
                           >
                             <FiEye className="w-4 h-4" />
-                            مشاهده پرونده کامل
+                            مشاهده پرونده 
                           </button>
                           <button
                             onClick={() => openModal('edit', patient)}
@@ -590,7 +600,7 @@ export default function MedicalRecords() {
                       className="flex-1 flex items-center justify-center gap-2 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition"
                     >
                       <FiEye className="w-4 h-4" />
-                      مشاهده پرونده کامل
+                      مشاهده پرونده 
                     </button>
                   </div>
                 </div>
