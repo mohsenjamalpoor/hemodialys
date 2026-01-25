@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   FiSearch, 
   FiUserPlus, 
   FiFileText, 
   FiCalendar, 
   FiHash, 
-  FiFolder, 
   FiMoreVertical, 
   FiUser, 
   FiPhone, 
@@ -16,105 +15,63 @@ import {
   FiX,
   FiCheck,
   FiArrowRight,
-  FiLogOut
+  FiLogOut,
+  FiHeart,
+  FiFolder
 } from 'react-icons/fi';
 
-// داده‌های نمونه برای بیماران با پزشک اختصاصی
-const allPatients = [
+const PATIENTS_STORAGE_KEY = 'hemo_patients_data';
+
+// داده‌های اولیه فقط با فیلدهای اصلی
+const initialPatients = [
   {
     id: 1,
     fullName: 'علی محمدی',
     nationalId: '0012345678',
     medicalRecordNumber: 'MR-2024-001',
-    lastVisit: '1402/11/15',
     age: 35,
     gender: 'مرد',
     phone: '09123456789',
     bloodType: 'O+',
-    doctorId: 'DR001', // کد پزشک
-    doctorName: 'دکتر احمدی'
+    doctorId: 'DR001',
+    doctorName: 'دکتر احمدی',
+    lastVisit: '1402/11/15',
+    lastUpdate: '1402/11/15'
   },
   {
     id: 2,
     fullName: 'فاطمه کریمی',
     nationalId: '0023456789',
     medicalRecordNumber: 'MR-2024-002',
-    lastVisit: '1402/11/10',
     age: 28,
     gender: 'زن',
     phone: '09129876543',
     bloodType: 'A+',
     doctorId: 'DR001',
-    doctorName: 'دکتر احمدی'
-  },
-  {
-    id: 3,
-    fullName: 'رضا احمدی',
-    nationalId: '0034567890',
-    medicalRecordNumber: 'MR-2024-003',
-    lastVisit: '1402/10/25',
-    age: 45,
-    gender: 'مرد',
-    phone: '09351234567',
-    bloodType: 'B+',
-    doctorId: 'DR002',
-    doctorName: 'دکتر کریمی'
-  },
-  {
-    id: 4,
-    fullName: 'سارا نوری',
-    nationalId: '0045678901',
-    medicalRecordNumber: 'MR-2024-004',
-    lastVisit: '1402/10/20',
-    age: 32,
-    gender: 'زن',
-    phone: '09107654321',
-    bloodType: 'AB+',
-    doctorId: 'DR001',
-    doctorName: 'دکتر احمدی'
-  },
-  {
-    id: 5,
-    fullName: 'محمد حسینی',
-    nationalId: '0056789012',
-    medicalRecordNumber: 'MR-2024-005',
-    lastVisit: '1402/11/05',
-    age: 50,
-    gender: 'مرد',
-    phone: '09191234567',
-    bloodType: 'A-',
-    doctorId: 'DR002',
-    doctorName: 'دکتر کریمی'
-  },
-  {
-    id: 6,
-    fullName: 'نازنین رضایی',
-    nationalId: '0067890123',
-    medicalRecordNumber: 'MR-2024-006',
-    lastVisit: '1402/10/30',
-    age: 29,
-    gender: 'زن',
-    phone: '09187654321',
-    bloodType: 'O-',
-    doctorId: 'DR001',
-    doctorName: 'دکتر احمدی'
+    doctorName: 'دکتر احمدی',
+    lastVisit: '1402/11/10',
+    lastUpdate: '1402/11/10'
   }
 ];
 
 export default function MedicalRecords() {
+  const navigate = useNavigate();
   const location = useLocation();
+  
   const [doctorInfo, setDoctorInfo] = useState({
     name: '',
     specialty: '',
     code: '',
     doctorId: ''
   });
+  
   const [patients, setPatients] = useState([]);
   const [filteredPatients, setFilteredPatients] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [modalType, setModalType] = useState(''); // 'add', 'edit', 'view', 'delete'
+  const [modalType, setModalType] = useState('');
+  
   const [newPatient, setNewPatient] = useState({
     fullName: '',
     nationalId: '',
@@ -123,15 +80,17 @@ export default function MedicalRecords() {
     gender: '',
     phone: '',
     bloodType: '',
-    lastVisit: new Date().toLocaleDateString('fa-IR'),
     doctorId: '',
-    doctorName: ''
+    doctorName: '',
+    lastVisit: new Date().toLocaleDateString('fa-IR'),
+    lastUpdate: new Date().toLocaleDateString('fa-IR')
   });
+  
   const [showNotification, setShowNotification] = useState(false);
   const [notification, setNotification] = useState({ message: '', type: 'success' });
   const [dropdownOpen, setDropdownOpen] = useState(null);
 
-  // خواندن اطلاعات پزشک از localStorage
+  // بارگذاری اطلاعات
   useEffect(() => {
     const savedName = localStorage.getItem("doctorName") || "دکتر احمدی";
     const savedSpecialty = localStorage.getItem("doctorSpecialty") || "متخصص نفرولوژی";
@@ -145,16 +104,35 @@ export default function MedicalRecords() {
       doctorId: savedDoctorId
     });
 
-    // فیلتر کردن بیماران بر اساس پزشک وارد شده
-    const doctorPatients = allPatients.filter(patient => 
-      patient.doctorId === savedDoctorId
-    );
-    
-    setPatients(doctorPatients);
-    setFilteredPatients(doctorPatients);
-  }, []);
+    const savedPatients = localStorage.getItem(PATIENTS_STORAGE_KEY);
+    if (savedPatients) {
+      const parsedPatients = JSON.parse(savedPatients);
+      const doctorPatients = parsedPatients.filter(patient => 
+        patient.doctorId === savedDoctorId
+      );
+      setPatients(doctorPatients);
+      setFilteredPatients(doctorPatients);
+    } else {
+      const doctorPatients = initialPatients.filter(patient => 
+        patient.doctorId === savedDoctorId
+      );
+      setPatients(doctorPatients);
+      setFilteredPatients(doctorPatients);
+      localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(initialPatients));
+    }
+  }, [location, navigate]);
 
-  // فیلتر بیماران بر اساس جستجو
+  // ذخیره بیماران در localStorage
+  useEffect(() => {
+    if (patients.length > 0) {
+      const allPatients = JSON.parse(localStorage.getItem(PATIENTS_STORAGE_KEY) || '[]');
+      const otherPatients = allPatients.filter(p => p.doctorId !== doctorInfo.doctorId);
+      const updatedAllPatients = [...otherPatients, ...patients];
+      localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(updatedAllPatients));
+    }
+  }, [patients, doctorInfo.doctorId]);
+
+  // فیلتر بیماران
   useEffect(() => {
     const filtered = patients.filter(patient => 
       patient.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -186,15 +164,19 @@ export default function MedicalRecords() {
         gender: '',
         phone: '',
         bloodType: '',
-        lastVisit: new Date().toLocaleDateString('fa-IR'),
         doctorId: doctorInfo.doctorId,
-        doctorName: doctorInfo.name
+        doctorName: doctorInfo.name,
+        lastVisit: new Date().toLocaleDateString('fa-IR'),
+        lastUpdate: new Date().toLocaleDateString('fa-IR')
       });
-    } else if (type === 'view' && patient) {
-      setNewPatient(patient);
     }
     setShowModal(true);
     setDropdownOpen(null);
+  };
+
+  // باز کردن صفحه جزئیات
+  const openDetailPage = (patient) => {
+    navigate(`/hemo/medicalRecords/patient/${patient.id}`, { state: { patient } });
   };
 
   const closeModal = () => {
@@ -207,9 +189,10 @@ export default function MedicalRecords() {
       gender: '',
       phone: '',
       bloodType: '',
-      lastVisit: new Date().toLocaleDateString('fa-IR'),
       doctorId: doctorInfo.doctorId,
-      doctorName: doctorInfo.name
+      doctorName: doctorInfo.name,
+      lastVisit: new Date().toLocaleDateString('fa-IR'),
+      lastUpdate: new Date().toLocaleDateString('fa-IR')
     });
   };
 
@@ -231,14 +214,31 @@ export default function MedicalRecords() {
 
   // اضافه کردن بیمار جدید
   const handleAddPatient = () => {
+    // اعتبارسنجی فیلدهای ضروری
+    if (!newPatient.fullName || !newPatient.nationalId || !newPatient.age || !newPatient.phone) {
+      showNotificationMessage('لطفا فیلدهای ضروری را پر کنید', 'error');
+      return;
+    }
+    
     const newPatientObj = {
       ...newPatient,
-      id: allPatients.length + 1,
+      id: Date.now(),
+      lastUpdate: new Date().toLocaleDateString('fa-IR'),
       doctorId: doctorInfo.doctorId,
-      doctorName: doctorInfo.name
+      doctorName: doctorInfo.name,
+      // فیلدهای اضافی که در صفحه جزئیات اضافه می‌شوند
+      height: '',
+      weight: '',
+      smoking: 'غیرسیگاری',
+      pregnancy: false,
+      breastfeeding: false,
+      vaccinations: [],
+      medicalHistory: [],
+      surgeryHistory: [],
+      familyHistory: [],
+      bmi: ''
     };
     
-    // در واقعیت اینجا باید به API ارسال شود
     setPatients(prev => [...prev, newPatientObj]);
     showNotificationMessage('بیمار جدید با موفقیت اضافه شد', 'success');
     closeModal();
@@ -246,8 +246,34 @@ export default function MedicalRecords() {
 
   // ویرایش بیمار
   const handleEditPatient = () => {
+    // اعتبارسنجی فیلدهای ضروری
+    if (!newPatient.fullName || !newPatient.nationalId || !newPatient.age || !newPatient.phone) {
+      showNotificationMessage('لطفا فیلدهای ضروری را پر کنید', 'error');
+      return;
+    }
+    
+    const updatedPatient = {
+      ...newPatient,
+      lastUpdate: new Date().toLocaleDateString('fa-IR')
+    };
+    
+    // حفظ فیلدهای اضافی در ویرایش
+    const existingPatient = patients.find(p => p.id === selectedPatient.id);
+    if (existingPatient) {
+      updatedPatient.height = existingPatient.height || '';
+      updatedPatient.weight = existingPatient.weight || '';
+      updatedPatient.smoking = existingPatient.smoking || 'غیرسیگاری';
+      updatedPatient.pregnancy = existingPatient.pregnancy || false;
+      updatedPatient.breastfeeding = existingPatient.breastfeeding || false;
+      updatedPatient.vaccinations = existingPatient.vaccinations || [];
+      updatedPatient.medicalHistory = existingPatient.medicalHistory || [];
+      updatedPatient.surgeryHistory = existingPatient.surgeryHistory || [];
+      updatedPatient.familyHistory = existingPatient.familyHistory || [];
+      updatedPatient.bmi = existingPatient.bmi || '';
+    }
+    
     const updatedPatients = patients.map(patient => 
-      patient.id === selectedPatient.id ? { ...newPatient, id: patient.id } : patient
+      patient.id === selectedPatient.id ? updatedPatient : patient
     );
     
     setPatients(updatedPatients);
@@ -259,26 +285,11 @@ export default function MedicalRecords() {
   const handleDeletePatient = () => {
     const filtered = patients.filter(patient => patient.id !== selectedPatient.id);
     setPatients(filtered);
-    showNotificationMessage('بیمار با موفقیت حذف شد', 'success');
+    showNotificationMessage('بیمار با موفقیت حذف شد', 'error');
     closeModal();
   };
 
-  // بازگشت به صفحه اصلی
-  const handleBackToHome = () => {
-    window.location.href = '/hemo';
-  };
-
-  // خروج از سیستم
-  const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("doctorName");
-    localStorage.removeItem("doctorSpecialty");
-    localStorage.removeItem("doctorCode");
-    localStorage.removeItem("doctorId");
-    window.location.href = "/login";
-  };
-
-  // رندر آواتار با حرف اول نام
+  // رندر آواتار
   const renderAvatar = (name) => {
     const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-pink-500', 'bg-orange-500'];
     const color = colors[Math.floor(Math.random() * colors.length)];
@@ -290,23 +301,7 @@ export default function MedicalRecords() {
     );
   };
 
-  // رندر گزینه‌های گروه خونی
-  const bloodTypeOptions = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
-
-  // تاریخ شمسی
-  const getPersianDate = () => {
-    const date = new Date();
-    const options = {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      calendar: "persian"
-    };
-    return date.toLocaleDateString("fa-IR", options);
-  };
-
-  // زمان فعلی
+  // مدیریت زمان و تاریخ
   const [currentTime, setCurrentTime] = useState('');
   
   useEffect(() => {
@@ -325,6 +320,19 @@ export default function MedicalRecords() {
     return () => clearInterval(timer);
   }, []);
 
+  // تاریخ شمسی
+  const getPersianDate = () => {
+    const date = new Date();
+    const options = {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      calendar: "persian"
+    };
+    return date.toLocaleDateString("fa-IR", options);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50">
       {/* هدر ثابت */}
@@ -333,7 +341,7 @@ export default function MedicalRecords() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
-                onClick={handleBackToHome}
+                onClick={() => navigate('/hemo')}
                 className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition"
               >
                 <FiArrowRight className="rotate-180" />
@@ -369,7 +377,14 @@ export default function MedicalRecords() {
               </div>
               
               <button
-                onClick={handleLogout}
+                onClick={() => {
+                  localStorage.removeItem("isLoggedIn");
+                  localStorage.removeItem("doctorName");
+                  localStorage.removeItem("doctorSpecialty");
+                  localStorage.removeItem("doctorCode");
+                  localStorage.removeItem("doctorId");
+                  navigate("/login");
+                }}
                 className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition duration-300"
               >
                 <FiLogOut />
@@ -403,11 +418,11 @@ export default function MedicalRecords() {
                 </div>
                 <div className="h-12 w-px bg-white bg-opacity-30"></div>
                 <div className="text-center">
-                  <p className="text-blue-200 text-sm">آخرین ویزیت</p>
+                  <p className="text-blue-200 text-sm">آخرین بروزرسانی</p>
                   <p className="font-bold text-lg">
                     {patients.length > 0 
                       ? patients.reduce((latest, patient) => 
-                          patient.lastVisit > latest ? patient.lastVisit : latest, '') 
+                          patient.lastUpdate > latest ? patient.lastUpdate : latest, '') 
                       : '---'}
                   </p>
                 </div>
@@ -505,11 +520,11 @@ export default function MedicalRecords() {
                       {dropdownOpen === patient.id && (
                         <div className="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
                           <button
-                            onClick={() => openModal('view', patient)}
+                            onClick={() => openDetailPage(patient)}
                             className="w-full text-right px-4 py-3 hover:bg-gray-50 flex items-center gap-2 justify-end"
                           >
                             <FiEye className="w-4 h-4" />
-                            مشاهده جزئیات
+                            مشاهده پرونده کامل
                           </button>
                           <button
                             onClick={() => openModal('edit', patient)}
@@ -549,14 +564,6 @@ export default function MedicalRecords() {
                     </div>
                     
                     <div className="flex items-center gap-2">
-                      <FiCalendar className="w-4 h-4 text-gray-500" />
-                      <span className="text-gray-700">
-                        <strong>آخرین ویزیت:</strong> 
-                        <span className="mr-2">{patient.lastVisit}</span>
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
                       <FiPhone className="w-4 h-4 text-gray-500" />
                       <span className="text-gray-700">
                         <strong>تلفن:</strong> 
@@ -565,15 +572,13 @@ export default function MedicalRecords() {
                     </div>
                     
                     <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 flex items-center justify-center">
-                        <span className="text-xs">🩸</span>
-                      </div>
+                      <FiHeart className="w-4 h-4 text-gray-500" />
                       <span className="text-gray-700">
                         <strong>گروه خونی:</strong> 
                         <span className={`mr-2 px-2 py-1 rounded-full text-xs font-medium ${
-                          patient.bloodType.includes('+') ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
+                          patient.bloodType?.includes('+') ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
                         }`}>
-                          {patient.bloodType}
+                          {patient.bloodType || '---'}
                         </span>
                       </span>
                     </div>
@@ -581,7 +586,7 @@ export default function MedicalRecords() {
 
                   <div className="flex gap-2">
                     <button
-                      onClick={() => openModal('view', patient)}
+                      onClick={() => openDetailPage(patient)}
                       className="flex-1 flex items-center justify-center gap-2 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition"
                     >
                       <FiEye className="w-4 h-4" />
@@ -597,13 +602,12 @@ export default function MedicalRecords() {
         {/* مودال‌ها */}
         {showModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               {/* هدر مودال */}
               <div className="flex justify-between items-center p-6 border-b">
                 <h2 className="text-xl font-bold text-gray-800">
                   {modalType === 'add' ? 'افزودن بیمار جدید' : 
                    modalType === 'edit' ? 'ویرایش اطلاعات بیمار' : 
-                   modalType === 'view' ? 'مشاهده پرونده بیمار' : 
                    'تایید حذف'}
                 </h2>
                 <button
@@ -638,161 +642,141 @@ export default function MedicalRecords() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        نام و نام خانوادگی
-                      </label>
-                      <input
-                        type="text"
-                        name="fullName"
-                        value={newPatient.fullName}
-                        onChange={handleInputChange}
-                        disabled={modalType === 'view'}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition disabled:bg-gray-100 text-right"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        کد ملی
-                      </label>
-                      <input
-                        type="text"
-                        name="nationalId"
-                        value={newPatient.nationalId}
-                        onChange={handleInputChange}
-                        disabled={modalType === 'view'}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition disabled:bg-gray-100 text-right"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        شماره پرونده
-                      </label>
-                      <input
-                        type="text"
-                        name="medicalRecordNumber"
-                        value={newPatient.medicalRecordNumber}
-                        onChange={handleInputChange}
-                        disabled={modalType === 'view'}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition disabled:bg-gray-100 text-right"
-                      />
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          سن
+                          نام و نام خانوادگی *
+                        </label>
+                        <input
+                          type="text"
+                          name="fullName"
+                          value={newPatient.fullName}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-right"
+                          required
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          کد ملی *
+                        </label>
+                        <input
+                          type="text"
+                          name="nationalId"
+                          value={newPatient.nationalId}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-right"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          شماره پرونده
+                        </label>
+                        <input
+                          type="text"
+                          name="medicalRecordNumber"
+                          value={newPatient.medicalRecordNumber}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-right"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          شماره تماس *
+                        </label>
+                        <input
+                          type="tel"
+                          name="phone"
+                          value={newPatient.phone}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-right"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          سن *
                         </label>
                         <input
                           type="number"
                           name="age"
                           value={newPatient.age}
                           onChange={handleInputChange}
-                          disabled={modalType === 'view'}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition disabled:bg-gray-100 text-right"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-right"
+                          required
                         />
                       </div>
+                      
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          جنسیت
+                          جنسیت *
                         </label>
                         <select
                           name="gender"
                           value={newPatient.gender}
                           onChange={handleInputChange}
-                          disabled={modalType === 'view'}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition disabled:bg-gray-100 text-right"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-right"
+                          required
                         >
                           <option value="">انتخاب کنید</option>
                           <option value="مرد">مرد</option>
                           <option value="زن">زن</option>
                         </select>
                       </div>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        شماره تماس
-                      </label>
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={newPatient.phone}
-                        onChange={handleInputChange}
-                        disabled={modalType === 'view'}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition disabled:bg-gray-100 text-right"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        گروه خونی
-                      </label>
-                      <select
-                        name="bloodType"
-                        value={newPatient.bloodType}
-                        onChange={handleInputChange}
-                        disabled={modalType === 'view'}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition disabled:bg-gray-100 text-right"
-                      >
-                        <option value="">انتخاب کنید</option>
-                        {bloodTypeOptions.map(type => (
-                          <option key={type} value={type}>{type}</option>
-                        ))}
-                      </select>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        آخرین ویزیت
-                      </label>
-                      <input
-                        type="text"
-                        name="lastVisit"
-                        value={newPatient.lastVisit}
-                        onChange={handleInputChange}
-                        disabled={modalType === 'view'}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition disabled:bg-gray-100 text-right"
-                      />
-                    </div>
-                    
-                    {/* نمایش پزشک معالج فقط در حالت مشاهده */}
-                    {modalType === 'view' && (
-                      <div className="bg-blue-50 p-4 rounded-lg">
-                        <p className="text-sm text-gray-700 mb-1">پزشک معالج:</p>
-                        <p className="font-bold text-blue-700">{newPatient.doctorName}</p>
-                        <p className="text-xs text-gray-600 mt-1">کد پزشک: {newPatient.doctorId}</p>
-                      </div>
-                    )}
-                    
-                    {modalType !== 'view' && (
-                      <div className="flex gap-3 pt-4">
-                        <button
-                          onClick={closeModal}
-                          className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition"
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          گروه خونی
+                        </label>
+                        <select
+                          name="bloodType"
+                          value={newPatient.bloodType}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-right"
                         >
-                          لغو
-                        </button>
-                        <button
-                          onClick={modalType === 'add' ? handleAddPatient : handleEditPatient}
-                          className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition flex items-center justify-center gap-2"
-                        >
-                          <FiCheck className="w-5 h-5" />
-                          {modalType === 'add' ? 'افزودن' : 'ذخیره تغییرات'}
-                        </button>
+                          <option value="">انتخاب کنید</option>
+                          <option value="A+">A+</option>
+                          <option value="A-">A-</option>
+                          <option value="B+">B+</option>
+                          <option value="B-">B-</option>
+                          <option value="O+">O+</option>
+                          <option value="O-">O-</option>
+                          <option value="AB+">AB+</option>
+                          <option value="AB-">AB-</option>
+                        </select>
                       </div>
-                    )}
-                    
-                    {modalType === 'view' && (
+                    </div>
+
+                    <div className="pt-4 border-t">
+                      <p className="text-sm text-gray-600 mb-4">
+                        * اطلاعات اضافی مانند سوابق بیماری، جراحی، خانوادگی، واکسیناسیون و اطلاعات سلامت در صفحه جزئیات بیمار قابل ویرایش هستند.
+                      </p>
+                    </div>
+
+                    <div className="flex gap-3 pt-4 border-t">
                       <button
                         onClick={closeModal}
-                        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition mt-4"
+                        className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition"
                       >
-                        بستن
+                        لغو
                       </button>
-                    )}
+                      <button
+                        onClick={modalType === 'add' ? handleAddPatient : handleEditPatient}
+                        className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition flex items-center justify-center gap-2"
+                      >
+                        <FiCheck className="w-5 h-5" />
+                        {modalType === 'add' ? 'افزودن' : 'ذخیره تغییرات'}
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

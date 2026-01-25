@@ -1,4 +1,3 @@
-// App.js
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Login } from "./components/Login";
@@ -13,7 +12,8 @@ import { StableDialysisAssistant } from "./components/StableDialysisAssistant";
 import { UnstableDialysisAssistant } from "./components/UnstableDialysisAssistant";
 import { HemodialysisPrime } from "./components/HemodialsisPrime";
 import HemodialsisFilmPrime from "./components/HemodialsisFilmPrime";
-import MedicalRecords from "./components/MedicalRecords";
+import MedicalRecords from "./components/medicalRecords/MedicalRecords";
+import PatientDetailPage from "./components/medicalRecords/PatientDetailPage";
 
 function App() {
   return (
@@ -31,22 +31,35 @@ function App() {
             <HemodialysisHome />
           </ProtectedRoute>
         } />
+        
+        {/* پرونده پزشکی */}
+        <Route path="/hemo/medicalRecords" element={
+          <ProtectedRoute>
+            <MedicalRecords />
+          </ProtectedRoute>
+        } />
+        
+        {/* صفحه جزئیات بیمار */}
+        <Route path="/hemo/medicalRecords/patient/:patientId" element={
+          <ProtectedRoute>
+            <PatientDetailPage />
+          </ProtectedRoute>
+        } />
+        
+        {/* بقیه مسیرها */}
         <Route path="/hemo/hemodialysisPrime" element={
           <ProtectedRoute>
             <HemodialysisPrime />
           </ProtectedRoute>
         } />
-         <Route path="/hemo/medicalRecords" element={
-          <ProtectedRoute>
-            <MedicalRecords />
-          </ProtectedRoute>
-        } />
-           <Route path="/hemo/priming4008" element={
+        
+        <Route path="/hemo/priming4008" element={
           <ProtectedRoute>
             <Priming4008S />
           </ProtectedRoute>
         } />
-          <Route path="/hemo/hemodialsisFilmPrime" element={
+        
+        <Route path="/hemo/hemodialsisFilmPrime" element={
           <ProtectedRoute>
             <HemodialsisFilmPrime />
           </ProtectedRoute>
