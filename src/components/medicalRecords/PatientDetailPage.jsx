@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { 
-  FiArrowRight, 
+
   FiUser, 
   FiEdit, 
-  FiFileText, 
+
   FiCalendar, 
   FiHash, 
   FiFolder, 
@@ -22,7 +22,7 @@ import {
   FiX,
   FiCheck,
   FiEdit2,
-  FiBook,
+
   FiClipboard,
   FiUsers,
   FiSave,
@@ -255,11 +255,11 @@ const EditableSection = React.memo(({
         ) : (
           <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
             <div className="text-gray-400 mb-3 text-3xl">
-              {sectionType === 'medical' ? '🏥' :
-               sectionType === 'surgery' ? '🔪' :
-               sectionType === 'family' ? '👨‍👩‍👧‍👦' : '💉'}
+              {sectionType === 'medical' ? '' :
+               sectionType === 'surgery' ? ' ' :
+               sectionType === 'family' ? '' : ''}
             </div>
-            <p className="text-gray-500">موردی ثبت نشده است</p>
+            <p className="text-gray-500">اطلاعاتی ثبت نشده است</p>
             {isEditing && (
               <p className="text-sm text-gray-400 mt-1">اولین مورد را اضافه کنید</p>
             )}
