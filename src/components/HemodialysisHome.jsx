@@ -27,6 +27,7 @@ import {
   FaUserInjured,
   FaProcedures
 } from "react-icons/fa";
+import { FiFileText } from "react-icons/fi";
 
 export function HemodialysisHome() {
   const [currentTime, setCurrentTime] = useState("");
@@ -135,7 +136,7 @@ export function HemodialysisHome() {
     
    {
       to: "/hemo/medicalRecords",
-      icon: <FaHeartbeat size={28} />,
+      icon: <FiFileText size={32} />,
       label: " پرونده های پزشکی بیماران",
       description: "مدیریت عوارض حین همودیالیز",
       color: "from-teal-500 to-green-600",

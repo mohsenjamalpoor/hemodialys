@@ -275,9 +275,9 @@ High Conductivity:
   },
   {
     id: 8,
-    title: "آلارم دما (Temperature)",
-    label: "آلارم دما",
-    content: `آلارم دما (Temperature):
+    title: " دما (Temperature)",
+    label: " دما",
+    content: ` دما (Temperature):
 
 دمای نرمال دیالیز: حدود ۳۶.۵–۳۷.۵°C
 

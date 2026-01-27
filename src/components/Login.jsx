@@ -18,7 +18,7 @@ export function Login() {
       specialty: 'نفرولوژیست اطفال',
       code: '636465'
     },
-    '192025': { 
+    '731006': { 
       id: 2, 
       name: 'دکتر  حیدری', 
       specialty: 'نفرولوژیست',
@@ -61,7 +61,7 @@ export function Login() {
           </div>
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          سامانه تخصصی همودیالیز اطفال
+         دیاک
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
           برای دسترسی به سیستم، لطفا کد نظام پزشکی خود را وارد کنید
