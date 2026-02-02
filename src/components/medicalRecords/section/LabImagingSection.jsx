@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { FiCamera, FiUpload, FiTrash2, FiEye, FiEdit, FiX, FiCheck, FiDownload } from 'react-icons/fi';
+import { FiCamera, FiUpload, FiTrash2, FiEye, FiEdit, FiX, FiCheck } from 'react-icons/fi';
 
 const LabImagingSection = ({ 
   labImaging, 

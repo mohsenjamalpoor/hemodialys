@@ -3,11 +3,11 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { 
   FiUser, FiEdit, FiCalendar, FiHash, 
   FiFolder, FiPhone, FiActivity, FiHeart, FiThermometer, 
-  FiSmile, FiInfo, FiTrash2,
+   FiInfo, FiTrash2,
   FiClock, FiAlertCircle, FiX, FiCheck, FiEdit2,
   FiSave, FiArrowLeft, FiRefreshCw,
-  FiAlertTriangle, FiPrinter, FiPlus,
-  FiTrendingUp, FiDroplet, FiEye
+   FiPrinter,
+  FiTrendingUp,
 } from 'react-icons/fi';
 
 // کامپوننت‌های جداگانه

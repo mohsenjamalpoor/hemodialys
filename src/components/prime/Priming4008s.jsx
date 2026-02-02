@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import   useState  from "react";
 import { motion } from "framer-motion";
 import { HiChevronRight, HiChevronLeft } from "react-icons/hi";
 import { Link } from "react-router-dom";
@@ -18,11 +18,7 @@ import {
 } from "react-icons/fa";
 
 // -------------------- Utility --------------------
-const rateToDuration = (rate) => {
-  const clamped = Math.max(20, Math.min(500, rate || 20));
-  const t = 8 - (clamped - 20) * (6.8 / (500 - 20));
-  return Math.max(1.2, Math.min(8, t));
-};
+
 
 // -------------------- Steps with Real Images --------------------
 const STEPS = [
@@ -302,7 +298,7 @@ export default function Priming4008S() {
   const [imageError, setImageError] = useState(false);
 
   const step = STEPS[stepIndex];
-  const duration = useMemo(() => rateToDuration(rate), [rate]);
+
 
   const toggleRunning = () => {
     setRunning((r) => {

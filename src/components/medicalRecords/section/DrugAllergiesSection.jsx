@@ -8,7 +8,7 @@ import {
   FiCheck, 
   FiActivity,
   FiCalendar,
-  FiInfo,
+ 
   FiChevronDown,
   FiChevronUp,
   FiAlertCircle,
