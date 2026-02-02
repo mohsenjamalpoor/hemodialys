@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { 
   FiUser, FiEdit, FiCalendar, FiHash, 
   FiFolder, FiPhone, FiActivity, FiHeart, FiThermometer, 
   FiSmile, FiInfo, FiTrash2,
   FiClock, FiAlertCircle, FiX, FiCheck, FiEdit2,
-   FiSave, FiArrowLeft, FiRefreshCw,
-   FiAlertTriangle, FiPrinter
+  FiSave, FiArrowLeft, FiRefreshCw,
+  FiAlertTriangle, FiPrinter, FiPlus,
+  FiTrendingUp, FiDroplet, FiEye
 } from 'react-icons/fi';
 
 // کامپوننت‌های جداگانه
@@ -18,6 +19,8 @@ import LabTestsSection from './section/LabTestsSection';
 import NotesSection from './section/NotesSection';
 import MedicationHistorySection from './section/MedicationHistorySection';
 import LabImagingSection from './section/LabImagingSection';
+import FoodAllergiesSection from './section/FoodAllergiesSection';
+import DrugAllergiesSection from './section/DrugAllergiesSection';
 
 const PATIENTS_STORAGE_KEY = 'hemo_patients_data';
 
@@ -37,16 +40,20 @@ const getDefaultPatientData = (basicData) => ({
   familyHistory: basicData.familyHistory || [],
   foodAllergies: basicData.foodAllergies || [],
   drugAllergies: basicData.drugAllergies || [],
-  notes: basicData.notes || [], // تغییر از رشته به آرایه
+  notes: basicData.notes || [],
   labTests: basicData.labTests || [],
   medicationHistory: basicData.medicationHistory || [],
   labImaging: basicData.labImaging || [],
   lastVisit: basicData.lastVisit || new Date().toLocaleDateString('fa-IR'),
-  lastUpdate: basicData.lastUpdate || new Date().toLocaleDateString('fa-IR')
+  lastUpdate: basicData.lastUpdate || new Date().toLocaleDateString('fa-IR'),
+  bloodPressure: basicData.bloodPressure || '',
+  pulse: basicData.pulse || '',
+  temperature: basicData.temperature || '',
+  respiratoryRate: basicData.respiratoryRate || ''
 });
 
-// کامپوننت HealthInfoCard
-const HealthInfoCard = React.memo(({ 
+// کامپوننت CompactHealthInfoCard - کامپوننت جمع‌وجورتر
+const CompactHealthInfoCard = React.memo(({ 
   title, 
   icon: Icon, 
   value, 
@@ -55,75 +62,82 @@ const HealthInfoCard = React.memo(({
   isEditing,
   onChange,
   type = 'text',
-  options = []
+  options = [],
+  size = 'md'
 }) => {
   const colors = {
-    blue: { bg: 'bg-blue-100', text: 'text-blue-600', border: 'border-blue-200' },
-    green: { bg: 'bg-green-100', text: 'text-green-600', border: 'border-green-200' },
-    red: { bg: 'bg-red-100', text: 'text-red-600', border: 'border-red-200' },
-    purple: { bg: 'bg-purple-100', text: 'text-purple-600', border: 'border-purple-200' },
-    yellow: { bg: 'bg-yellow-100', text: 'text-yellow-600', border: 'border-yellow-200' },
-    pink: { bg: 'bg-pink-100', text: 'text-pink-600', border: 'border-pink-200' }
+    blue: { bg: 'bg-blue-50', icon: 'bg-blue-100', text: 'text-blue-600', border: 'border-blue-200' },
+    green: { bg: 'bg-green-50', icon: 'bg-green-100', text: 'text-green-600', border: 'border-green-200' },
+    red: { bg: 'bg-red-50', icon: 'bg-red-100', text: 'text-red-600', border: 'border-red-200' },
+    purple: { bg: 'bg-purple-50', icon: 'bg-purple-100', text: 'text-purple-600', border: 'border-purple-200' },
+    yellow: { bg: 'bg-yellow-50', icon: 'bg-yellow-100', text: 'text-yellow-600', border: 'border-yellow-200' },
+    pink: { bg: 'bg-pink-50', icon: 'bg-pink-100', text: 'text-pink-600', border: 'border-pink-200' }
+  };
+
+  const sizes = {
+    sm: { icon: 'w-4 h-4 md:w-5 md:h-5', text: 'text-sm md:text-base', value: 'text-lg md:text-xl' },
+    md: { icon: 'w-5 h-5 md:w-6 md:h-6', text: 'text-base md:text-lg', value: 'text-xl md:text-2xl' }
   };
 
   const selectedColor = colors[color] || colors.blue;
+  const selectedSize = sizes[size] || sizes.md;
 
   return (
-    <div className={`bg-gradient-to-br from-white to-gray-50 rounded-xl md:rounded-2xl p-4 md:p-6 border ${selectedColor.border} shadow-sm hover:shadow-md transition-shadow`}>
-      <div className="flex items-center justify-between mb-3 md:mb-4">
-        <div className={`${selectedColor.bg} p-2 md:p-3 rounded-lg md:rounded-xl`}>
-          <Icon className={`${selectedColor.text} w-5 h-5 md:w-6 md:h-6`} />
+    <div className={`${selectedColor.bg} border ${selectedColor.border} rounded-xl p-3 md:p-4 hover:shadow-sm transition-all duration-200`}>
+      <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+        <div className={`${selectedColor.icon} p-1.5 md:p-2 rounded-lg`}>
+          <Icon className={`${selectedColor.text} ${selectedSize.icon}`} />
         </div>
-        <span className="text-xs md:text-sm text-gray-600 font-medium">{title}</span>
-      </div>
-      <div className="text-center">
-        {isEditing ? (
-          <div className="relative">
-            {type === 'select' ? (
-              <select
-                value={value || ''}
-                onChange={(e) => onChange(e.target.value)}
-                className="w-full text-center text-lg md:text-2xl lg:text-3xl font-bold border-2 border-gray-300 rounded-xl px-3 py-2 md:px-4 md:py-3 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-              >
-                <option value="">انتخاب کنید</option>
-                {options.map((option, index) => (
-                  <option key={index} value={option.value}>{option.label}</option>
-                ))}
-              </select>
-            ) : type === 'checkbox' ? (
-              <label className="inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={value || false}
-                  onChange={(e) => onChange(e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="relative w-12 md:w-16 h-6 md:h-8 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 md:after:h-7 after:w-5 md:after:w-7 after:transition-all peer-checked:bg-green-500"></div>
-                <span className="mr-2 md:mr-3 text-sm md:text-lg font-medium text-gray-900">
-                  {value ? 'بله' : 'خیر'}
-                </span>
-              </label>
-            ) : (
-              <>
-                <input
-                  type={type}
+        <div className="flex-1">
+          <p className={`text-gray-600 ${selectedSize.text} font-medium`}>{title}</p>
+          {isEditing ? (
+            <div className="mt-1">
+              {type === 'select' ? (
+                <select
                   value={value || ''}
                   onChange={(e) => onChange(e.target.value)}
-                  className="w-full text-center text-lg md:text-2xl lg:text-3xl font-bold border-2 border-gray-300 rounded-xl px-3 py-2 md:px-4 md:py-3 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                  placeholder={unit ? `عدد ${unit}` : 'مقدار'}
-                />
-                {unit && (
-                  <span className="absolute left-3 md:left-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm md:text-lg">{unit}</span>
-                )}
-              </>
-            )}
-          </div>
-        ) : (
-          <>
-            <p className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800">{value || '---'}</p>
-            {unit && <p className="text-gray-600 mt-2 md:mt-3 text-sm md:text-base">{unit}</p>}
-          </>
-        )}
+                  className="w-full px-2 py-1 md:px-3 md:py-2 border border-gray-300 rounded-lg text-right text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                >
+                  <option value="">انتخاب کنید</option>
+                  {options.map((option, index) => (
+                    <option key={index} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              ) : type === 'checkbox' ? (
+                <label className="flex items-center justify-end gap-2 cursor-pointer">
+                  <span className="text-sm">{value ? 'بله' : 'خیر'}</span>
+                  <div className="relative w-10 h-5">
+                    <input
+                      type="checkbox"
+                      checked={value || false}
+                      onChange={(e) => onChange(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-10 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                  </div>
+                </label>
+              ) : (
+                <div className="relative">
+                  <input
+                    type={type}
+                    value={value || ''}
+                    onChange={(e) => onChange(e.target.value)}
+                    className="w-full px-2 py-1 md:px-3 md:py-2 border border-gray-300 rounded-lg text-right text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none pr-8"
+                    placeholder={unit ? unit : 'مقدار'}
+                  />
+                  {unit && (
+                    <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs">{unit}</span>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <p className={`${selectedSize.value} font-bold text-gray-800 mt-1`}>{value || '---'}</p>
+              {unit && <p className="text-gray-500 text-xs md:text-sm mt-1">{unit}</p>}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -150,8 +164,8 @@ const ContactInfoCard = React.memo(({
   const selectedColor = colors[color] || colors.blue;
 
   return (
-    <div className={`flex items-center gap-3 md:gap-4 p-3 md:p-4 ${selectedColor.bg} rounded-xl hover:bg-opacity-80 transition`}>
-      <div className={`${selectedColor.icon} p-2 md:p-3 rounded-lg md:rounded-xl`}>
+    <div className={`flex items-center gap-2 md:gap-3 p-2 md:p-3 ${selectedColor.bg} rounded-xl hover:bg-opacity-80 transition`}>
+      <div className={`${selectedColor.icon} p-1.5 md:p-2 rounded-lg`}>
         <Icon className={`${selectedColor.text} w-4 h-4 md:w-5 md:h-5`} />
       </div>
       <div className="flex-1">
@@ -161,11 +175,11 @@ const ContactInfoCard = React.memo(({
             type={type}
             value={value || ''}
             onChange={(e) => onChange(e.target.value)}
-            className="w-full px-2 py-1.5 md:px-3 md:py-2 border border-gray-300 rounded-lg text-right text-sm md:text-base font-mono focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+            className="w-full px-2 py-1 md:px-3 md:py-2 border border-gray-300 rounded-lg text-right text-sm md:text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
             placeholder={placeholder}
           />
         ) : (
-          <p className="font-bold text-gray-800 text-sm md:text-lg font-mono">{value || '---'}</p>
+          <p className="font-bold text-gray-800 text-sm md:text-lg">{value || '---'}</p>
         )}
       </div>
     </div>
@@ -190,12 +204,12 @@ const AlertCard = React.memo(({
   const selectedColor = colors[color] || colors.yellow;
 
   return (
-    <div className={`${selectedColor.bg} border ${selectedColor.border} rounded-xl p-3 md:p-4 hover:shadow-md transition`}>
+    <div className={`${selectedColor.bg} border ${selectedColor.border} rounded-xl p-2 md:p-3 hover:shadow-md transition`}>
       <div className="flex items-start gap-2 md:gap-3">
-        <span className={`text-lg md:text-xl ${selectedColor.text}`}>{icon}</span>
-        <div>
-          <p className="text-gray-700 font-medium text-sm md:text-lg mb-1">{title}</p>
-          <p className="text-gray-600 text-xs md:text-sm">{description}</p>
+        <span className={`text-base md:text-lg ${selectedColor.text}`}>{icon}</span>
+        <div className="flex-1 min-w-0">
+          <p className="text-gray-700 font-medium text-xs md:text-sm mb-1 truncate">{title}</p>
+          <p className="text-gray-600 text-xs line-clamp-2">{description}</p>
         </div>
       </div>
     </div>
@@ -224,6 +238,7 @@ export default function PatientDetailPage() {
   
   // حالت ویرایش برای فیلدهای پایه
   const [editingBasicInfo, setEditingBasicInfo] = useState(false);
+  const [expandedVitals, setExpandedVitals] = useState(false);
 
   // بارگذاری اطلاعات بیمار و پزشک
   useEffect(() => {
@@ -309,7 +324,7 @@ export default function PatientDetailPage() {
     const firstLetter = patient.fullName?.charAt(0) || '?';
     
     return (
-      <div className={`${color} w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center text-white font-bold text-2xl md:text-3xl shadow-lg`}>
+      <div className={`${color} w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center text-white font-bold text-xl md:text-2xl shadow-lg`}>
         {firstLetter}
       </div>
     );
@@ -716,37 +731,88 @@ export default function PatientDetailPage() {
     showNotificationMessage('آزمایش/تصویربرداری حذف شد', 'success');
   };
 
-  // آلرژی‌ها
-  const handleAddAllergy = (type, text) => {
-    const field = type === 'food' ? 'foodAllergies' : 'drugAllergies';
-    const currentAllergies = Array.isArray(patient?.[field]) 
-      ? patient[field] 
-      : [];
-    
-    const newItem = {
-      id: Date.now() + Math.random(),
-      text: text,
-      date: new Date().toLocaleDateString('fa-IR'),
-      type: type
-    };
-    
-    const updatedAllergies = [...currentAllergies, newItem];
-    handleInputChange(field, updatedAllergies);
-    savePatientToStorage({ [field]: updatedAllergies });
-    showNotificationMessage(`آلرژی ${type === 'food' ? 'غذایی' : 'دارویی'} اضافه شد`, 'success');
-  };
+// توابع مدیریت آلرژی غذایی (در PatientDetailPage)
+const handleAddFoodAllergy = (item) => {
+  const currentAllergies = Array.isArray(patient?.foodAllergies) 
+    ? patient.foodAllergies 
+    : [];
+  
+  const updatedAllergies = [...currentAllergies, item];
+  handleInputChange('foodAllergies', updatedAllergies);
+  savePatientToStorage({ foodAllergies: updatedAllergies });
+  showNotificationMessage('آلرژی غذایی اضافه شد', 'success');
+};
 
-  const handleRemoveAllergy = (type, id) => {
-    const field = type === 'food' ? 'foodAllergies' : 'drugAllergies';
-    const currentAllergies = Array.isArray(patient?.[field]) 
-      ? patient[field] 
-      : [];
-    
-    const updatedAllergies = currentAllergies.filter(item => item.id !== id);
-    handleInputChange(field, updatedAllergies);
-    savePatientToStorage({ [field]: updatedAllergies });
-    showNotificationMessage(`آلرژی ${type === 'food' ? 'غذایی' : 'دارویی'} حذف شد`, 'success');
-  };
+const handleEditFoodAllergy = (id, newText, newSeverity) => {
+  const currentAllergies = Array.isArray(patient?.foodAllergies) 
+    ? patient.foodAllergies 
+    : [];
+  
+  const updatedAllergies = currentAllergies.map(item => 
+    item.id === id ? { 
+      ...item, 
+      text: newText, 
+      severity: newSeverity || item.severity,
+      lastUpdated: new Date().toLocaleDateString('fa-IR')
+    } : item
+  );
+  handleInputChange('foodAllergies', updatedAllergies);
+  savePatientToStorage({ foodAllergies: updatedAllergies });
+  showNotificationMessage('آلرژی غذایی ویرایش شد', 'success');
+};
+
+const handleRemoveFoodAllergy = (id) => {
+  const currentAllergies = Array.isArray(patient?.foodAllergies) 
+    ? patient.foodAllergies 
+    : [];
+  
+  const updatedAllergies = currentAllergies.filter(item => item.id !== id);
+  handleInputChange('foodAllergies', updatedAllergies);
+  savePatientToStorage({ foodAllergies: updatedAllergies });
+  showNotificationMessage('آلرژی غذایی حذف شد', 'success');
+};
+
+// توابع مدیریت آلرژی دارویی (در PatientDetailPage)
+const handleAddDrugAllergy = (item) => {
+  const currentAllergies = Array.isArray(patient?.drugAllergies) 
+    ? patient.drugAllergies 
+    : [];
+  
+  const updatedAllergies = [...currentAllergies, item];
+  handleInputChange('drugAllergies', updatedAllergies);
+  savePatientToStorage({ drugAllergies: updatedAllergies });
+  showNotificationMessage('آلرژی دارویی اضافه شد', 'success');
+};
+
+const handleEditDrugAllergy = (id, newText, newSeverity, newReaction) => {
+  const currentAllergies = Array.isArray(patient?.drugAllergies) 
+    ? patient.drugAllergies 
+    : [];
+  
+  const updatedAllergies = currentAllergies.map(item => 
+    item.id === id ? { 
+      ...item, 
+      text: newText, 
+      severity: newSeverity || item.severity,
+      reaction: newReaction || item.reaction,
+      lastUpdated: new Date().toLocaleDateString('fa-IR')
+    } : item
+  );
+  handleInputChange('drugAllergies', updatedAllergies);
+  savePatientToStorage({ drugAllergies: updatedAllergies });
+  showNotificationMessage('آلرژی دارویی ویرایش شد', 'success');
+};
+
+const handleRemoveDrugAllergy = (id) => {
+  const currentAllergies = Array.isArray(patient?.drugAllergies) 
+    ? patient.drugAllergies 
+    : [];
+  
+  const updatedAllergies = currentAllergies.filter(item => item.id !== id);
+  handleInputChange('drugAllergies', updatedAllergies);
+  savePatientToStorage({ drugAllergies: updatedAllergies });
+  showNotificationMessage('آلرژی دارویی حذف شد', 'success');
+};
 
   // پرینت
   const handlePrint = (test = null, type = 'single') => {
@@ -906,7 +972,7 @@ export default function PatientDetailPage() {
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 15px;">
               <div><strong>تاریخ آزمایش:</strong> ${printContent.test.date || '---'}</div>
               <div><strong>نتیجه:</strong> ${printContent.test.result || '---'}</div>
-              <div><strong>محدوده نرمال:</strong> ${printContent.test.normalRange || '---'}</div>
+              <div><strong>مقدار نرمال:</strong> ${printContent.test.normalRange || '---'}</div>
             </div>
             ${printContent.test.notes ? `<div style="margin-top: 15px;"><strong>یادداشت:</strong><br>${printContent.test.notes}</div>` : ''}
           </div>
@@ -1021,7 +1087,7 @@ export default function PatientDetailPage() {
           <div className="flex items-center justify-between">
             <button
               onClick={handleBackToList}
-              className="flex items-center gap-1 md:gap-3 px-2 md:px-4 py-1.5 md:py-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition text-sm md:text-base"
+              className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-1.5 md:py-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition text-sm md:text-base"
             >
               <FiArrowLeft className="rotate-180 w-4 h-4 md:w-5 md:h-5" />
               <span className="font-medium hidden md:inline">بازگشت به لیست بیماران</span>
@@ -1034,7 +1100,7 @@ export default function PatientDetailPage() {
                 <p className="font-bold text-blue-700 text-sm md:text-lg">{doctorInfo.name}</p>
               </div>
               <div className="bg-blue-100 p-2 md:p-3 rounded-full">
-                <FiUser className="text-blue-600 w-4 h-4 md:w-6 md:h-6" />
+                <FiUser className="text-blue-600 w-4 h-4 md:w-5 md:h-5" />
               </div>
             </div>
           </div>
@@ -1044,64 +1110,60 @@ export default function PatientDetailPage() {
       {/* محتوای اصلی */}
       <div className="max-w-7xl mx-auto p-3 md:p-4">
         {/* هدر بیمار */}
-        <div className="bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl md:rounded-2xl shadow-xl p-4 md:p-8 text-white mb-6 md:mb-8 transform transition-all hover:shadow-2xl">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 md:gap-8">
-            <div className="flex items-center gap-3 md:gap-6">
+        <div className="bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl md:rounded-2xl shadow-xl p-4 md:p-6 text-white mb-4 md:mb-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-6">
+            <div className="flex items-center gap-3 md:gap-4">
               {renderAvatar()}
-              <div>
-                <h1 className="text-xl md:text-3xl lg:text-4xl font-bold mb-1 md:mb-2">{patient.fullName}</h1>
-                <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-2 md:mt-3">
-                  <span className="bg-white bg-opacity-20 px-2 md:px-4 py-1 md:py-1.5 rounded-full text-xs md:text-sm font-medium">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-lg md:text-2xl lg:text-3xl font-bold mb-1 truncate">{patient.fullName}</h1>
+                <div className="flex flex-wrap items-center gap-1 md:gap-2">
+                  <span className="bg-white bg-opacity-20 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-xs md:text-sm font-medium">
                     {patient.age} سال
                   </span>
-                  <span className="bg-white bg-opacity-20 px-2 md:px-4 py-1 md:py-1.5 rounded-full text-xs md:text-sm font-medium">
+                  <span className="bg-white bg-opacity-20 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-xs md:text-sm font-medium">
                     {patient.gender}
                   </span>
-                  <span className="bg-white bg-opacity-20 px-2 md:px-4 py-1 md:py-1.5 rounded-full text-xs md:text-sm font-medium">
+                  <span className="bg-white bg-opacity-20 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-xs md:text-sm font-medium">
                     پرونده: {patient.medicalRecordNumber}
                   </span>
                 </div>
               </div>
             </div>
             
-            <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-4 md:mt-0">
+            <div className="flex flex-wrap items-center gap-1 md:gap-2 mt-3 md:mt-0">
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                className="flex items-center gap-1 md:gap-3 px-3 md:px-6 py-1.5 md:py-3 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-xl transition transform hover:scale-105 text-sm md:text-base"
+                className="flex items-center gap-1 px-2 py-1 md:px-4 md:py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition text-xs md:text-sm"
               >
-                <FiTrash2 className="w-4 h-4 md:w-5 md:h-5" />
-                <span className="font-medium hidden md:inline">حذف پرونده</span>
-                <span className="font-medium md:hidden">حذف</span>
+                <FiTrash2 className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="hidden md:inline">حذف</span>
               </button>
               
               {editingBasicInfo ? (
                 <>
                   <button
                     onClick={handleCancelEditBasicInfo}
-                    className="flex items-center gap-1 md:gap-3 px-3 md:px-6 py-1.5 md:py-3 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-xl transition transform hover:scale-105 text-sm md:text-base"
+                    className="flex items-center gap-1 px-2 py-1 md:px-4 md:py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition text-xs md:text-sm"
                   >
-                    <FiX className="w-4 h-4 md:w-5 md:h-5" />
-                    <span className="font-medium hidden md:inline">لغو ویرایش</span>
-                    <span className="font-medium md:hidden">لغو</span>
+                    <FiX className="w-3 h-3 md:w-4 md:h-4" />
+                    <span className="hidden md:inline">لغو</span>
                   </button>
                   
                   <button
                     onClick={handleSaveBasicInfo}
-                    className="flex items-center gap-1 md:gap-3 px-4 md:px-8 py-1.5 md:py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl transition transform hover:scale-105 shadow-lg text-sm md:text-base"
+                    className="flex items-center gap-1 px-3 py-1 md:px-6 md:py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition shadow-lg text-xs md:text-sm"
                   >
-                    <FiSave className="w-4 h-4 md:w-5 md:h-5" />
-                    <span className="font-medium hidden md:inline">ذخیره تغییرات</span>
-                    <span className="font-medium md:hidden">ذخیره</span>
+                    <FiSave className="w-3 h-3 md:w-4 md:h-4" />
+                    <span className="hidden md:inline">ذخیره</span>
                   </button>
                 </>
               ) : (
                 <button
                   onClick={() => setEditingBasicInfo(true)}
-                  className="flex items-center gap-1 md:gap-3 px-4 md:px-8 py-1.5 md:py-3 bg-white text-blue-600 hover:bg-blue-50 rounded-xl transition transform hover:scale-105 shadow-lg text-sm md:text-base"
+                  className="flex items-center gap-1 px-3 py-1 md:px-6 md:py-2 bg-white text-blue-600 hover:bg-blue-50 rounded-lg transition shadow-lg text-xs md:text-sm"
                 >
-                  <FiEdit className="w-4 h-4 md:w-5 md:h-5" />
-                  <span className="font-medium hidden md:inline">ویرایش اطلاعات پایه</span>
-                  <span className="font-medium md:hidden">ویرایش</span>
+                  <FiEdit className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="hidden md:inline">ویرایش</span>
                 </button>
               )}
             </div>
@@ -1109,27 +1171,41 @@ export default function PatientDetailPage() {
         </div>
 
         {/* اطلاعات بیمار */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
-          {/* ستون سمت چپ - اطلاعات سلامت */}
-          <div className="lg:col-span-2 space-y-4 md:space-y-8">
-            {/* اطلاعات سلامت پایه */}
-            <div className="bg-white rounded-xl md:rounded-2xl shadow-lg p-4 md:p-8">
-              <div className="flex items-center justify-between mb-4 md:mb-8">
-                <h3 className="text-lg md:text-2xl font-bold text-gray-800">اطلاعات سلامت</h3>
-                {editingBasicInfo && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-6">
+          {/* ستون سمت چپ - اطلاعات سلامت و سوابق */}
+          <div className="lg:col-span-2 space-y-3 md:space-y-6">
+            {/* بخش جمع‌وجور اطلاعات سلامت */}
+            <div className="bg-white rounded-xl shadow-lg p-3 md:p-6">
+              <div className="flex items-center justify-between mb-3 md:mb-6">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 md:p-2 rounded-lg bg-blue-100">
+                    <FiActivity className="text-blue-600 w-4 h-4 md:w-5 md:h-5" />
+                  </div>
+                  <h3 className="text-base md:text-xl font-bold text-gray-800">اطلاعات سلامت</h3>
+                </div>
+                <div className="flex items-center gap-1 md:gap-2">
+                  {editingBasicInfo && (
+                    <button
+                      onClick={calculateAndSaveBMI}
+                      className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 px-2 py-1 hover:bg-blue-50 rounded-lg transition"
+                    >
+                      <FiRefreshCw className="w-3 h-3" />
+                      محاسبه BMI
+                    </button>
+                  )}
                   <button
-                    onClick={calculateAndSaveBMI}
-                    className="text-xs md:text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1 md:gap-2 px-2 md:px-4 py-1 md:py-2 hover:bg-blue-50 rounded-lg transition"
+                    onClick={() => setExpandedVitals(!expandedVitals)}
+                    className="text-xs text-gray-600 hover:text-gray-800 flex items-center gap-1 px-2 py-1 hover:bg-gray-50 rounded-lg transition"
                   >
-                    <FiRefreshCw className="w-3 h-3 md:w-4 md:h-4" />
-                    محاسبه BMI
+                    {expandedVitals ? 'بستن' : 'مشاهده بیشتر'}
                   </button>
-                )}
+                </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 mb-4 md:mb-8">
+              {/* اطلاعات سلامت اصلی - جمع‌وجور */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 mb-3 md:mb-4">
                 {/* قد */}
-                <HealthInfoCard
+                <CompactHealthInfoCard
                   title="قد"
                   icon={FiActivity}
                   value={patient.height}
@@ -1138,10 +1214,11 @@ export default function PatientDetailPage() {
                   isEditing={editingBasicInfo}
                   onChange={(value) => handleInputChange('height', value)}
                   type="number"
+                  size="sm"
                 />
 
                 {/* وزن */}
-                <HealthInfoCard
+                <CompactHealthInfoCard
                   title="وزن"
                   icon={FiThermometer}
                   value={patient.weight}
@@ -1150,108 +1227,162 @@ export default function PatientDetailPage() {
                   isEditing={editingBasicInfo}
                   onChange={(value) => handleInputChange('weight', value)}
                   type="number"
+                  size="sm"
                 />
 
                 {/* BMI */}
-                <div className={`bg-gradient-to-br rounded-xl md:rounded-2xl p-4 md:p-6 border shadow-sm ${
+                <div className={`bg-gradient-to-br rounded-xl p-3 md:p-4 border shadow-sm ${
                   bmiColor === 'green' ? 'from-emerald-50 to-green-50 border-emerald-200' :
                   bmiColor === 'yellow' ? 'from-yellow-50 to-amber-50 border-yellow-200' :
                   bmiColor === 'orange' ? 'from-orange-50 to-amber-50 border-orange-200' :
                   'from-red-50 to-pink-50 border-red-200'
                 }`}>
-                  <div className="flex items-center justify-between mb-3 md:mb-4">
-                    <div className={`p-2 md:p-3 rounded-lg md:rounded-xl ${
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className={`p-1.5 rounded-lg ${
                       bmiColor === 'green' ? 'bg-emerald-100' :
                       bmiColor === 'yellow' ? 'bg-amber-100' :
                       bmiColor === 'orange' ? 'bg-orange-100' :
                       'bg-red-100'
                     }`}>
-                      <FiHeart className={`w-5 h-5 md:w-6 md:h-6 ${
+                      <FiHeart className={`w-4 h-4 md:w-5 md:h-5 ${
                         bmiColor === 'green' ? 'text-emerald-600' :
                         bmiColor === 'yellow' ? 'text-amber-600' :
                         bmiColor === 'orange' ? 'text-orange-600' :
                         'text-red-600'
                       }`} />
                     </div>
-                    <span className="text-xs md:text-sm text-gray-600 font-medium">شاخص توده بدنی</span>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800">{bmi || '---'}</p>
-                    {bmiCategory && (
-                      <p className={`mt-2 md:mt-3 px-3 md:px-5 py-1 md:py-2 rounded-full text-xs md:text-sm font-medium inline-block ${
-                        bmiColor === 'green' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
-                        bmiColor === 'yellow' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
-                        bmiColor === 'orange' ? 'bg-orange-100 text-orange-800 border border-orange-200' :
-                        'bg-red-100 text-red-800 border border-red-200'
-                      }`}>
-                        {bmiCategory}
-                      </p>
-                    )}
+                    <div>
+                      <p className="text-xs md:text-sm text-gray-600 font-medium">BMI</p>
+                      <p className="text-lg md:text-xl font-bold text-gray-800">{bmi || '---'}</p>
+                      {bmiCategory && (
+                        <p className={`text-xs px-2 py-0.5 rounded-full mt-1 inline-block ${
+                          bmiColor === 'green' ? 'bg-emerald-100 text-emerald-800' :
+                          bmiColor === 'yellow' ? 'bg-amber-100 text-amber-800' :
+                          bmiColor === 'orange' ? 'bg-orange-100 text-orange-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {bmiCategory}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* اطلاعات سلامت تکمیلی */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
-                {/* مصرف دخانیات */}
-                <HealthInfoCard
-                  title="مصرف دخانیات"
-                  icon={FiSmile}
-                  value={patient.smoking}
-                  unit=""
-                  color="gray"
-                  isEditing={editingBasicInfo}
-                  onChange={(value) => handleInputChange('smoking', value)}
-                  type="select"
-                  options={[
-                    { value: 'غیرسیگاری', label: 'غیرسیگاری' },
-                    { value: 'سیگاری (کمتر از 10 نخ)', label: 'سیگاری (کمتر از 10 نخ)' },
-                    { value: 'سیگاری (10-20 نخ)', label: 'سیگاری (10-20 نخ)' },
-                    { value: 'سیگاری (بیش از 20 نخ)', label: 'سیگاری (بیش از 20 نخ)' },
-                    { value: 'ترک کرده', label: 'ترک کرده' }
-                  ]}
-                />
+              {/* اطلاعات سلامت تکمیلی - قابل گسترش */}
+              {expandedVitals && (
+                <div className="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-gray-200">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
+                    {/* فشار خون */}
+                    <CompactHealthInfoCard
+                      title="فشار خون"
+                      icon={FiTrendingUp}
+                      value={patient.bloodPressure}
+                      unit="mmHg"
+                      color="red"
+                      isEditing={editingBasicInfo}
+                      onChange={(value) => handleInputChange('bloodPressure', value)}
+                      type="text"
+                      size="sm"
+                    />
 
-                {/* آخرین ویزیت */}
-                <div className="bg-blue-50 rounded-xl p-3 md:p-6">
-                  <div className="flex items-center gap-2 md:gap-4 mb-2 md:mb-4">
-                    <div className="bg-blue-100 p-2 md:p-3 rounded-lg md:rounded-xl">
-                      <FiCalendar className="text-blue-700 w-4 h-4 md:w-5 md:h-5" />
-                    </div>
-                    <h4 className="font-bold text-gray-800 text-sm md:text-lg">آخرین ویزیت</h4>
-                  </div>
-                  <div className="bg-white rounded-xl p-2 md:p-4">
-                    {editingBasicInfo ? (
-                      <input
-                        type="text"
-                        name="lastVisit"
-                        value={patient.lastVisit || ''}
-                        onChange={handleTextInputChange}
-                        className="w-full px-2 md:px-4 py-1.5 md:py-3 border border-gray-300 rounded-lg text-right focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm md:text-base"
-                        placeholder="1402/11/15"
-                      />
-                    ) : (
-                      <>
-                        <p className="text-gray-700 text-sm md:text-lg">{patient.lastVisit || '---'}</p>
-                        <p className="text-xs md:text-sm text-gray-600 mt-1 md:mt-2">توسط: {patient.doctorName || doctorInfo.name}</p>
-                      </>
-                    )}
-                  </div>
-                </div>
+                    {/* نبض */}
+                    <CompactHealthInfoCard
+                      title="نبض"
+                      icon={FiHeart}
+                      value={patient.pulse}
+                      unit="bpm"
+                      color="purple"
+                      isEditing={editingBasicInfo}
+                      onChange={(value) => handleInputChange('pulse', value)}
+                      type="number"
+                      size="sm"
+                    />
 
-                {/* بارداری و شیردهی */}
-                {patient.gender === 'زن' && (
-                  <div className="bg-pink-50 rounded-xl p-3 md:p-6 md:col-span-2">
-                    <div className="flex items-center gap-2 md:gap-4 mb-2 md:mb-4">
-                      <div className="bg-pink-100 p-2 md:p-3 rounded-lg md:rounded-xl">
-                        <FiInfo className="text-pink-700 w-4 h-4 md:w-5 md:h-5" />
+                    {/* دما */}
+                    <CompactHealthInfoCard
+                      title="دمای بدن"
+                      icon={FiThermometer}
+                      value={patient.temperature}
+                      unit="°C"
+                      color="orange"
+                      isEditing={editingBasicInfo}
+                      onChange={(value) => handleInputChange('temperature', value)}
+                      type="number"
+                      size="sm"
+                    />
+
+                    {/* تعداد تنفس */}
+                    <CompactHealthInfoCard
+                      title="تعداد تنفس"
+                      icon={FiActivity}
+                      value={patient.respiratoryRate}
+                      unit="breaths/min"
+                      color="blue"
+                      isEditing={editingBasicInfo}
+                      onChange={(value) => handleInputChange('respiratoryRate', value)}
+                      type="number"
+                      size="sm"
+                    />
+                  </div>
+
+                  {/* اطلاعات سلامت تکمیلی */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3 mt-2 md:mt-3">
+                    {/* مصرف دخانیات */}
+                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">مصرف دخانیات:</span>
+                        {editingBasicInfo ? (
+                          <select
+                            value={patient.smoking || ''}
+                            onChange={(e) => handleInputChange('smoking', e.target.value)}
+                            className="text-xs px-2 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                          >
+                            <option value="غیرسیگاری">غیرسیگاری</option>
+                            <option value="سیگاری">سیگاری</option>
+                            <option value="ترک کرده">ترک کرده</option>
+                          </select>
+                        ) : (
+                          <span className="font-medium text-sm">{patient.smoking || '---'}</span>
+                        )}
                       </div>
-                      <h4 className="font-bold text-gray-800 text-sm md:text-lg">وضعیت بارداری و شیردهی</h4>
                     </div>
-                    <div className="bg-white rounded-xl p-2 md:p-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+
+                    {/* گروه خونی */}
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">گروه خونی:</span>
+                        {editingBasicInfo ? (
+                          <select
+                            value={patient.bloodType || ''}
+                            onChange={(e) => handleInputChange('bloodType', e.target.value)}
+                            className="text-xs px-2 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none"
+                          >
+                            <option value="">انتخاب کنید</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                          </select>
+                        ) : (
+                          <span className={`font-bold text-sm ${patient.bloodType?.includes('+') ? 'text-red-600' : 'text-blue-600'}`}>
+                            {patient.bloodType || '---'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* بارداری و شیردهی - فقط برای زنان */}
+                  {patient.gender === 'زن' && (
+                    <div className="bg-pink-50 rounded-xl p-3 mt-2 md:mt-3 border border-pink-200">
+                      <div className="grid grid-cols-2 gap-3">
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-700 text-sm md:text-lg">بارداری:</span>
+                          <span className="text-sm text-gray-700">بارداری:</span>
                           {editingBasicInfo ? (
                             <label className="inline-flex items-center cursor-pointer">
                               <input
@@ -1260,19 +1391,19 @@ export default function PatientDetailPage() {
                                 onChange={(e) => handleInputChange('pregnancy', e.target.checked)}
                                 className="sr-only peer"
                               />
-                              <div className="relative w-10 md:w-12 h-5 md:h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 md:after:h-5 after:w-4 md:after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-                              <span className="mr-2 md:mr-3 text-sm md:text-lg font-medium text-gray-900">
+                              <div className="relative w-8 h-4 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[1px] after:left-[1px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-green-500"></div>
+                              <span className="mr-2 text-xs font-medium text-gray-900">
                                 {patient.pregnancy ? 'بله' : 'خیر'}
                               </span>
                             </label>
                           ) : (
-                            <span className={`font-bold text-sm md:text-lg ${patient.pregnancy ? 'text-green-600' : 'text-gray-600'}`}>
+                            <span className={`font-bold text-sm ${patient.pregnancy ? 'text-green-600' : 'text-gray-600'}`}>
                               {patient.pregnancy ? '✓ بله' : '✗ خیر'}
                             </span>
                           )}
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-700 text-sm md:text-lg">شیردهی:</span>
+                          <span className="text-sm text-gray-700">شیردهی:</span>
                           {editingBasicInfo ? (
                             <label className="inline-flex items-center cursor-pointer">
                               <input
@@ -1281,21 +1412,46 @@ export default function PatientDetailPage() {
                                 onChange={(e) => handleInputChange('breastfeeding', e.target.checked)}
                                 className="sr-only peer"
                               />
-                              <div className="relative w-10 md:w-12 h-5 md:h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 md:after:h-5 after:w-4 md:after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-                              <span className="mr-2 md:mr-3 text-sm md:text-lg font-medium text-gray-900">
+                              <div className="relative w-8 h-4 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[1px] after:left-[1px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-green-500"></div>
+                              <span className="mr-2 text-xs font-medium text-gray-900">
                                 {patient.breastfeeding ? 'بله' : 'خیر'}
                               </span>
                             </label>
                           ) : (
-                            <span className={`font-bold text-sm md:text-lg ${patient.breastfeeding ? 'text-green-600' : 'text-gray-600'}`}>
+                            <span className={`font-bold text-sm ${patient.breastfeeding ? 'text-green-600' : 'text-gray-600'}`}>
                               {patient.breastfeeding ? '✓ بله' : '✗ خیر'}
                             </span>
                           )}
                         </div>
                       </div>
                     </div>
+                  )}
+                </div>
+              )}
+
+              {/* آخرین ویزیت */}
+              <div className="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FiCalendar className="text-blue-600 w-4 h-4" />
+                    <span className="text-sm text-gray-700">آخرین ویزیت:</span>
                   </div>
-                )}
+                  {editingBasicInfo ? (
+                    <input
+                      type="text"
+                      name="lastVisit"
+                      value={patient.lastVisit || ''}
+                      onChange={handleTextInputChange}
+                      className="px-2 py-1 border border-gray-300 rounded-lg text-right text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none w-32"
+                      placeholder="1402/11/15"
+                    />
+                  ) : (
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-gray-800">{patient.lastVisit || '---'}</p>
+                      <p className="text-xs text-gray-600">توسط: {patient.doctorName || doctorInfo.name}</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -1323,6 +1479,24 @@ export default function PatientDetailPage() {
               onAdd={handleAddFamilyHistory}
               onEdit={handleEditFamilyHistory}
               onRemove={handleRemoveFamilyHistory}
+              showAddButton={true}
+            />
+
+            {/* آلرژی غذایی */}
+            <FoodAllergiesSection
+              foodAllergies={patient.foodAllergies}
+              onAdd={handleAddFoodAllergy}
+              onEdit={handleEditFoodAllergy}
+              onRemove={handleRemoveFoodAllergy}
+              showAddButton={true}
+            />
+
+            {/* آلرژی دارویی */}
+            <DrugAllergiesSection
+              drugAllergies={patient.drugAllergies}
+              onAdd={handleAddDrugAllergy}
+              onEdit={handleEditDrugAllergy}
+              onRemove={handleRemoveDrugAllergy}
               showAddButton={true}
             />
 
@@ -1355,6 +1529,15 @@ export default function PatientDetailPage() {
               showEditButtons={true}
             />
 
+            {/* واکسیناسیون */}
+            <VaccinationSection
+              vaccinations={patient.vaccinations}
+              onAdd={handleAddVaccination}
+              onEdit={handleEditVaccination}
+              onRemove={handleRemoveVaccination}
+              showAddButton={true}
+            />
+
             {/* یادداشت‌ها */}
             <NotesSection
               notes={patient.notes}
@@ -1373,32 +1556,23 @@ export default function PatientDetailPage() {
               showEditButtons={true}
             />
 
-            {/* واکسیناسیون */}
-            <VaccinationSection
-              vaccinations={patient.vaccinations}
-              onAdd={handleAddVaccination}
-              onEdit={handleEditVaccination}
-              onRemove={handleRemoveVaccination}
-              showAddButton={true}
-            />
-
           </div>
 
           {/* ستون سمت راست - سایدبار */}
-          <div className="lg:col-span-1 space-y-4 md:space-y-8">
+          <div className="lg:col-span-1 space-y-3 md:space-y-6">
             {/* اطلاعات تماس */}
-            <div className="bg-white rounded-xl shadow-lg p-4 md:p-8">
-              <div className="flex items-center justify-between mb-4 md:mb-8">
-                <h3 className="text-lg md:text-2xl font-bold text-gray-800">اطلاعات تماس</h3>
+            <div className="bg-white rounded-xl shadow-lg p-3 md:p-6">
+              <div className="flex items-center justify-between mb-3 md:mb-6">
+                <h3 className="text-base md:text-xl font-bold text-gray-800">اطلاعات تماس</h3>
                 {editingBasicInfo && (
-                  <span className="text-xs md:text-sm text-green-600 bg-green-50 px-2 md:px-4 py-1 md:py-2 rounded-full flex items-center gap-1 md:gap-2">
-                    <FiEdit2 className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full flex items-center gap-1">
+                    <FiEdit2 className="w-3 h-3" />
                     در حال ویرایش
                   </span>
                 )}
               </div>
               
-              <div className="space-y-3 md:space-y-6">
+              <div className="space-y-2 md:space-y-3">
                 <ContactInfoCard
                   title="شماره تماس"
                   icon={FiPhone}
@@ -1429,158 +1603,33 @@ export default function PatientDetailPage() {
                   onChange={(value) => handleInputChange('medicalRecordNumber', value)}
                   color="purple"
                 />
-                
-                <div className="flex items-center gap-3 md:gap-4 p-3 md:p-4 bg-red-50 rounded-xl hover:bg-red-100 transition">
-                  <div className="bg-red-100 p-2 md:p-3 rounded-lg md:rounded-xl">
-                    <span className="text-red-600 font-bold text-sm md:text-base">🩸</span>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs md:text-sm text-gray-600 mb-1">گروه خونی</p>
-                    {editingBasicInfo ? (
-                      <select
-                        value={patient.bloodType || ''}
-                        onChange={(e) => handleInputChange('bloodType', e.target.value)}
-                        className="w-full px-2 md:px-3 py-1.5 md:py-2 border border-gray-300 rounded-lg text-right focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none text-sm md:text-base"
-                      >
-                        <option value="">انتخاب کنید</option>
-                        <option value="A+">A+</option>
-                        <option value="A-">A-</option>
-                        <option value="B+">B+</option>
-                        <option value="B-">B-</option>
-                        <option value="O+">O+</option>
-                        <option value="O-">O-</option>
-                        <option value="AB+">AB+</option>
-                        <option value="AB-">AB-</option>
-                      </select>
-                    ) : (
-                      <p className={`font-bold text-sm md:text-lg ${patient.bloodType?.includes('+') ? 'text-red-600' : 'text-blue-600'}`}>
-                        {patient.bloodType || '---'}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* آلرژی‌ها */}
-            <div className="bg-white rounded-xl shadow-md p-4 md:p-6 mb-6 transition-all duration-300 hover:shadow-lg">
-              <div className="flex items-center justify-between mb-4 md:mb-6">
-                <div className="flex items-center gap-2 md:gap-3">
-                  <div className="p-2 md:p-3 rounded-lg bg-yellow-100">
-                    <FiAlertTriangle className="w-5 h-5 md:w-6 md:h-6 text-yellow-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg md:text-xl font-bold text-gray-800">آلرژی‌ها</h3>
-                    <p className="text-xs md:text-sm text-gray-500">
-                      {(patient.foodAllergies?.length || 0) + (patient.drugAllergies?.length || 0)} مورد ثبت شده
-                    </p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="space-y-3 md:space-y-4">
-                {/* آلرژی غذایی */}
-                <div className="bg-amber-50 rounded-xl p-3 md:p-4">
-                  <h4 className="font-bold text-gray-800 text-sm md:text-base mb-2 md:mb-3">آلرژی غذایی</h4>
-                  {patient.foodAllergies && patient.foodAllergies.length > 0 ? (
-                    <div className="space-y-2">
-                      {patient.foodAllergies.map((allergy, index) => (
-                        <div key={allergy.id} className="flex items-center justify-between bg-white p-2 md:p-3 rounded-lg">
-                          <span className="text-gray-700 text-xs md:text-sm">{allergy.text}</span>
-                          <button
-                            onClick={() => handleRemoveAllergy('food', allergy.id)}
-                            className="text-red-500 hover:text-red-700 text-xs"
-                          >
-                            حذف
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-500 text-xs md:text-sm text-center py-2">هیچ آلرژی غذایی ثبت نشده</p>
-                  )}
-                  {editingBasicInfo && (
-                    <div className="mt-2 md:mt-3">
-                      <input
-                        type="text"
-                        placeholder="مثلاً: بادام زمینی، لبنیات"
-                        className="w-full px-2 md:px-3 py-1.5 md:py-2 border border-gray-300 rounded-lg text-right text-xs md:text-sm"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && e.target.value.trim()) {
-                            handleAddAllergy('food', e.target.value);
-                            e.target.value = '';
-                          }
-                        }}
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Enter ↵ برای افزودن سریع</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* آلرژی دارویی */}
-                <div className="bg-red-50 rounded-xl p-3 md:p-4">
-                  <h4 className="font-bold text-gray-800 text-sm md:text-base mb-2 md:mb-3">آلرژی دارویی</h4>
-                  {patient.drugAllergies && patient.drugAllergies.length > 0 ? (
-                    <div className="space-y-2">
-                      {patient.drugAllergies.map((allergy, index) => (
-                        <div key={allergy.id} className="flex items-center justify-between bg-white p-2 md:p-3 rounded-lg">
-                          <span className="text-gray-700 text-xs md:text-sm">{allergy.text}</span>
-                          <button
-                            onClick={() => handleRemoveAllergy('drug', allergy.id)}
-                            className="text-red-500 hover:text-red-700 text-xs"
-                          >
-                            حذف
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-500 text-xs md:text-sm text-center py-2">هیچ آلرژی دارویی ثبت نشده</p>
-                  )}
-                  {editingBasicInfo && (
-                    <div className="mt-2 md:mt-3">
-                      <input
-                        type="text"
-                        placeholder="مثلاً: پنی‌سیلین، ایبوپروفن"
-                        className="w-full px-2 md:px-3 py-1.5 md:py-2 border border-gray-300 rounded-lg text-right text-xs md:text-sm"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && e.target.value.trim()) {
-                            handleAddAllergy('drug', e.target.value);
-                            e.target.value = '';
-                          }
-                        }}
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Enter ↵ برای افزودن سریع</p>
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
 
             {/* آخرین بروزرسانی */}
-            <div className="bg-white rounded-xl shadow-lg p-4 md:p-8">
-              <div className="flex items-center gap-2 md:gap-4 mb-3 md:mb-6">
-                <div className="bg-purple-100 p-2 md:p-3 rounded-lg md:rounded-xl">
-                  <FiClock className="text-purple-600 w-5 h-5 md:w-6 md:h-6" />
+            <div className="bg-white rounded-xl shadow-lg p-3 md:p-6">
+              <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-4">
+                <div className="bg-purple-100 p-1.5 md:p-2 rounded-lg">
+                  <FiClock className="text-purple-600 w-4 h-4 md:w-5 md:h-5" />
                 </div>
-                <h3 className="font-bold text-gray-800 text-lg md:text-xl">آخرین بروزرسانی</h3>
+                <h3 className="font-bold text-gray-800 text-sm md:text-lg">آخرین بروزرسانی</h3>
               </div>
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 md:p-6 border border-purple-200">
-                <p className="text-gray-800 font-bold text-lg md:text-2xl mb-1 md:mb-2">{patient.lastUpdate || new Date().toLocaleDateString('fa-IR')}</p>
-                <p className="text-gray-600 text-sm md:text-base">توسط: {patient.doctorName || doctorInfo.name}</p>
-                <p className="text-xs md:text-sm text-gray-500 mt-2 md:mt-3">تغییرات به صورت خودکار ذخیره می‌شوند</p>
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-3 md:p-4 border border-purple-200">
+                <p className="text-gray-800 font-bold text-base md:text-xl mb-1">{patient.lastUpdate || new Date().toLocaleDateString('fa-IR')}</p>
+                <p className="text-gray-600 text-xs md:text-sm">توسط: {patient.doctorName || doctorInfo.name}</p>
+                <p className="text-xs text-gray-500 mt-1 md:mt-2">تغییرات به صورت خودکار ذخیره می‌شوند</p>
               </div>
             </div>
 
             {/* هشدارها */}
-            <div className="bg-white rounded-xl shadow-lg p-4 md:p-8">
-              <div className="flex items-center gap-2 md:gap-4 mb-3 md:mb-6">
-                <div className="bg-yellow-100 p-2 md:p-3 rounded-lg md:rounded-xl">
-                  <FiAlertCircle className="text-yellow-600 w-5 h-5 md:w-6 md:h-6" />
+            <div className="bg-white rounded-xl shadow-lg p-3 md:p-6">
+              <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-4">
+                <div className="bg-yellow-100 p-1.5 md:p-2 rounded-lg">
+                  <FiAlertCircle className="text-yellow-600 w-4 h-4 md:w-5 md:h-5" />
                 </div>
-                <h3 className="font-bold text-gray-800 text-lg md:text-xl">هشدارها و یادداشت‌ها</h3>
+                <h3 className="font-bold text-gray-800 text-sm md:text-lg">هشدارها و یادداشت‌ها</h3>
               </div>
-              <div className="space-y-3 md:space-y-4">
+              <div className="space-y-2 md:space-y-3">
                 {patient.pregnancy && (
                   <AlertCard
                     title="بیمار باردار"
@@ -1608,7 +1657,7 @@ export default function PatientDetailPage() {
                 {(patient.foodAllergies && patient.foodAllergies.length > 0) && (
                   <AlertCard
                     title="آلرژی غذایی"
-                    description={`${patient.foodAllergies.length} مورد آلرژی غذایی ثبت شده`}
+                    description={`${patient.foodAllergies.length} مورد آلرژی غذایی`}
                     icon="🍽️"
                     color="amber"
                   />
@@ -1616,7 +1665,7 @@ export default function PatientDetailPage() {
                 {bmi && parseFloat(bmi) >= 30 && (
                   <AlertCard
                     title="اضافه وزن"
-                    description="نیاز به مشاوره تغذیه و کاهش وزن"
+                    description="نیاز به مشاوره تغذیه"
                     icon="⚖️"
                     color="red"
                   />
@@ -1624,7 +1673,7 @@ export default function PatientDetailPage() {
                 {(patient.drugAllergies && patient.drugAllergies.length > 0) && (
                   <AlertCard
                     title="آلرژی دارویی"
-                    description="توجه ویژه در تجویز داروها"
+                    description="توجه در تجویز داروها"
                     icon="💊"
                     color="red"
                   />
@@ -1637,6 +1686,51 @@ export default function PatientDetailPage() {
                     color="green"
                   />
                 )}
+                {patient.labTests && patient.labTests.some(test => {
+                  if (!test.result || !test.normalRange) return false;
+                  try {
+                    const result = parseFloat(test.result);
+                    const range = test.normalRange.split('-');
+                    const min = parseFloat(range[0]);
+                    const max = parseFloat(range[1]);
+                    return result < min || result > max;
+                  } catch {
+                    return false;
+                  }
+                }) && (
+                  <AlertCard
+                    title="آزمایشات غیرنرمال"
+                    description="نیاز به بررسی نتایج آزمایش"
+                    icon="📊"
+                    color="orange"
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* نکات مهم */}
+            <div className="bg-white rounded-xl shadow-md p-3 md:p-6">
+              <div className="flex items-center gap-2 mb-3">
+                <FiInfo className="text-blue-600 w-4 h-4" />
+                <h3 className="font-bold text-gray-800 text-sm md:text-base">نکات مهم</h3>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-start gap-2">
+                  <span className="text-green-500 text-sm">✓</span>
+                  <p className="text-xs text-gray-600">تمام تغییرات به صورت خودکار ذخیره می‌شوند</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-blue-500 text-sm">ℹ</span>
+                  <p className="text-xs text-gray-600">برای ویرایش اطلاعات پایه، روی دکمه ویرایش کلیک کنید</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-red-500 text-sm">⚠</span>
+                  <p className="text-xs text-gray-600">آلرژی‌های دارویی باید با دقت ثبت شوند</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-purple-500 text-sm">📋</span>
+                  <p className="text-xs text-gray-600">برای پرینت آزمایشات، از دکمه پرینت در بخش آزمایشات استفاده کنید</p>
+                </div>
               </div>
             </div>
           </div>
@@ -1646,28 +1740,28 @@ export default function PatientDetailPage() {
       {/* مودال تایید حذف */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 md:p-4">
-          <div className="bg-white rounded-xl md:rounded-2xl shadow-2xl max-w-md w-full p-4 md:p-8">
-            <div className="text-center mb-4 md:mb-8">
-              <div className="w-16 h-16 md:w-20 md:h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-6">
-                <FiTrash2 className="w-8 h-8 md:w-10 md:h-10 text-red-600" />
+          <div className="bg-white rounded-xl md:rounded-2xl shadow-2xl max-w-md w-full p-4 md:p-6">
+            <div className="text-center mb-4 md:mb-6">
+              <div className="w-12 h-12 md:w-16 md:h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2 md:mb-4">
+                <FiTrash2 className="w-6 h-6 md:w-8 md:h-8 text-red-600" />
               </div>
-              <h3 className="text-lg md:text-2xl font-bold text-gray-800 mb-2 md:mb-3">حذف پرونده بیمار</h3>
-              <p className="text-gray-600 text-sm md:text-base mb-1 md:mb-2">
+              <h3 className="text-base md:text-xl font-bold text-gray-800 mb-1 md:mb-2">حذف پرونده بیمار</h3>
+              <p className="text-gray-600 text-sm md:text-base mb-1">
                 آیا از حذف پرونده <span className="font-bold text-red-600">{patient.fullName}</span> اطمینان دارید؟
               </p>
               <p className="text-xs md:text-sm text-gray-500">این عمل قابل بازگشت نیست.</p>
             </div>
             
-            <div className="flex gap-2 md:gap-4">
+            <div className="flex gap-2 md:gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 py-2 md:py-4 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl transition font-medium text-sm md:text-base"
+                className="flex-1 py-2 md:py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition font-medium text-sm"
               >
                 لغو
               </button>
               <button
                 onClick={handleDeletePatient}
-                className="flex-1 py-2 md:py-4 bg-red-600 hover:bg-red-700 text-white rounded-xl transition font-medium shadow-lg text-sm md:text-base"
+                className="flex-1 py-2 md:py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-medium shadow-lg text-sm"
               >
                 حذف پرونده
               </button>
@@ -1679,13 +1773,13 @@ export default function PatientDetailPage() {
       {/* مودال پرینت */}
       {showPrintModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 md:p-4">
-          <div className="bg-white rounded-xl md:rounded-2xl shadow-2xl max-w-md w-full p-4 md:p-8">
-            <div className="text-center mb-4 md:mb-8">
-              <div className="w-16 h-16 md:w-20 md:h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-6">
-                <FiPrinter className="w-8 h-8 md:w-10 md:h-10 text-blue-600" />
+          <div className="bg-white rounded-xl md:rounded-2xl shadow-2xl max-w-md w-full p-4 md:p-6">
+            <div className="text-center mb-4 md:mb-6">
+              <div className="w-12 h-12 md:w-16 md:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2 md:mb-4">
+                <FiPrinter className="w-6 h-6 md:w-8 md:h-8 text-blue-600" />
               </div>
-              <h3 className="text-lg md:text-2xl font-bold text-gray-800 mb-2 md:mb-3">آماده‌سازی پرینت</h3>
-              <p className="text-gray-600 text-sm md:text-base mb-1 md:mb-2">
+              <h3 className="text-base md:text-xl font-bold text-gray-800 mb-1 md:mb-2">آماده‌سازی پرینت</h3>
+              <p className="text-gray-600 text-sm md:text-base mb-1">
                 {printContent?.tests ? 
                   'آیا مایلید گزارش کامل آزمایشات چاپ شود؟' : 
                   'آیا مایلید این آزمایش چاپ شود؟'
@@ -1694,16 +1788,16 @@ export default function PatientDetailPage() {
               <p className="text-xs md:text-sm text-gray-500">گزارش در پنجره جدید باز خواهد شد</p>
             </div>
             
-            <div className="flex gap-2 md:gap-4">
+            <div className="flex gap-2 md:gap-3">
               <button
                 onClick={() => setShowPrintModal(false)}
-                className="flex-1 py-2 md:py-4 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl transition font-medium text-sm md:text-base"
+                className="flex-1 py-2 md:py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition font-medium text-sm"
               >
                 لغو
               </button>
               <button
                 onClick={handlePrintConfirm}
-                className="flex-1 py-2 md:py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition font-medium shadow-lg text-sm md:text-base"
+                className="flex-1 py-2 md:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-medium shadow-lg text-sm"
               >
                 تایید و چاپ
               </button>
@@ -1714,37 +1808,37 @@ export default function PatientDetailPage() {
 
       {/* اطلاع‌رسانی */}
       {showNotification && (
-        <div className={`fixed bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-auto md:w-96 rounded-xl shadow-xl p-4 md:p-6 transform transition-all duration-300 z-50 ${
+        <div className={`fixed bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-auto md:w-80 rounded-xl shadow-xl p-3 md:p-4 transform transition-all duration-300 z-50 ${
           notification.type === 'success' ? 'bg-green-50 border-2 border-green-200' : 'bg-red-50 border-2 border-red-200'
         }`}>
-          <div className="flex items-center gap-3 md:gap-4">
-            <div className={`flex-shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center ${
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className={`flex-shrink-0 w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center ${
               notification.type === 'success' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
             }`}>
-              {notification.type === 'success' ? <FiCheck className="w-4 h-4 md:w-6 md:h-6" /> : <FiX className="w-4 h-4 md:w-6 md:h-6" />}
+              {notification.type === 'success' ? <FiCheck className="w-3 h-3 md:w-5 md:h-5" /> : <FiX className="w-3 h-3 md:w-5 md:h-5" />}
             </div>
             <div className="flex-1">
-              <p className={`font-medium text-sm md:text-base ${
+              <p className={`font-medium text-xs md:text-sm ${
                 notification.type === 'success' ? 'text-green-800' : 'text-red-800'
               }`}>
                 {notification.message}
               </p>
-              <div className="h-1 w-full bg-gray-200 mt-2 rounded-full overflow-hidden">
+              <div className="h-1 w-full bg-gray-200 mt-1 rounded-full overflow-hidden">
                 <div className={`h-full ${
                   notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
                 } animate-progress`}></div>
+              </div>
             </div>
           </div>
-        </div>
-        <style>{`
-          @keyframes progress {
-            from { width: 100%; }
-            to { width: 0%; }
-          }
-          .animate-progress {
-            animation: progress 3s linear forwards;
-          }
-        `}</style>
+          <style>{`
+            @keyframes progress {
+              from { width: 100%; }
+              to { width: 0%; }
+            }
+            .animate-progress {
+              animation: progress 3s linear forwards;
+            }
+          `}</style>
         </div>
       )}
     </div>

@@ -265,7 +265,7 @@ const SurgeryHistorySection = React.memo(({
                 onChange={(e) => setNewItemText(e.target.value)}
                 onKeyDown={handleKeyPress}
                 placeholder="مثلاً: آپاندکتومی"
-                className="flex-1 px-3 md:px-4 py-2 md:py-3 border-2 border-orange-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-right text-sm md:text-base placeholder:text-gray-400"
+                className="flex-1 px-3 md:px-4 py-2 md:py-3 border-2 border-orange-300 rounded-xl focus:ring-1 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-right text-sm md:text-base placeholder:text-gray-400"
                 autoComplete="off"
                 spellCheck="false"
                 maxLength={200}
@@ -281,7 +281,7 @@ const SurgeryHistorySection = React.memo(({
                 value={newItemDate}
                 onChange={(e) => setNewItemDate(e.target.value)}
                 placeholder="تاریخ جراحی (اختیاری - مثال: 1402/05/15)"
-                className="flex-1 px-3 md:px-4 py-2 border border-orange-200 rounded-lg text-right text-sm md:text-base"
+                className="flex-1 px-3 md:px-4 py-2 border border-orange-200  rounded-lg text-right text-sm md:text-base"
               />
             </div>
             

@@ -151,9 +151,7 @@ const LabImagingSection = ({
     <div className="bg-white rounded-xl md:rounded-2xl shadow-lg p-4 md:p-8 mb-6 md:mb-8">
       <div className="flex items-center justify-between mb-6 md:mb-8">
         <div className="flex items-center gap-3 md:gap-4">
-          <div className="bg-purple-100 p-2 md:p-3 rounded-lg md:rounded-xl">
-            <span className="text-purple-600 font-bold text-lg md:text-xl">📊</span>
-          </div>
+         
           <div>
             <h3 className="text-lg md:text-2xl font-bold text-gray-800">تست‌های آزمایشگاهی و تصویربرداری</h3>
             <p className="text-xs md:text-sm text-gray-600 mt-1">
@@ -264,9 +262,7 @@ const LabImagingSection = ({
         </div>
       ) : (
         <div className="text-center py-12 md:py-16 bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200">
-          <div className="w-16 h-16 md:w-20 md:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6">
-            <span className="text-gray-400 text-2xl md:text-3xl">📊</span>
-          </div>
+         
           <h4 className="text-gray-600 font-medium text-lg md:text-xl mb-2 md:mb-3">هیچ تستی ثبت نشده است</h4>
           <p className="text-gray-500 text-sm md:text-base mb-6 md:mb-8">با افزودن تست‌های جدید، اطلاعات بیمار تکمیل می‌شود</p>
           {showAddButton && (

@@ -238,7 +238,6 @@ export default function MedicalRecords() {
       lastUpdate: new Date().toLocaleDateString('fa-IR'),
       doctorId: doctorInfo.doctorId,
       doctorName: doctorInfo.name,
-      // فیلدهای اضافی که در صفحه جزئیات اضافه می‌شوند
       height: '',
       weight: '',
       smoking: 'غیرسیگاری',
