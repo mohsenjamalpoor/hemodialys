@@ -823,7 +823,7 @@ const DrugAllergiesSection = React.memo(({
       {/* داشبورد آماری */}
       {safeAllergies.length > 0 && (
         <div className="mt-6">
-          <h4 className="text-lg font-bold text-gray-800 mb-4">📊 آمار آلرژی‌های دارویی</h4>
+          <h4 className="text-lg font-bold text-gray-800 mb-4"> آمار آلرژی‌های دارویی</h4>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 text-center border border-gray-200">
               <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
