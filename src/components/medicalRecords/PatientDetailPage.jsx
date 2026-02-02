@@ -16,6 +16,8 @@ import FamilyHistorySection from './section/FamilyHistorySection';
 import VaccinationSection from './section/VaccinationSection';
 import LabTestsSection from './section/LabTestsSection';
 import NotesSection from './section/NotesSection';
+import MedicationHistorySection from './section/MedicationHistorySection';
+import LabImagingSection from './section/LabImagingSection';
 
 const PATIENTS_STORAGE_KEY = 'hemo_patients_data';
 
@@ -37,6 +39,8 @@ const getDefaultPatientData = (basicData) => ({
   drugAllergies: basicData.drugAllergies || [],
   notes: basicData.notes || [], // تغییر از رشته به آرایه
   labTests: basicData.labTests || [],
+  medicationHistory: basicData.medicationHistory || [],
+  labImaging: basicData.labImaging || [],
   lastVisit: basicData.lastVisit || new Date().toLocaleDateString('fa-IR'),
   lastUpdate: basicData.lastUpdate || new Date().toLocaleDateString('fa-IR')
 });
@@ -542,7 +546,15 @@ export default function PatientDetailPage() {
     showNotificationMessage('آزمایش جدید اضافه شد', 'success');
   };
 
-  const handleEditLabTest = (updatedTests) => {
+  const handleEditLabTest = (id, updatedData) => {
+    const currentTests = Array.isArray(patient?.labTests) 
+      ? patient.labTests 
+      : [];
+    
+    const updatedTests = currentTests.map(item => 
+      item.id === id ? { ...item, ...updatedData } : item
+    );
+    
     handleInputChange('labTests', updatedTests);
     savePatientToStorage({ labTests: updatedTests });
     showNotificationMessage('آزمایش ویرایش شد', 'success');
@@ -632,32 +644,76 @@ export default function PatientDetailPage() {
     showNotificationMessage('وضعیت خصوصی بودن یادداشت تغییر کرد', 'success');
   };
 
-  // تابع پشتیبان برای ذخیره یادداشت‌ها (برای سازگاری)
-  const handleSaveNotes = (notes) => {
-    // اگر notes یک رشته است، آن را به آرایه تبدیل کنیم
-    let processedNotes;
+  // سوابق دارویی
+  const handleAddMedication = (medication) => {
+    const currentMedications = Array.isArray(patient?.medicationHistory) 
+      ? patient.medicationHistory 
+      : [];
     
-    if (typeof notes === 'string') {
-      if (notes.trim() === '') {
-        processedNotes = [];
-      } else {
-        processedNotes = [
-          {
-            id: Date.now(),
-            content: notes,
-            date: new Date().toLocaleDateString('fa-IR'),
-            doctorName: doctorInfo.name,
-            category: 'عمومی'
-          }
-        ];
-      }
-    } else {
-      processedNotes = notes;
-    }
+    const updatedMedications = [...currentMedications, medication];
+    handleInputChange('medicationHistory', updatedMedications);
+    savePatientToStorage({ medicationHistory: updatedMedications });
+    showNotificationMessage('دارو اضافه شد', 'success');
+  };
+
+  const handleEditMedication = (id, updatedMedication) => {
+    const currentMedications = Array.isArray(patient?.medicationHistory) 
+      ? patient.medicationHistory 
+      : [];
     
-    handleInputChange('notes', processedNotes);
-    savePatientToStorage({ notes: processedNotes });
-    showNotificationMessage('یادداشت‌ها ذخیره شد', 'success');
+    const updatedMedications = currentMedications.map(item => 
+      item.id === id ? { ...item, ...updatedMedication } : item
+    );
+    handleInputChange('medicationHistory', updatedMedications);
+    savePatientToStorage({ medicationHistory: updatedMedications });
+    showNotificationMessage('دارو ویرایش شد', 'success');
+  };
+
+  const handleRemoveMedication = (id) => {
+    const currentMedications = Array.isArray(patient?.medicationHistory) 
+      ? patient.medicationHistory 
+      : [];
+    
+    const updatedMedications = currentMedications.filter(item => item.id !== id);
+    handleInputChange('medicationHistory', updatedMedications);
+    savePatientToStorage({ medicationHistory: updatedMedications });
+    showNotificationMessage('دارو حذف شد', 'success');
+  };
+
+  // آزمایشات و تصویربرداری
+  const handleAddLabImaging = (item) => {
+    const currentLabImaging = Array.isArray(patient?.labImaging) 
+      ? patient.labImaging 
+      : [];
+    
+    const updatedLabImaging = [...currentLabImaging, item];
+    handleInputChange('labImaging', updatedLabImaging);
+    savePatientToStorage({ labImaging: updatedLabImaging });
+    showNotificationMessage('آزمایش/تصویربرداری اضافه شد', 'success');
+  };
+
+  const handleEditLabImaging = (id, updatedItem) => {
+    const currentLabImaging = Array.isArray(patient?.labImaging) 
+      ? patient.labImaging 
+      : [];
+    
+    const updatedLabImaging = currentLabImaging.map(item => 
+      item.id === id ? { ...item, ...updatedItem } : item
+    );
+    handleInputChange('labImaging', updatedLabImaging);
+    savePatientToStorage({ labImaging: updatedLabImaging });
+    showNotificationMessage('آزمایش/تصویربرداری ویرایش شد', 'success');
+  };
+
+  const handleRemoveLabImaging = (id) => {
+    const currentLabImaging = Array.isArray(patient?.labImaging) 
+      ? patient.labImaging 
+      : [];
+    
+    const updatedLabImaging = currentLabImaging.filter(item => item.id !== id);
+    handleInputChange('labImaging', updatedLabImaging);
+    savePatientToStorage({ labImaging: updatedLabImaging });
+    showNotificationMessage('آزمایش/تصویربرداری حذف شد', 'success');
   };
 
   // آلرژی‌ها
@@ -1270,6 +1326,24 @@ export default function PatientDetailPage() {
               showAddButton={true}
             />
 
+            {/* سوابق دارویی */}
+            <MedicationHistorySection
+              medicationHistory={patient.medicationHistory}
+              onAdd={handleAddMedication}
+              onEdit={handleEditMedication}
+              onRemove={handleRemoveMedication}
+              showAddButton={true}
+            />
+
+            {/* آزمایشات و تصویربرداری */}
+            <LabImagingSection
+              labImaging={patient.labImaging}
+              onAdd={handleAddLabImaging}
+              onEdit={handleEditLabImaging}
+              onRemove={handleRemoveLabImaging}
+              showAddButton={true}
+            />
+
             {/* آزمایشات */}
             <LabTestsSection
               labTests={patient.labTests}
@@ -1280,7 +1354,8 @@ export default function PatientDetailPage() {
               showAddButton={true}
               showEditButtons={true}
             />
-             {/* یادداشت‌ها */}
+
+            {/* یادداشت‌ها */}
             <NotesSection
               notes={patient.notes}
               onAdd={handleAddNote}
@@ -1296,10 +1371,9 @@ export default function PatientDetailPage() {
               doctorName={doctorInfo.name}
               patientName={patient.fullName}
               showEditButtons={true}
-              
             />
 
-              {/* واکسیناسیون */}
+            {/* واکسیناسیون */}
             <VaccinationSection
               vaccinations={patient.vaccinations}
               onAdd={handleAddVaccination}
@@ -1387,8 +1461,6 @@ export default function PatientDetailPage() {
                 </div>
               </div>
             </div>
-
-          
 
             {/* آلرژی‌ها */}
             <div className="bg-white rounded-xl shadow-md p-4 md:p-6 mb-6 transition-all duration-300 hover:shadow-lg">
@@ -1485,8 +1557,6 @@ export default function PatientDetailPage() {
               </div>
             </div>
 
-           
-
             {/* آخرین بروزرسانی */}
             <div className="bg-white rounded-xl shadow-lg p-4 md:p-8">
               <div className="flex items-center gap-2 md:gap-4 mb-3 md:mb-6">
@@ -1557,6 +1627,14 @@ export default function PatientDetailPage() {
                     description="توجه ویژه در تجویز داروها"
                     icon="💊"
                     color="red"
+                  />
+                )}
+                {patient.medicationHistory && patient.medicationHistory.some(med => med.status === 'در حال مصرف') && (
+                  <AlertCard
+                    title="داروهای فعال"
+                    description={`${patient.medicationHistory.filter(med => med.status === 'در حال مصرف').length} داروی فعال`}
+                    icon="💊"
+                    color="green"
                   />
                 )}
               </div>

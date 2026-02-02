@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FiClipboard, FiPlus, FiX, FiEdit2, FiTrash2, FiCheck } from 'react-icons/fi';
+import { FiClipboard, FiPlus, FiX, FiEdit2, FiTrash2, FiCheck, FiCalendar } from 'react-icons/fi';
 
 // کامپوننت EditableItem برای آیتم‌های قابل ویرایش
 const EditableItem = React.memo(({ item, onEdit, onRemove }) => {
@@ -67,17 +67,20 @@ const EditableItem = React.memo(({ item, onEdit, onRemove }) => {
         ) : (
           <>
             <div className="flex items-start gap-2">
-              <div className="flex-1">
-                <p className="text-gray-700 text-right text-sm md:text-base">{item.text}</p>
-                {item.date && (
-                  <p className="text-xs text-gray-500 mt-1 text-left">📅 {item.date}</p>
-                )}
-                {item.details && (
-                  <p className="text-xs text-gray-600 mt-1 text-right">{item.details}</p>
-                )}
-              </div>
-              <span className="text-2xl text-red-400">🏥</span>
-            </div>
+                       <div className="flex-1">
+                         <p className="text-gray-700 text-right text-sm md:text-base">{item.text}</p>
+                         {item.date && (
+                           <div className="flex items-center gap-1 mt-1">
+                             <FiCalendar className="text-gray-400 w-3 h-3" />
+                             <p className="text-xs text-gray-500">تاریخ: {item.date}</p>
+                           </div>
+                         )}
+                         {item.details && (
+                           <p className="text-xs text-gray-600 mt-1 text-right">{item.details}</p>
+                         )}
+                       </div>
+                       
+                     </div>
           </>
         )}
       </div>
@@ -269,7 +272,7 @@ const MedicalHistorySection = React.memo(({
             <p>{newItemText.length}/200 کاراکتر</p>
           </div>
           <div className="mt-2 text-xs text-red-500">
-            <p>💡 مثال‌ها: دیابت نوع ۲، فشار خون بالا، آسم، میگرن، کولیت اولسراتیو</p>
+            <p> مثال‌ها: دیابت نوع ۲، فشار خون بالا، آسم، میگرن، کولیت اولسراتیو</p>
           </div>
         </div>
       )}

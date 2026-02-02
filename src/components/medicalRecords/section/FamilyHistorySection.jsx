@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   FiUsers, FiPlus, FiX, FiEdit2, FiTrash2, FiCheck, 
-  FiCalendar, FiHeart, FiActivity, FiAlertCircle,
+  FiCalendar, FiHeart, FiAlertCircle,
   FiFilter, FiSearch, FiUserPlus, FiUserMinus
 } from 'react-icons/fi';
 import { GiFamilyHouse, GiFamilyTree } from 'react-icons/gi';
@@ -657,7 +657,7 @@ const FamilyHistorySection = React.memo(({
           ))
         ) : (
           <div className="text-center py-6 md:py-8 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
-            <div className="text-gray-400 mb-3 text-2xl md:text-3xl">👨‍👩‍👧‍👦</div>
+          
             <p className="text-gray-500 text-sm md:text-base">سابقه خانوادگی ثبت نشده است</p>
             {showAddButton && (
               <p className="text-xs md:text-sm text-gray-400 mt-1">برای افزودن سابقه، روی افزودن کلیک کنید</p>

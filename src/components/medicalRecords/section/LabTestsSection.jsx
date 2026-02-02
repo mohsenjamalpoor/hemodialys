@@ -46,7 +46,6 @@ const LabTestsSection = ({
   // مرتب کردن هر گروه بر اساس تاریخ
   Object.keys(groupedTests).forEach(testName => {
     groupedTests[testName].sort((a, b) => {
-      // تبدیل تاریخ به عدد برای مرتب‌سازی
       const dateA = convertPersianDateToNumber(a.date);
       const dateB = convertPersianDateToNumber(b.date);
       return dateB - dateA; // نزولی (جدیدترین اول)
@@ -56,7 +55,6 @@ const LabTestsSection = ({
   // تابع تبدیل تاریخ شمسی به عدد
   function convertPersianDateToNumber(dateStr) {
     if (!dateStr) return 0;
-    // فرمت: 1402/11/15
     const parts = dateStr.split('/').map(part => parseInt(part) || 0);
     if (parts.length !== 3) return 0;
     return parts[0] * 10000 + parts[1] * 100 + parts[2];
@@ -109,14 +107,11 @@ const LabTestsSection = ({
     }
   };
 
-  // تابع ذخیره ویرایش
+  // تابع ذخیره ویرایش - **رفع مشکل اصلی**
   const handleSaveEdit = () => {
     if (editingId && editData.testName?.trim() && onEdit) {
-      const updatedTests = safeItems.map(item => 
-        item.id === editingId ? { ...editData } : item
-      );
-      
-      onEdit(updatedTests);
+      // ارسال id و داده‌های ویرایش شده به onEdit
+      onEdit(editingId, editData);
       setEditingId(null);
       setEditData({});
     }
@@ -156,6 +151,13 @@ const LabTestsSection = ({
   const handleStartEdit = (test) => {
     setEditingId(test.id);
     setEditData({ ...test });
+    
+    // فوکوس روی فیلد نام آزمایش
+    setTimeout(() => {
+      if (editRefs.current[test.id]) {
+        editRefs.current[test.id].focus();
+      }
+    }, 100);
   };
 
   // تابع لغو ویرایش
@@ -164,12 +166,23 @@ const LabTestsSection = ({
     setEditData({});
   };
 
-  // تابع تغییر ویرایش
+  // تابع تغییر ویرایش - **بهبود یافته**
   const handleEditChange = (field, value) => {
     setEditData(prev => ({
       ...prev,
       [field]: value
     }));
+    
+    // اگر نام آزمایش تغییر کرد، محدوده نرمال را آپدیت کن
+    if (field === 'testName' && value) {
+      const testInfo = getTestInfo(value);
+      if (testInfo?.normalRange) {
+        setEditData(prev => ({
+          ...prev,
+          normalRange: testInfo.normalRange
+        }));
+      }
+    }
   };
 
   // تابع لغو افزودن
@@ -209,14 +222,6 @@ const LabTestsSection = ({
     }
   }, [isAdding]);
 
-  useEffect(() => {
-    if (editingId && editRefs.current[editingId]) {
-      setTimeout(() => {
-        editRefs.current[editingId]?.focus();
-      }, 100);
-    }
-  }, [editingId]);
-
   // محاسبه روند (افزایش/کاهش)
   const calculateTrend = (tests) => {
     if (tests.length < 2) return { direction: 'stable', percent: 0 };
@@ -238,6 +243,12 @@ const LabTestsSection = ({
       direction: percentChange > 5 ? 'up' : percentChange < -5 ? 'down' : 'stable',
       percent: Math.abs(percentChange).toFixed(1)
     };
+  };
+
+  // تابعی برای بررسی آیا آزمایش ویرایش شده با آزمایش اصلی متفاوت است
+  const isEditChanged = (original, edited) => {
+    const fields = ['testName', 'date', 'result', 'normalRange', 'notes'];
+    return fields.some(field => original[field] !== edited[field]);
   };
 
   return (
@@ -316,7 +327,7 @@ const LabTestsSection = ({
             <tbody>
               {Object.keys(groupedTests).map((testName, index) => {
                 const tests = groupedTests[testName];
-                const latestTest = tests[0]; // جدیدترین
+                const latestTest = tests[0];
                 const testInfo = getTestInfo(testName);
                 const status = checkIfNormal(testName, latestTest.result);
                 const trend = calculateTrend(tests);
@@ -382,12 +393,21 @@ const LabTestsSection = ({
                           >
                             <FiPrinter className="w-4 h-4" />
                           </button>
+                          {showEditButtons && (
+                            <button
+                              onClick={() => handleStartEdit(latestTest)}
+                              className="p-1 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50 rounded"
+                              title="ویرایش"
+                            >
+                              <FiEdit2 className="w-4 h-4" />
+                            </button>
+                          )}
                           <button
-                            onClick={() => setIsAdding(true)}
-                            className="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded"
-                            title="افزودن آزمایش جدید"
+                            onClick={() => handleRemoveTest(latestTest.id)}
+                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                            title="حذف"
                           >
-                            <FiPlus className="w-4 h-4" />
+                            <FiTrash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
@@ -418,51 +438,119 @@ const LabTestsSection = ({
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {tests.map((test, idx) => (
-                                    <tr key={test.id} className="border-b border-blue-50 hover:bg-white transition-colors">
-                                      <td className="py-2 px-3 text-center text-sm text-gray-600">{idx + 1}</td>
-                                      <td className="py-2 px-3 text-sm text-gray-700">{test.date}</td>
-                                      <td className="py-2 px-3">
-                                        <span className={`font-medium ${checkIfNormal(testName, test.result) === 'normal' ? 'text-green-600' : checkIfNormal(testName, test.result) === 'abnormal' ? 'text-red-600' : 'text-yellow-600'}`}>
-                                          {test.result || '---'}
-                                        </span>
-                                      </td>
-                                      <td className="py-2 px-3">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                          checkIfNormal(testName, test.result) === 'normal' ? 'bg-green-100 text-green-800' :
-                                          checkIfNormal(testName, test.result) === 'abnormal' ? 'bg-red-100 text-red-800' :
-                                          'bg-yellow-100 text-yellow-800'
-                                        }`}>
-                                          {checkIfNormal(testName, test.result) === 'normal' ? 'نرمال' : 
-                                           checkIfNormal(testName, test.result) === 'abnormal' ? 'غیرنرمال' : 
-                                           'نامشخص'}
-                                        </span>
-                                      </td>
-                                      <td className="py-2 px-3 text-xs text-gray-600 max-w-xs truncate">
-                                        {test.notes || '---'}
-                                      </td>
-                                      <td className="py-2 px-3">
-                                        <div className="flex items-center gap-2">
-                                          {showEditButtons && (
-                                            <button
-                                              onClick={() => handleStartEdit(test)}
-                                              className="p-1 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50 rounded"
-                                              title="ویرایش"
-                                            >
-                                              <FiEdit2 className="w-3 h-3" />
-                                            </button>
+                                  {tests.map((test, idx) => {
+                                    const testStatus = checkIfNormal(testName, test.result);
+                                    const isEditingThis = editingId === test.id;
+                                    
+                                    return (
+                                      <tr key={test.id} className="border-b border-blue-50 hover:bg-white transition-colors">
+                                        <td className="py-2 px-3 text-center text-sm text-gray-600">{idx + 1}</td>
+                                        <td className="py-2 px-3 text-sm text-gray-700">
+                                          {isEditingThis ? (
+                                            <input
+                                              type="text"
+                                              value={editData.date || ''}
+                                              onChange={(e) => handleEditChange('date', e.target.value)}
+                                              className="w-full px-2 py-1 border border-gray-300 rounded text-right text-sm"
+                                            />
+                                          ) : (
+                                            test.date
                                           )}
-                                          <button
-                                            onClick={() => handleRemoveTest(test.id)}
-                                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
-                                            title="حذف"
-                                          >
-                                            <FiTrash2 className="w-3 h-3" />
-                                          </button>
-                                        </div>
-                                      </td>
-                                    </tr>
-                                  ))}
+                                        </td>
+                                        <td className="py-2 px-3">
+                                          {isEditingThis ? (
+                                            <input
+                                              type="text"
+                                              value={editData.result || ''}
+                                              onChange={(e) => handleEditChange('result', e.target.value)}
+                                              className="w-full px-2 py-1 border border-gray-300 rounded text-right text-sm"
+                                            />
+                                          ) : (
+                                            <span className={`font-medium ${testStatus === 'normal' ? 'text-green-600' : testStatus === 'abnormal' ? 'text-red-600' : 'text-yellow-600'}`}>
+                                              {test.result || '---'}
+                                            </span>
+                                          )}
+                                        </td>
+                                        <td className="py-2 px-3">
+                                          {isEditingThis ? (
+                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                              checkIfNormal(editData.testName || test.testName, editData.result || test.result) === 'normal' ? 'bg-green-100 text-green-800' :
+                                              checkIfNormal(editData.testName || test.testName, editData.result || test.result) === 'abnormal' ? 'bg-red-100 text-red-800' :
+                                              'bg-yellow-100 text-yellow-800'
+                                            }`}>
+                                              {checkIfNormal(editData.testName || test.testName, editData.result || test.result) === 'normal' ? 'نرمال' : 
+                                               checkIfNormal(editData.testName || test.testName, editData.result || test.result) === 'abnormal' ? 'غیرنرمال' : 
+                                               'نامشخص'}
+                                            </span>
+                                          ) : (
+                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                              testStatus === 'normal' ? 'bg-green-100 text-green-800' :
+                                              testStatus === 'abnormal' ? 'bg-red-100 text-red-800' :
+                                              'bg-yellow-100 text-yellow-800'
+                                            }`}>
+                                              {testStatus === 'normal' ? 'نرمال' : 
+                                               testStatus === 'abnormal' ? 'غیرنرمال' : 
+                                               'نامشخص'}
+                                            </span>
+                                          )}
+                                        </td>
+                                        <td className="py-2 px-3 text-xs text-gray-600">
+                                          {isEditingThis ? (
+                                            <textarea
+                                              value={editData.notes || ''}
+                                              onChange={(e) => handleEditChange('notes', e.target.value)}
+                                              className="w-full px-2 py-1 border border-gray-300 rounded text-right text-sm"
+                                              rows="1"
+                                            />
+                                          ) : (
+                                            <span className="max-w-xs truncate inline-block">
+                                              {test.notes || '---'}
+                                            </span>
+                                          )}
+                                        </td>
+                                        <td className="py-2 px-3">
+                                          {isEditingThis ? (
+                                            <div className="flex items-center gap-2">
+                                              <button
+                                                onClick={handleSaveEdit}
+                                                className="p-1 bg-green-500 text-white rounded hover:bg-green-600 transition"
+                                                title="ذخیره"
+                                                disabled={!editData.testName?.trim()}
+                                              >
+                                                <FiSave className="w-3 h-3" />
+                                              </button>
+                                              <button
+                                                onClick={handleCancelEdit}
+                                                className="p-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition"
+                                                title="لغو"
+                                              >
+                                                <FiX className="w-3 h-3" />
+                                              </button>
+                                            </div>
+                                          ) : (
+                                            <div className="flex items-center gap-2">
+                                              {showEditButtons && (
+                                                <button
+                                                  onClick={() => handleStartEdit(test)}
+                                                  className="p-1 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50 rounded"
+                                                  title="ویرایش"
+                                                >
+                                                  <FiEdit2 className="w-3 h-3" />
+                                                </button>
+                                              )}
+                                              <button
+                                                onClick={() => handleRemoveTest(test.id)}
+                                                className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                                                title="حذف"
+                                              >
+                                                <FiTrash2 className="w-3 h-3" />
+                                              </button>
+                                            </div>
+                                          )}
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
                                 </tbody>
                               </table>
                             </div>
@@ -478,196 +566,234 @@ const LabTestsSection = ({
         </div>
       )}
 
-    
-   {/* حالت کارتی */}
-{viewMode === 'card' && (
-  <div className="mb-4 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-    {safeItems.length > 0 ? (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {safeItems.map((item) => {
-          if (removingId === item.id) {
-            return (
-              <div key={item.id} className="p-4 bg-red-50 border border-red-200 rounded-lg transition-all duration-300 opacity-50 transform scale-95 col-span-full">
-                <div className="flex items-center justify-center py-2">
-                  <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-red-600"></div>
-                  <span className="mr-2 text-red-600 text-sm">در حال حذف...</span>
-                </div>
-              </div>
-            );
-          }
+      {/* حالت کارتی */}
+      {viewMode === 'card' && safeItems.length > 0 && (
+        <div className="mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {safeItems.map((item) => {
+              if (removingId === item.id) {
+                return (
+                  <div key={item.id} className="p-4 bg-red-50 border border-red-200 rounded-lg transition-all duration-300 opacity-50 transform scale-95">
+                    <div className="flex items-center justify-center py-2">
+                      <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-red-600"></div>
+                      <span className="mr-2 text-red-600 text-sm">در حال حذف...</span>
+                    </div>
+                  </div>
+                );
+              }
 
-          const testInfo = getTestInfo(item.testName);
-          const status = checkIfNormal(item.testName, item.result);
-          const isEditing = editingId === item.id;
-          
-          return (
-            <div key={item.id} className="group p-4 bg-white hover:bg-blue-50 rounded-lg border border-blue-100 shadow-sm hover:shadow-md transition-all duration-300">
-              {isEditing ? (
-                // حالت ویرایش
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center mb-2">
-                    <input
-                      ref={(el) => editRefs.current[item.id] = el}
-                      type="text"
-                      value={editData.testName || ''}
-                      onChange={(e) => handleEditChange('testName', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-right font-medium"
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">تاریخ</label>
-                      <input
-                        type="text"
-                        value={editData.date || ''}
-                        onChange={(e) => handleEditChange('date', e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg text-right"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">نتیجه</label>
-                      <input
-                        type="text"
-                        value={editData.result || ''}
-                        onChange={(e) => handleEditChange('result', e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg text-right"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">محدوده نرمال</label>
-                    <input
-                      type="text"
-                      value={editData.normalRange || ''}
-                      onChange={(e) => handleEditChange('normalRange', e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg text-right"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">یادداشت</label>
-                    <textarea
-                      value={editData.notes || ''}
-                      onChange={(e) => handleEditChange('notes', e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg text-right"
-                      rows="2"
-                    />
-                  </div>
-                  
-                  <div className="flex gap-2 pt-2">
-                    <button
-                      onClick={handleSaveEdit}
-                      className="flex-1 py-2 bg-green-500 hover:bg-green-600 text-white text-sm rounded-lg transition"
-                      disabled={!editData.testName?.trim()}
-                    >
-                      <FiSave className="inline ml-1 w-4 h-4" />
-                      ذخیره
-                    </button>
-                    <button
-                      onClick={handleCancelEdit}
-                      className="flex-1 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 text-sm rounded-lg transition"
-                    >
-                      <FiX className="inline ml-1 w-4 h-4" />
-                      لغو
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                // حالت نمایش
-                <>
-                  <div className="flex justify-between items-center mb-3">
-                    <div>
-                      <h4 className="font-bold text-gray-800 text-right">
-                        {testInfo?.title || item.testName}
-                      </h4>
-                      <p className="text-xs text-gray-500 text-right mt-1">
-                        {item.testName}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => handlePrintTest(item)}
-                        className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded transition"
-                        title="پرینت"
-                      >
-                        <FiPrinter className="w-4 h-4" />
-                      </button>
-                      {showEditButtons && (
-                        <button
-                          onClick={() => handleStartEdit(item)}
-                          className="p-1 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-100 rounded transition"
-                          title="ویرایش"
-                        >
-                          <FiEdit2 className="w-4 h-4" />
-                        </button>
+              const testInfo = getTestInfo(item.testName);
+              const status = checkIfNormal(item.testName, item.result);
+              const isEditing = editingId === item.id;
+              
+              return (
+                <div key={item.id} className={`p-4 rounded-lg border transition-all duration-300 ${isEditing ? 'bg-blue-50 border-blue-300 shadow-md' : 'bg-white border-gray-200 hover:shadow-md'}`}>
+                  {isEditing ? (
+                    // حالت ویرایش
+                    <div className="space-y-3">
+                      <div className="relative">
+                        <input
+                          ref={(el) => editRefs.current[item.id] = el}
+                          type="text"
+                          value={editData.testName || ''}
+                          onChange={(e) => handleEditChange('testName', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-right font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="نام آزمایش"
+                        />
+                        {editData.testName && (
+                          <div className="absolute left-2 top-1/2 transform -translate-y-1/2">
+                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                              {editData.testName}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">تاریخ</label>
+                          <input
+                            type="text"
+                            value={editData.date || ''}
+                            onChange={(e) => handleEditChange('date', e.target.value)}
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg text-right focus:ring-1 focus:ring-blue-500"
+                            placeholder="1402/11/15"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">نتیجه</label>
+                          <input
+                            type="text"
+                            value={editData.result || ''}
+                            onChange={(e) => handleEditChange('result', e.target.value)}
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg text-right focus:ring-1 focus:ring-blue-500"
+                            placeholder="مقدار"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1">محدوده نرمال</label>
+                        <input
+                          type="text"
+                          value={editData.normalRange || ''}
+                          onChange={(e) => handleEditChange('normalRange', e.target.value)}
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg text-right focus:ring-1 focus:ring-blue-500"
+                          placeholder="مثلاً: 70-110"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1">یادداشت</label>
+                        <textarea
+                          value={editData.notes || ''}
+                          onChange={(e) => handleEditChange('notes', e.target.value)}
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg text-right focus:ring-1 focus:ring-blue-500"
+                          rows="2"
+                          placeholder="یادداشت‌های اضافی"
+                        />
+                      </div>
+                      
+                      {/* نمایش وضعیت در حالت ویرایش */}
+                      {editData.testName && editData.result && (
+                        <div className="p-2 bg-gray-100 rounded">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-600">وضعیت:</span>
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${
+                              checkIfNormal(editData.testName, editData.result) === 'normal' 
+                                ? 'bg-green-100 text-green-800' 
+                                : checkIfNormal(editData.testName, editData.result) === 'abnormal'
+                                  ? 'bg-red-100 text-red-800'
+                                  : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {checkIfNormal(editData.testName, editData.result) === 'normal' 
+                                ? 'نرمال' 
+                                : checkIfNormal(editData.testName, editData.result) === 'abnormal'
+                                  ? 'غیرنرمال'
+                                  : 'نامشخص'}
+                            </span>
+                          </div>
+                        </div>
                       )}
-                      <button
-                        onClick={() => handleRemoveTest(item.id)}
-                        className="p-1 text-red-600 hover:text-red-800 hover:bg-red-100 rounded transition"
-                        title="حذف"
-                      >
-                        <FiTrash2 className="w-4 h-4" />
-                      </button>
+                      
+                      <div className="flex gap-2 pt-2">
+                        <button
+                          onClick={handleSaveEdit}
+                          className={`flex-1 py-2 text-white text-sm rounded-lg transition flex items-center justify-center gap-1 ${
+                            isEditChanged(item, editData) 
+                              ? 'bg-green-500 hover:bg-green-600' 
+                              : 'bg-gray-400 cursor-not-allowed'
+                          }`}
+                          disabled={!isEditChanged(item, editData)}
+                        >
+                          <FiSave className="w-4 h-4" />
+                          ذخیره
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          className="flex-1 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 text-sm rounded-lg transition flex items-center justify-center gap-1"
+                        >
+                          <FiX className="w-4 h-4" />
+                          لغو
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-3 mb-3">
-                    <div className="text-center p-2 bg-gray-50 rounded-lg">
-                      <p className="text-xs text-gray-500 mb-1">نتیجه</p>
-                      <p className={`text-lg font-bold ${status === 'normal' ? 'text-green-600' : status === 'abnormal' ? 'text-red-600' : 'text-yellow-600'}`}>
-                        {item.result || '---'}
-                      </p>
-                    </div>
-                    <div className="text-center p-2 bg-gray-50 rounded-lg">
-                      <p className="text-xs text-gray-500 mb-1">تاریخ</p>
-                      <p className="text-lg font-medium text-gray-700">{item.date}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="mb-3">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-xs text-gray-500">محدوده نرمال:</span>
-                      <span className="text-xs text-gray-700">{item.normalRange || '---'}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-gray-500">وضعیت:</span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        status === 'normal' ? 'bg-green-100 text-green-800' :
-                        status === 'abnormal' ? 'bg-red-100 text-red-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {status === 'normal' ? 'نرمال' : 
-                         status === 'abnormal' ? 'غیرنرمال' : 
-                         'نامشخص'}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {item.notes && (
-                    <div className="p-2 bg-blue-50 rounded-lg border border-blue-100">
-                      <p className="text-xs text-gray-500 mb-1">یادداشت:</p>
-                      <p className="text-sm text-gray-700 text-right">{item.notes}</p>
-                    </div>
+                  ) : (
+                    // حالت نمایش
+                    <>
+                      <div className="flex justify-between items-center mb-3">
+                        <div>
+                          <h4 className="font-bold text-gray-800 text-right">
+                            {testInfo?.title || item.testName}
+                          </h4>
+                          <p className="text-xs text-gray-500 text-right mt-1">
+                            {item.testName}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => handlePrintTest(item)}
+                            className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded transition"
+                            title="پرینت"
+                          >
+                            <FiPrinter className="w-4 h-4" />
+                          </button>
+                          {showEditButtons && (
+                            <button
+                              onClick={() => handleStartEdit(item)}
+                              className="p-1 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-100 rounded transition"
+                              title="ویرایش"
+                            >
+                              <FiEdit2 className="w-4 h-4" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleRemoveTest(item.id)}
+                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-100 rounded transition"
+                            title="حذف"
+                          >
+                            <FiTrash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3 mb-3">
+                        <div className="text-center p-2 bg-gray-50 rounded-lg">
+                          <p className="text-xs text-gray-500 mb-1">نتیجه</p>
+                          <p className={`text-lg font-bold ${status === 'normal' ? 'text-green-600' : status === 'abnormal' ? 'text-red-600' : 'text-yellow-600'}`}>
+                            {item.result || '---'}
+                          </p>
+                        </div>
+                        <div className="text-center p-2 bg-gray-50 rounded-lg">
+                          <p className="text-xs text-gray-500 mb-1">تاریخ</p>
+                          <p className="text-lg font-medium text-gray-700">{item.date}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="mb-3">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-xs text-gray-500">محدوده نرمال:</span>
+                          <span className="text-xs text-gray-700">{item.normalRange || '---'}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs text-gray-500">وضعیت:</span>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            status === 'normal' ? 'bg-green-100 text-green-800' :
+                            status === 'abnormal' ? 'bg-red-100 text-red-800' :
+                            'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {status === 'normal' ? 'نرمال' : 
+                             status === 'abnormal' ? 'غیرنرمال' : 
+                             'نامشخص'}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {item.notes && (
+                        <div className="p-2 bg-blue-50 rounded-lg border border-blue-100">
+                          <p className="text-xs text-gray-500 mb-1">یادداشت:</p>
+                          <p className="text-sm text-gray-700 text-right">{item.notes}</p>
+                        </div>
+                      )}
+                    </>
                   )}
-                </>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    ) : (
-      <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
-        <div className="text-gray-400 mb-3 text-3xl">🔬</div>
-        <p className="text-gray-500">هیچ آزمایشی ثبت نشده است</p>
-        {showAddButton && (
-          <p className="text-sm text-gray-400 mt-1">اولین آزمایش را اضافه کنید</p>
-        )}
-      </div>
-    )}
-  </div>
-)}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* پیام وقتی هیچ آزمایشی وجود ندارد */}
+      {safeItems.length === 0 && !isAdding && (
+        <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
+          <div className="text-gray-400 mb-3 text-3xl">🔬</div>
+          <p className="text-gray-500">هیچ آزمایشی ثبت نشده است</p>
+          {showAddButton && (
+            <p className="text-sm text-gray-400 mt-1">اولین آزمایش را اضافه کنید</p>
+          )}
+        </div>
+      )}
 
       {/* فرم افزودن جدید */}
       {isAdding && (

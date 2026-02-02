@@ -223,6 +223,18 @@ const EditableVaccinationItem = React.memo(({ item, onEdit, onRemove }) => {
   );
 });
 
+// لیست واکسن‌های پیشنهادی - بخش مهم که حذف شده بود
+const SUGGESTED_VACCINES = [
+  { name: "واکسن آنفلوآنزا", type: "آنفلوآنزا", dose: "سالانه", icon: "❄️" },
+  { name: "واکسن کووید-۱۹", type: "کووید", dose: "یادآور", icon: "🦠" },
+  { name: "واکسن کزاز", type: "کزاز", dose: "هر ۱۰ سال", icon: "🛡️" },
+  { name: "واکسن هپاتیت B", type: "هپاتیت", dose: "۳ دوز", icon: "🩺" },
+  { name: "واکسن پنوموکوک", type: "پنوموکوک", dose: "تک دوز", icon: "🫁" },
+  { name: "واکسن مننژیت", type: "مننژیت", dose: "تک دوز", icon: "🧠" },
+  { name: "واکسن سرخک", type: "سرخک", dose: "۲ دوز", icon: "🌡️" },
+  { name: "واکسن واریسلا", type: "آبله مرغان", dose: "۲ دوز", icon: "🔴" },
+];
+
 // کامپوننت اصلی VaccinationSection با قابلیت expand/collapse
 const VaccinationSection = React.memo(({
   vaccinations = [],
@@ -317,6 +329,37 @@ const VaccinationSection = React.memo(({
     }
   };
 
+  // واکسن‌های ضروری بر اساس سن و شرایط
+  const getEssentialVaccines = () => {
+    const essentials = [];
+    
+    // واکسن‌های عمومی
+    essentials.push({ name: "واکسن آنفلوآنزا", reason: "همه بزرگسالان" });
+    
+    // بر اساس سن
+    if (patientAge >= 65) {
+      essentials.push({ name: "واکسن پنوموکوک", reason: "سن بالای ۶۵ سال" });
+      essentials.push({ name: "واکسن زونا", reason: "سن بالای ۵۰ سال" });
+    }
+    
+    // بر اساس شرایط پزشکی
+    if (patientConditions && patientConditions.includes('دیابت')) {
+      essentials.push({ name: "واکسن هپاتیت B", reason: "بیماران دیابتی" });
+    }
+    
+    if (patientConditions && patientConditions.includes('بیماری قلبی')) {
+      essentials.push({ name: "واکسن آنفلوآنزا", reason: "بیماران قلبی" });
+    }
+    
+    if (patientConditions && patientConditions.includes('سرطان')) {
+      essentials.push({ name: "واکسن پنوموکوک", reason: "بیماران سرطانی" });
+    }
+    
+    return essentials;
+  };
+
+  const essentialVaccines = getEssentialVaccines();
+
   // آمار و اطلاعات
   const calculateStats = () => {
     const total = safeItems.length;
@@ -333,10 +376,38 @@ const VaccinationSection = React.memo(({
       item.status === 'دریافت شده'
     ).length;
 
-    return { total, thisYear, pending, completed };
+    // واکسن‌های ضروری دریافت نشده
+    const missingEssentials = essentialVaccines.filter(essential => 
+      !safeItems.some(vaccine => vaccine.text.includes(essential.name.split(' ')[1]))
+    );
+
+    return { total, thisYear, pending, completed, missingEssentials };
   };
 
   const stats = calculateStats();
+
+  // پیشنهاد واکسن‌های ضروری
+  const suggestVaccines = () => {
+    if (stats.missingEssentials.length > 0) {
+      return (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 md:p-4 mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <FiPackage className="text-yellow-600" />
+            <h4 className="font-bold text-gray-800 text-sm md:text-base">واکسن‌های ضروری پیشنهادی</h4>
+          </div>
+          <div className="space-y-2">
+            {stats.missingEssentials.map((vaccine, index) => (
+              <div key={index} className="flex items-center justify-between bg-white p-2 rounded-lg">
+                <span className="text-gray-700 text-xs md:text-sm">{vaccine.name}</span>
+                <span className="text-xs text-gray-500">{vaccine.reason}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="bg-white rounded-xl shadow-md p-4 md:p-6 mb-6 transition-all duration-300 hover:shadow-lg">
@@ -357,6 +428,11 @@ const VaccinationSection = React.memo(({
                 {stats.completed > 0 && ` • ${stats.completed} دریافت شده`}
                 {stats.pending > 0 && ` • ${stats.pending} در انتظار`}
               </p>
+              {stats.missingEssentials.length > 0 && (
+                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
+                  {stats.missingEssentials.length} واکسن ضروری
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -377,19 +453,33 @@ const VaccinationSection = React.memo(({
             )}
           </button>
           
-          {/* دکمه افزودن فقط وقتی باز است */}
-          {showAddButton && isExpanded && !isAdding && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowForm(true);
-              }}
-              className="flex items-center gap-1 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition text-sm md:text-base"
-            >
-              <FiPlus className="w-4 h-4" />
-              <span className="hidden md:inline">افزودن واکسن</span>
-              <span className="md:hidden">افزودن</span>
-            </button>
+          {/* دکمه‌های عمل فقط وقتی باز است */}
+          {isExpanded && showAddButton && !isAdding && (
+            <div className="flex gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowSuggested(true);
+                }}
+                className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition text-xs md:text-sm"
+              >
+                <FiPackage className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="hidden md:inline">واکسن پیشنهادی</span>
+                <span className="md:hidden">پیشنهادی</span>
+              </button>
+              
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowForm(true);
+                }}
+                className="flex items-center gap-1 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition text-sm md:text-base"
+              >
+                <FiPlus className="w-4 h-4" />
+                <span className="hidden md:inline">افزودن واکسن</span>
+                <span className="md:hidden">افزودن</span>
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -397,6 +487,9 @@ const VaccinationSection = React.memo(({
       {/* محتوای expandable */}
       {isExpanded && (
         <div className="mt-4">
+          {/* پیشنهاد واکسن‌های ضروری */}
+          {suggestVaccines()}
+          
           {/* لیست واکسن‌ها */}
           <div className="mb-4 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
             {safeItems.length > 0 ? (
@@ -418,6 +511,63 @@ const VaccinationSection = React.memo(({
               </div>
             )}
           </div>
+          
+          {/* واکسن‌های پیشنهادی سریع */}
+          {showSuggested && !showForm && (
+            <div className="mb-4 p-3 md:p-4 bg-blue-50 rounded-xl border border-blue-200">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-bold text-gray-800 text-sm md:text-base">واکسن‌های پیشنهادی</h4>
+                <button
+                  onClick={() => setShowSuggested(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <FiX className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {SUGGESTED_VACCINES.map((vaccine, index) => {
+                  const isAdded = safeItems.some(item => 
+                    item.text.includes(vaccine.name.split(' ')[1]) || 
+                    item.vaccineType === vaccine.type
+                  );
+                  
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => handleQuickAdd(vaccine)}
+                      disabled={isAdded}
+                      className={`flex items-center gap-2 p-2 md:p-3 rounded-lg transition ${
+                        isAdded 
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                          : 'bg-white hover:bg-blue-100 text-gray-700 hover:text-blue-700 border border-gray-200 hover:border-blue-300'
+                      }`}
+                    >
+                      <span className="text-lg">{vaccine.icon}</span>
+                      <div className="flex-1 text-right">
+                        <p className="text-xs md:text-sm font-medium">{vaccine.name}</p>
+                        <p className="text-xs text-gray-500">{vaccine.dose}</p>
+                      </div>
+                      {isAdded && (
+                        <span className="text-xs text-green-600">✓</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-3 pt-3 border-t border-blue-200">
+                <button
+                  onClick={() => {
+                    setShowSuggested(false);
+                    setShowForm(true);
+                  }}
+                  className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
+                >
+                  <FiPlus className="w-3 h-3" />
+                  افزودن واکسن سفارشی
+                </button>
+              </div>
+            </div>
+          )}
           
           {/* فرم افزودن جدید */}
           {showForm && (
@@ -513,6 +663,9 @@ const VaccinationSection = React.memo(({
                 <p>Enter ↵ برای افزودن سریع</p>
                 <p>{newItemText.length}/200 کاراکتر</p>
               </div>
+              <div className="mt-2 text-xs text-green-500">
+                <p>💡 واکسن‌های ضروری: آنفلوآنزا (سالانه)، کزاز (هر ۱۰ سال)، پنوموکوک (بالای ۶۵ سال)</p>
+              </div>
             </div>
           )}
           
@@ -533,8 +686,8 @@ const VaccinationSection = React.memo(({
                   <p className="text-lg md:text-2xl font-bold text-green-800">{stats.completed}</p>
                 </div>
                 <div className="bg-yellow-50 rounded-xl p-2 md:p-3 text-center">
-                  <p className="text-xs md:text-sm text-gray-600">در انتظار</p>
-                  <p className="text-lg md:text-2xl font-bold text-yellow-700">{stats.pending}</p>
+                  <p className="text-xs md:text-sm text-gray-600">ضروری باقی‌مانده</p>
+                  <p className="text-lg md:text-2xl font-bold text-yellow-700">{stats.missingEssentials.length}</p>
                 </div>
               </div>
             </div>
