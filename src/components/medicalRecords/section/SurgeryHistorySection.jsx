@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FiActivity, FiPlus, FiX, FiEdit2, FiTrash2, FiCheck, FiCalendar } from 'react-icons/fi';
+import { FiActivity, FiPlus, FiX, FiEdit2, FiTrash2, FiCheck, FiCalendar, FiEye, FiEyeOff } from 'react-icons/fi';
 
 // کامپوننت EditableSurgeryItem
 const EditableSurgeryItem = React.memo(({ item, onEdit, onRemove }) => {
@@ -93,7 +93,6 @@ const EditableSurgeryItem = React.memo(({ item, onEdit, onRemove }) => {
                   <p className="text-xs text-gray-600 mt-1 text-right">{item.details}</p>
                 )}
               </div>
-              
             </div>
           </>
         )}
@@ -129,6 +128,7 @@ const SurgeryHistorySection = React.memo(({
   showAddButton = true
 }) => {
   const [isAdding, setIsAdding] = useState(false);
+  const [showSurgeryList, setShowSurgeryList] = useState(false);
   const [newItemText, setNewItemText] = useState('');
   const [newItemDate, setNewItemDate] = useState('');
   const inputRef = useRef(null);
@@ -148,6 +148,7 @@ const SurgeryHistorySection = React.memo(({
       setNewItemText('');
       setNewItemDate('');
       setIsAdding(false);
+      setShowSurgeryList(true);
     }
   };
 
@@ -204,6 +205,7 @@ const SurgeryHistorySection = React.memo(({
 
   return (
     <div className="bg-white rounded-xl shadow-md p-4 md:p-6 mb-6 transition-all duration-300 hover:shadow-lg">
+      {/* هدر */}
       <div className="flex items-center justify-between mb-4 md:mb-6">
         <div className="flex items-center gap-2 md:gap-3">
           <div className="p-2 md:p-3 rounded-lg bg-orange-100">
@@ -219,39 +221,64 @@ const SurgeryHistorySection = React.memo(({
           </div>
         </div>
         
-        {showAddButton && !isAdding && (
-          <button
-            onClick={() => setIsAdding(true)}
-            className="flex items-center gap-1 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition text-sm md:text-base"
-          >
-            <FiPlus className="w-4 h-4" />
-            <span className="hidden md:inline">افزودن سابقه جراحی</span>
-            <span className="md:hidden">افزودن</span>
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {/* دکمه نمایش/پنهان لیست */}
+          {safeItems.length > 0 && (
+            <button
+              onClick={() => setShowSurgeryList(!showSurgeryList)}
+              className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition text-sm"
+            >
+              {showSurgeryList ? (
+                <>
+                  <FiEyeOff className="w-4 h-4" />
+                  <span className="hidden md:inline">بستن لیست</span>
+                </>
+              ) : (
+                <>
+                  <FiEye className="w-4 h-4" />
+                  <span className="hidden md:inline">مشاهده لیست</span>
+                </>
+              )}
+            </button>
+          )}
+          
+          {/* دکمه افزودن سابقه جدید */}
+          {showAddButton && !isAdding && (
+            <button
+              onClick={() => setIsAdding(true)}
+              className="flex items-center gap-1 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition text-sm md:text-base"
+            >
+              <FiPlus className="w-4 h-4" />
+              <span className="hidden md:inline">افزودن سابقه جراحی</span>
+              <span className="md:hidden">افزودن</span>
+            </button>
+          )}
+        </div>
       </div>
       
       {/* لیست سوابق جراحی */}
-      <div className="mb-4 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
-        {safeItems.length > 0 ? (
-          safeItems.map((item) => (
+      {showSurgeryList && safeItems.length > 0 && (
+        <div className="mb-4 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+          {safeItems.map((item) => (
             <EditableSurgeryItem
               key={item.id}
               item={item}
               onEdit={handleEditItem}
               onRemove={handleRemoveItem}
             />
-          ))
-        ) : (
-          <div className="text-center py-6 md:py-8 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
-           
-            <p className="text-gray-500 text-sm md:text-base">سابقه جراحی ثبت نشده است</p>
-            {showAddButton && (
-              <p className="text-xs md:text-sm text-gray-400 mt-1">برای افزودن سابقه، روی افزودن کلیک کنید</p>
-            )}
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      )}
+
+      {/* پیام وقتی لیست خالی است */}
+      {!isAdding && showSurgeryList && safeItems.length === 0 && (
+        <div className="text-center py-6 md:py-8 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
+          <p className="text-gray-500 text-sm md:text-base">سابقه جراحی ثبت نشده است</p>
+          {showAddButton && (
+            <p className="text-xs md:text-sm text-gray-400 mt-1">برای افزودن سابقه، روی افزودن کلیک کنید</p>
+          )}
+        </div>
+      )}
       
       {/* فرم افزودن جدید */}
       {isAdding && (
@@ -281,7 +308,7 @@ const SurgeryHistorySection = React.memo(({
                 value={newItemDate}
                 onChange={(e) => setNewItemDate(e.target.value)}
                 placeholder="تاریخ جراحی (اختیاری - مثال: 1402/05/15)"
-                className="flex-1 px-3 md:px-4 py-2 border border-orange-200  rounded-lg text-right text-sm md:text-base"
+                className="flex-1 px-3 md:px-4 py-2 border border-orange-200 rounded-lg text-right text-sm md:text-base"
               />
             </div>
             

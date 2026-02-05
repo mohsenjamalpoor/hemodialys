@@ -1634,7 +1634,7 @@ const handleRemoveDrugAllergy = (id) => {
                   <AlertCard
                     title="بیمار باردار"
                     description="ملاحظات ویژه در تجویز داروها"
-                    icon="⚠️"
+                    icon=""
                     color="yellow"
                   />
                 )}
@@ -1642,7 +1642,7 @@ const handleRemoveDrugAllergy = (id) => {
                   <AlertCard
                     title="بیمار سیگاری"
                     description="نیاز به مشاوره ترک دخانیات"
-                    icon="🚬"
+                    icon=""
                     color="orange"
                   />
                 )}
@@ -1650,7 +1650,7 @@ const handleRemoveDrugAllergy = (id) => {
                   <AlertCard
                     title="واکسیناسیون"
                     description="نیاز به تکمیل واکسیناسیون"
-                    icon="💉"
+                    icon=""
                     color="blue"
                   />
                 )}
@@ -1658,7 +1658,7 @@ const handleRemoveDrugAllergy = (id) => {
                   <AlertCard
                     title="آلرژی غذایی"
                     description={`${patient.foodAllergies.length} مورد آلرژی غذایی`}
-                    icon="🍽️"
+                    icon=""
                     color="amber"
                   />
                 )}
@@ -1666,7 +1666,7 @@ const handleRemoveDrugAllergy = (id) => {
                   <AlertCard
                     title="اضافه وزن"
                     description="نیاز به مشاوره تغذیه"
-                    icon="⚖️"
+                    icon=""
                     color="red"
                   />
                 )}
@@ -1674,7 +1674,7 @@ const handleRemoveDrugAllergy = (id) => {
                   <AlertCard
                     title="آلرژی دارویی"
                     description="توجه در تجویز داروها"
-                    icon="💊"
+                    icon=""
                     color="red"
                   />
                 )}
@@ -1682,7 +1682,7 @@ const handleRemoveDrugAllergy = (id) => {
                   <AlertCard
                     title="داروهای فعال"
                     description={`${patient.medicationHistory.filter(med => med.status === 'در حال مصرف').length} داروی فعال`}
-                    icon="💊"
+                    icon=""
                     color="green"
                   />
                 )}
@@ -1701,7 +1701,7 @@ const handleRemoveDrugAllergy = (id) => {
                   <AlertCard
                     title="آزمایشات غیرنرمال"
                     description="نیاز به بررسی نتایج آزمایش"
-                    icon="📊"
+                    icon=""
                     color="orange"
                   />
                 )}
@@ -1716,19 +1716,19 @@ const handleRemoveDrugAllergy = (id) => {
               </div>
               <div className="space-y-2">
                 <div className="flex items-start gap-2">
-                  <span className="text-green-500 text-sm">✓</span>
+              
                   <p className="text-xs text-gray-600">تمام تغییرات به صورت خودکار ذخیره می‌شوند</p>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-blue-500 text-sm">ℹ</span>
+                
                   <p className="text-xs text-gray-600">برای ویرایش اطلاعات پایه، روی دکمه ویرایش کلیک کنید</p>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-red-500 text-sm">⚠</span>
+               
                   <p className="text-xs text-gray-600">آلرژی‌های دارویی باید با دقت ثبت شوند</p>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-purple-500 text-sm">📋</span>
+                 
                   <p className="text-xs text-gray-600">برای پرینت آزمایشات، از دکمه پرینت در بخش آزمایشات استفاده کنید</p>
                 </div>
               </div>

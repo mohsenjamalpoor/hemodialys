@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FiClipboard, FiPlus, FiX, FiEdit2, FiTrash2, FiCheck, FiCalendar } from 'react-icons/fi';
+import { FiClipboard, FiPlus, FiX, FiEdit2, FiTrash2, FiCheck, FiCalendar, FiEye, FiEyeOff } from 'react-icons/fi';
 
 // کامپوننت EditableItem برای آیتم‌های قابل ویرایش
 const EditableItem = React.memo(({ item, onEdit, onRemove }) => {
@@ -67,20 +67,19 @@ const EditableItem = React.memo(({ item, onEdit, onRemove }) => {
         ) : (
           <>
             <div className="flex items-start gap-2">
-                       <div className="flex-1">
-                         <p className="text-gray-700 text-right text-sm md:text-base">{item.text}</p>
-                         {item.date && (
-                           <div className="flex items-center gap-1 mt-1">
-                             <FiCalendar className="text-gray-400 w-3 h-3" />
-                             <p className="text-xs text-gray-500">تاریخ: {item.date}</p>
-                           </div>
-                         )}
-                         {item.details && (
-                           <p className="text-xs text-gray-600 mt-1 text-right">{item.details}</p>
-                         )}
-                       </div>
-                       
-                     </div>
+              <div className="flex-1">
+                <p className="text-gray-700 text-right text-sm md:text-base">{item.text}</p>
+                {item.date && (
+                  <div className="flex items-center gap-1 mt-1">
+                    <FiCalendar className="text-gray-400 w-3 h-3" />
+                    <p className="text-xs text-gray-500">تاریخ: {item.date}</p>
+                  </div>
+                )}
+                {item.details && (
+                  <p className="text-xs text-gray-600 mt-1 text-right">{item.details}</p>
+                )}
+              </div>
+            </div>
           </>
         )}
       </div>
@@ -115,6 +114,7 @@ const MedicalHistorySection = React.memo(({
   showAddButton = true
 }) => {
   const [isAdding, setIsAdding] = useState(false);
+  const [showHistoryList, setShowHistoryList] = useState(false);
   const [newItemText, setNewItemText] = useState('');
   const inputRef = useRef(null);
 
@@ -132,6 +132,7 @@ const MedicalHistorySection = React.memo(({
       onAdd(newItem);
       setNewItemText('');
       setIsAdding(false);
+      setShowHistoryList(true);
     }
   };
 
@@ -164,26 +165,9 @@ const MedicalHistorySection = React.memo(({
     }
   };
 
-  // محاسبه آمار
-  const calculateStats = () => {
-    const total = safeItems.length;
-    const thisYear = safeItems.filter(item => {
-      const itemYear = new Date().getFullYear();
-      return item.date && item.date.includes(itemYear.toString());
-    }).length;
-    
-    const chronic = safeItems.filter(item => 
-      item.text.toLowerCase().includes('مزمن') || 
-      item.text.toLowerCase().includes('طولانی')
-    ).length;
-
-    return { total, thisYear, chronic };
-  };
-
-  const stats = calculateStats();
-
   return (
     <div className="bg-white rounded-xl shadow-md p-4 md:p-6 mb-6 transition-all duration-300 hover:shadow-lg">
+      {/* هدر */}
       <div className="flex items-center justify-between mb-4 md:mb-6">
         <div className="flex items-center gap-2 md:gap-3">
           <div className="p-2 md:p-3 rounded-lg bg-red-100">
@@ -193,45 +177,68 @@ const MedicalHistorySection = React.memo(({
             <h3 className="text-lg md:text-xl font-bold text-gray-800">سوابق بیماری</h3>
             <p className="text-xs md:text-sm text-gray-500">
               {safeItems.length} مورد ثبت شده
-              {stats.thisYear > 0 && ` • ${stats.thisYear} مورد امسال`}
-              {stats.chronic > 0 && ` • ${stats.chronic} مورد مزمن`}
             </p>
           </div>
         </div>
         
-        {showAddButton && !isAdding && (
-          <button
-            onClick={() => setIsAdding(true)}
-            className="flex items-center gap-1 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition text-sm md:text-base"
-          >
-            <FiPlus className="w-4 h-4" />
-            <span className="hidden md:inline">افزودن سابقه بیماری</span>
-            <span className="md:hidden">افزودن</span>
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {/* دکمه نمایش/پنهان لیست */}
+          {safeItems.length > 0 && (
+            <button
+              onClick={() => setShowHistoryList(!showHistoryList)}
+              className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition text-sm"
+            >
+              {showHistoryList ? (
+                <>
+                  <FiEyeOff className="w-4 h-4" />
+                  <span className="hidden md:inline">بستن لیست</span>
+                </>
+              ) : (
+                <>
+                  <FiEye className="w-4 h-4" />
+                  <span className="hidden md:inline">مشاهده لیست</span>
+                </>
+              )}
+            </button>
+          )}
+          
+          {/* دکمه افزودن سابقه جدید */}
+          {showAddButton && !isAdding && (
+            <button
+              onClick={() => setIsAdding(true)}
+              className="flex items-center gap-1 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition text-sm md:text-base"
+            >
+              <FiPlus className="w-4 h-4" />
+              <span className="hidden md:inline">افزودن سابقه بیماری</span>
+              <span className="md:hidden">افزودن</span>
+            </button>
+          )}
+        </div>
       </div>
       
       {/* لیست سوابق بیماری */}
-      <div className="mb-4 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
-        {safeItems.length > 0 ? (
-          safeItems.map((item) => (
+      {showHistoryList && safeItems.length > 0 && (
+        <div className="mb-4 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+          {safeItems.map((item) => (
             <EditableItem
               key={item.id}
               item={item}
               onEdit={handleEditItem}
               onRemove={handleRemoveItem}
             />
-          ))
-        ) : (
-          <div className="text-center py-6 md:py-8 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
-         
-            <p className="text-gray-500 text-sm md:text-base">سابقه بیماری ثبت نشده است</p>
-            {showAddButton && (
-              <p className="text-xs md:text-sm text-gray-400 mt-1">برای افزودن سابقه، روی افزودن کلیک کنید</p>
-            )}
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      )}
+
+      {/* پیام وقتی لیست خالی است */}
+      {!isAdding && safeItems.length === 0 && (
+        <div className="text-center py-6 md:py-8 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
+          <p className="text-gray-500 text-sm md:text-base">سابقه بیماری ثبت نشده است</p>
+          {showAddButton && (
+            <p className="text-xs md:text-sm text-gray-400 mt-1">برای افزودن سابقه، روی افزودن کلیک کنید</p>
+          )}
+        </div>
+      )}
       
       {/* فرم افزودن جدید */}
       {isAdding && (

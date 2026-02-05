@@ -10,7 +10,9 @@ import {
   FiCalendar,
   FiInfo,
   FiChevronDown,
-  FiChevronUp
+  FiChevronUp,
+  FiEye,
+  FiEyeOff
 } from 'react-icons/fi';
 
 // کامپوننت EditableFoodAllergyItem برای ویرایش inline
@@ -190,6 +192,22 @@ const EditableFoodAllergyItem = React.memo(({ item, onEdit, onRemove }) => {
   );
 });
 
+// تابع مرتب‌سازی آلرژی‌ها از بسیار شدید به خفیف
+const sortAllergiesBySeverity = (allergies) => {
+  const severityOrder = {
+    'بسیار شدید': 4,
+    'شدید': 3,
+    'متوسط': 2,
+    'خفیف': 1
+  };
+  
+  return [...allergies].sort((a, b) => {
+    const orderA = severityOrder[a.severity] || 0;
+    const orderB = severityOrder[b.severity] || 0;
+    return orderB - orderA; // نزولی
+  });
+};
+
 // کامپوننت اصلی FoodAllergiesSection
 const FoodAllergiesSection = React.memo(({
   foodAllergies = [],
@@ -199,6 +217,7 @@ const FoodAllergiesSection = React.memo(({
   showAddButton = true
 }) => {
   const [isAdding, setIsAdding] = useState(false);
+  const [showAllergiesList, setShowAllergiesList] = useState(false);
   const [newAllergyText, setNewAllergyText] = useState('');
   const [newAllergySeverity, setNewAllergySeverity] = useState('متوسط');
   const [newAllergyDetails, setNewAllergyDetails] = useState('');
@@ -206,20 +225,7 @@ const FoodAllergiesSection = React.memo(({
   const inputRef = useRef(null);
 
   const safeAllergies = Array.isArray(foodAllergies) ? foodAllergies : [];
-
-  // محاسبه آمار
-  const calculateStats = () => {
-    const total = safeAllergies.length;
-    const severe = safeAllergies.filter(item => 
-      item.severity === 'شدید' || item.severity === 'بسیار شدید'
-    ).length;
-    
-    const withDetails = safeAllergies.filter(item => item.details).length;
-    
-    return { total, severe, withDetails };
-  };
-
-  const stats = calculateStats();
+  const sortedAllergies = sortAllergiesBySeverity(safeAllergies);
 
   const handleAddAllergy = () => {
     if (newAllergyText.trim()) {
@@ -237,6 +243,7 @@ const FoodAllergiesSection = React.memo(({
       setNewAllergySeverity('متوسط');
       setNewAllergyDetails('');
       setIsAdding(false);
+      setShowAllergiesList(true);
     }
   };
 
@@ -307,40 +314,53 @@ const FoodAllergiesSection = React.memo(({
           </div>
           <div>
             <h3 className="text-xl md:text-2xl font-bold text-gray-800">آلرژی غذایی</h3>
-            <div className="flex flex-wrap items-center gap-2 mt-1">
-              <span className="px-2 py-1 bg-amber-50 text-amber-700 text-xs font-medium rounded-lg">
-                {stats.total} مورد ثبت شده
-              </span>
-              {stats.severe > 0 && (
-                <span className="px-2 py-1 bg-red-50 text-red-700 text-xs font-medium rounded-lg">
-                  {stats.severe} مورد شدید
-                </span>
-              )}
-              {stats.withDetails > 0 && (
-                <span className="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-lg">
-                  {stats.withDetails} مورد دارای جزئیات
-                </span>
-              )}
-            </div>
+            <p className="text-gray-600 text-sm mt-1">
+              {sortedAllergies.length} مورد ثبت شده
+              <span className="mr-2">•</span>
+              به ترتیب از شدید به خفیف
+            </p>
           </div>
         </div>
         
-        {showAddButton && !isAdding && (
-          <button
-            onClick={() => setIsAdding(true)}
-            className="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 text-sm md:text-base font-medium"
-          >
-            <FiPlus className="w-5 h-5" />
-            <span>افزودن آلرژی غذایی جدید</span>
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {/* دکمه نمایش/پنهان لیست */}
+          {sortedAllergies.length > 0 && (
+            <button
+              onClick={() => setShowAllergiesList(!showAllergiesList)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-all duration-200 text-sm font-medium"
+            >
+              {showAllergiesList ? (
+                <>
+                  <FiEyeOff className="w-4 h-4" />
+                  بستن لیست
+                </>
+              ) : (
+                <>
+                  <FiEye className="w-4 h-4" />
+                  مشاهده لیست
+                </>
+              )}
+            </button>
+          )}
+          
+          {/* دکمه افزودن آلرژی جدید */}
+          {showAddButton && !isAdding && (
+            <button
+              onClick={() => setIsAdding(true)}
+              className="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 text-sm md:text-base font-medium"
+            >
+              <FiPlus className="w-5 h-5" />
+              <span>افزودن آلرژی غذایی جدید</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* لیست آلرژی‌های غذایی */}
-      <div className="mb-6">
-        {safeAllergies.length > 0 ? (
+      {showAllergiesList && sortedAllergies.length > 0 && (
+        <div className="mb-6">
           <div className="max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-            {safeAllergies.map((allergy) => (
+            {sortedAllergies.map((allergy) => (
               <EditableFoodAllergyItem
                 key={allergy.id}
                 item={allergy}
@@ -349,27 +369,30 @@ const FoodAllergiesSection = React.memo(({
               />
             ))}
           </div>
-        ) : (
-          <div className="text-center py-10 md:py-12 border-3 border-dashed border-gray-300 rounded-2xl bg-gradient-to-b from-gray-50 to-white">
-            <div className="w-20 h-20 md:w-24 md:h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FiAlertTriangle className="w-10 h-10 md:w-12 md:h-12 text-gray-400" />
-            </div>
-            <h4 className="text-gray-600 font-medium text-lg mb-2">آلرژی غذایی ثبت نشده است</h4>
-            <p className="text-gray-500 text-sm mb-4 max-w-md mx-auto">
-              ثبت آلرژی‌های غذایی به مدیریت بهتر رژیم غذایی بیمار کمک می‌کند
-            </p>
-            {showAddButton && (
-              <button
-                onClick={() => setIsAdding(true)}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl transition"
-              >
-                <FiPlus className="w-5 h-5" />
-                افزودن اولین آلرژی غذایی
-              </button>
-            )}
+        </div>
+      )}
+
+      {/* پیام وقتی لیست خالی است */}
+      {!isAdding && sortedAllergies.length === 0 && (
+        <div className="text-center py-10 md:py-12 border-3 border-dashed border-gray-300 rounded-2xl bg-gradient-to-b from-gray-50 to-white">
+          <div className="w-20 h-20 md:w-24 md:h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+            <FiAlertTriangle className="w-10 h-10 md:w-12 md:h-12 text-gray-400" />
           </div>
-        )}
-      </div>
+          <h4 className="text-gray-600 font-medium text-lg mb-2">آلرژی غذایی ثبت نشده است</h4>
+          <p className="text-gray-500 text-sm mb-4 max-w-md mx-auto">
+            ثبت آلرژی‌های غذایی به مدیریت بهتر رژیم غذایی بیمار کمک می‌کند
+          </p>
+          {showAddButton && (
+            <button
+              onClick={() => setIsAdding(true)}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl transition"
+            >
+              <FiPlus className="w-5 h-5" />
+              افزودن اولین آلرژی غذایی
+            </button>
+          )}
+        </div>
+      )}
 
       {/* فرم افزودن جدید */}
       {isAdding && (
@@ -529,36 +552,6 @@ const FoodAllergiesSection = React.memo(({
                   </ul>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* اطلاعات آماری */}
-      {safeAllergies.length > 0 && (
-        <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
-              <p className="text-xs text-gray-600 mt-1">تعداد کل</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-green-600">
-                {safeAllergies.filter(a => a.severity === 'خفیف').length}
-              </p>
-              <p className="text-xs text-gray-600 mt-1">خفیف</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-amber-600">
-                {safeAllergies.filter(a => a.severity === 'متوسط').length}
-              </p>
-              <p className="text-xs text-gray-600 mt-1">متوسط</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-red-600">
-                {safeAllergies.filter(a => a.severity === 'شدید' || a.severity === 'بسیار شدید').length}
-              </p>
-              <p className="text-xs text-gray-600 mt-1">شدید و خطرناک</p>
             </div>
           </div>
         </div>

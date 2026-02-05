@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   FiUsers, FiPlus, FiX, FiEdit2, FiTrash2, FiCheck, 
-  FiCalendar, FiHeart, FiAlertCircle,
-  FiFilter, FiSearch, FiUserPlus, FiUserMinus
+  FiCalendar, FiHeart, FiFilter, FiSearch, 
+  FiUserPlus, FiUserMinus, FiList, FiChevronUp,
+  FiEyeOff,
+  FiEye
 } from 'react-icons/fi';
 import { GiFamilyHouse, GiFamilyTree } from 'react-icons/gi';
 
@@ -40,16 +42,6 @@ const getDiseaseSeverity = (text) => {
     return { level: 'متوسط', color: 'bg-yellow-100 text-yellow-800' };
   }
   return { level: 'خفیف', color: 'bg-green-100 text-green-800' };
-};
-
-// تابع کمکی برای تشخیص بیماری‌های پرخطر
-const isHighRiskDisease = (diseaseText) => {
-  if (!diseaseText) return false;
-  
-  const highRiskKeywords = ['سرطان', 'قلبی', 'سکته', 'مرگ', 'حاد', 'شدید', 'دیابت نوع ۱'];
-  return highRiskKeywords.some(keyword => 
-    diseaseText.toLowerCase().includes(keyword.toLowerCase())
-  );
 };
 
 // لیست بیماری‌های شایع خانوادگی
@@ -338,8 +330,9 @@ const FamilyHistorySection = React.memo(({
   const [newItemAge, setNewItemAge] = useState('');
   const [newItemAgeAtDiagnosis, setNewItemAgeAtDiagnosis] = useState('');
   const [showQuickAdd, setShowQuickAdd] = useState(false);
-  const [filter, setFilter] = useState('all'); // all, active, deceased, highRisk
+  const [filter, setFilter] = useState('all'); // all, active, deceased
   const [searchQuery, setSearchQuery] = useState('');
+  const [showList, setShowList] = useState(false);
   const inputRef = useRef(null);
 
   const safeItems = Array.isArray(familyHistory) ? familyHistory : [];
@@ -356,7 +349,6 @@ const FamilyHistorySection = React.memo(({
     // فیلتر وضعیت
     if (filter === 'active' && item.isActive === false) return false;
     if (filter === 'deceased' && item.isActive !== false) return false;
-    if (filter === 'highRisk' && !isHighRiskDisease(item.text)) return false;
     
     return true;
   });
@@ -449,91 +441,7 @@ const FamilyHistorySection = React.memo(({
     }
   };
 
-  // محاسبه آمار و تحلیل ریسک
-  const calculateStats = () => {
-    const total = safeItems.length;
-    const active = safeItems.filter(item => item.isActive !== false).length;
-    const deceased = safeItems.filter(item => item.isActive === false).length;
-    const highRisk = safeItems.filter(item => isHighRiskDisease(item.text)).length;
-    
-    // تحلیل ریسک بر اساس بیماری‌های خانوادگی
-    const riskFactors = {
-      heartDisease: safeItems.filter(item => 
-        item.text?.toLowerCase().includes('قلب') && 
-        ['پدر', 'مادر', 'برادر', 'خواهر'].includes(item.relation)
-      ).length,
-      
-      cancer: safeItems.filter(item => 
-        item.text?.toLowerCase().includes('سرطان') && 
-        ['پدر', 'مادر', 'برادر', 'خواهر'].includes(item.relation)
-      ).length,
-      
-      diabetes: safeItems.filter(item => 
-        (item.text?.toLowerCase().includes('دیابت') || item.text?.includes('قند')) && 
-        ['پدر', 'مادر'].includes(item.relation)
-      ).length,
-      
-      earlyOnset: safeItems.filter(item => 
-        item.ageAtDiagnosis && parseInt(item.ageAtDiagnosis) < 50
-      ).length
-    };
-
-    // تعیین سطح ریسک کلی
-    let overallRisk = 'پایین';
-    if (riskFactors.heartDisease >= 2 || riskFactors.cancer >= 2) {
-      overallRisk = 'بالا';
-    } else if (riskFactors.heartDisease >= 1 || riskFactors.cancer >= 1 || riskFactors.diabetes >= 2) {
-      overallRisk = 'متوسط';
-    }
-
-    return { total, active, deceased, highRisk, riskFactors, overallRisk };
-  };
-
-  const stats = calculateStats();
   const suggestedDiseases = getSuggestedDiseases();
-
-  // نمودار درختی ساده
-  const renderFamilyTreePreview = () => {
-    const immediateFamily = safeItems.filter(item => 
-      ['پدر', 'مادر', 'برادر', 'خواهر', 'فرزند'].includes(item.relation)
-    );
-    
-    if (immediateFamily.length === 0) return null;
-
-    return (
-      <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-3 md:p-4 mb-4 border border-purple-200">
-        <div className="flex items-center gap-2 mb-3">
-          <GiFamilyTree className="text-purple-600" />
-          <h4 className="font-bold text-gray-800 text-sm md:text-base">نمودار خانوادگی بیماری‌ها</h4>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {['پدر', 'مادر', 'برادر', 'خواهر'].map(relation => {
-            const items = immediateFamily.filter(item => item.relation === relation);
-            if (items.length === 0) return null;
-            
-            return (
-              <div key={relation} className="flex items-center gap-2 bg-white p-2 rounded-lg">
-                <span className="text-sm text-gray-700">{relation}:</span>
-                <div className="flex gap-1">
-                  {items.map((item, idx) => (
-                    <span 
-                      key={idx} 
-                      className={`text-xs px-2 py-1 rounded-full ${
-                        isHighRiskDisease(item.text) ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
-                      }`}
-                      title={item.text}
-                    >
-                      {item.text?.split(' ')[0] || ''}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="bg-white rounded-xl shadow-md p-4 md:p-6 mb-6 transition-all duration-300 hover:shadow-lg">
@@ -545,34 +453,35 @@ const FamilyHistorySection = React.memo(({
           </div>
           <div>
             <h3 className="text-lg md:text-xl font-bold text-gray-800">سوابق خانوادگی</h3>
-            <div className="flex items-center gap-2 md:gap-3">
-              <p className="text-xs md:text-sm text-gray-500">
-                {safeItems.length} مورد ثبت شده
-                {stats.highRisk > 0 && ` • ${stats.highRisk} مورد پرخطر`}
-                {stats.deceased > 0 && ` • ${stats.deceased} فوت شده`}
-              </p>
-              {stats.overallRisk !== 'پایین' && (
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  stats.overallRisk === 'بالا' ? 'bg-red-100 text-red-800' : 
-                  stats.overallRisk === 'متوسط' ? 'bg-yellow-100 text-yellow-800' : 
-                  'bg-green-100 text-green-800'
-                }`}>
-                  ریسک {stats.overallRisk}
-                </span>
-              )}
-            </div>
+            <p className="text-xs md:text-sm text-gray-500">
+              {safeItems.length} مورد ثبت شده
+            </p>
           </div>
         </div>
         
-        {showAddButton && !isAdding && (
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
+          {!isAdding && (
             <button
-              onClick={() => setShowQuickAdd(true)}
-              className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition text-sm"
+              onClick={() => setShowList(!showList)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-all duration-200 text-sm font-medium"
             >
-              <GiFamilyHouse className="w-3 h-3 md:w-4 md:h-4" />
-              <span className="hidden md:inline">بیماری‌های شایع</span>
+              {showList ? (
+                <>
+                 <FiEyeOff className="w-4 h-4" />
+                  <span className="hidden md:inline">بستن لیست</span>
+                  <span className="md:hidden">بستن</span>
+                </>
+              ) : (
+                <>
+                  <FiEye className="w-4 h-4" />
+                  <span className="hidden md:inline">مشاهده لیست</span>
+                  <span className="md:hidden">لیست</span>
+                </>
+              )}
             </button>
+          )}
+          
+          {showAddButton && !isAdding && (
             <button
               onClick={() => {
                 setIsAdding(true);
@@ -581,90 +490,75 @@ const FamilyHistorySection = React.memo(({
               className="flex items-center gap-1 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition text-sm md:text-base"
             >
               <FiPlus className="w-4 h-4" />
-              <span className="hidden md:inline">افزودن سابقه خانوادگی</span>
+              <span className="hidden md:inline">افزودن سابقه</span>
               <span className="md:hidden">افزودن</span>
             </button>
-          </div>
-        )}
-      </div>
-      
-      {/* پیش‌نمایش نمودار خانوادگی */}
-      {renderFamilyTreePreview()}
-      
-      {/* فیلتر و جستجو */}
-      <div className="mb-4 flex flex-col md:flex-row gap-2 md:gap-4">
-        <div className="flex-1">
-          <div className="relative">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="جستجو در سوابق خانوادگی..."
-              className="w-full px-3 md:px-4 py-2 pr-10 border border-gray-300 rounded-lg text-right text-sm md:text-base focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
-            />
-            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          </div>
-        </div>
-        
-        <div className="flex gap-2">
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-right text-sm md:text-base"
-          >
-            <option value="all">همه موارد</option>
-            <option value="active">افراد زنده</option>
-            <option value="deceased">فوت شده‌ها</option>
-            <option value="highRisk">پرریسک</option>
-          </select>
-          <button
-            onClick={() => {
-              setSearchQuery('');
-              setFilter('all');
-            }}
-            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm"
-          >
-            <FiFilter className="w-4 h-4" />
-          </button>
+          )}
         </div>
       </div>
-      
-      {/* هشدار ریسک بالا */}
-      {stats.riskFactors.heartDisease >= 2 && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-3 md:p-4 mb-4">
-          <div className="flex items-center gap-2">
-            <FiAlertCircle className="text-red-600" />
-            <h4 className="font-bold text-gray-800 text-sm md:text-base">هشدار ریسک قلبی عروقی</h4>
-          </div>
-          <p className="text-gray-700 text-sm mt-1">
-            {stats.riskFactors.heartDisease} مورد بیماری قلبی در خویشاوندان درجه یک شناسایی شد. 
-            نیاز به پیگیری و غربالگری منظم دارد.
-          </p>
-        </div>
-      )}
       
       {/* لیست سوابق خانوادگی */}
-      <div className="mb-4 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-        {filteredItems.length > 0 ? (
-          filteredItems.map((item) => (
-            <EditableFamilyItem
-              key={item.id}
-              item={item}
-              onEdit={handleEditItem}
-              onRemove={handleRemoveItem}
-              onToggleStatus={handleStatusToggle}
-            />
-          ))
-        ) : (
-          <div className="text-center py-6 md:py-8 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
+      {showList && (
+        <>
+          {/* فیلتر و جستجو */}
+          <div className="mb-4 flex flex-col md:flex-row gap-2 md:gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="جستجو در سوابق خانوادگی..."
+                  className="w-full px-3 md:px-4 py-2 pr-10 border border-gray-300 rounded-lg text-right text-sm md:text-base focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                />
+                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              </div>
+            </div>
+            
+            <div className="flex gap-2">
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-right text-sm md:text-base"
+              >
+                <option value="all">همه موارد</option>
+                <option value="active">افراد زنده</option>
+                <option value="deceased">فوت شده‌ها</option>
+              </select>
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  setFilter('all');
+                }}
+                className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm"
+              >
+                <FiFilter className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
           
-            <p className="text-gray-500 text-sm md:text-base">سابقه خانوادگی ثبت نشده است</p>
-            {showAddButton && (
-              <p className="text-xs md:text-sm text-gray-400 mt-1">برای افزودن سابقه، روی افزودن کلیک کنید</p>
+          <div className="mb-4 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+            {filteredItems.length > 0 ? (
+              filteredItems.map((item) => (
+                <EditableFamilyItem
+                  key={item.id}
+                  item={item}
+                  onEdit={handleEditItem}
+                  onRemove={handleRemoveItem}
+                  onToggleStatus={handleStatusToggle}
+                />
+              ))
+            ) : (
+              <div className="text-center py-6 md:py-8 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
+                <p className="text-gray-500 text-sm md:text-base">سابقه خانوادگی ثبت نشده است</p>
+                {showAddButton && (
+                  <p className="text-xs md:text-sm text-gray-400 mt-1">برای افزودن سابقه، روی افزودن کلیک کنید</p>
+                )}
+              </div>
             )}
           </div>
-        )}
-      </div>
+        </>
+      )}
       
       {/* بیماری‌های شایع سریع */}
       {showQuickAdd && !isAdding && (
@@ -818,62 +712,6 @@ const FamilyHistorySection = React.memo(({
           </div>
           <div className="mt-2 text-xs text-purple-500">
             <p>💡 بیماری‌های پرخطر خانوادگی: سرطان‌ها، بیماری‌های قلبی زودهنگام، دیابت نوع ۱</p>
-          </div>
-        </div>
-      )}
-      
-      {/* خلاصه تحلیل ریسک */}
-      {safeItems.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-4">
-            <div className="bg-purple-50 rounded-xl p-2 md:p-3 text-center">
-              <p className="text-xs md:text-sm text-gray-600">کل موارد</p>
-              <p className="text-lg md:text-2xl font-bold text-purple-700">{stats.total}</p>
-            </div>
-            <div className="bg-green-50 rounded-xl p-2 md:p-3 text-center">
-              <p className="text-xs md:text-sm text-gray-600">افراد زنده</p>
-              <p className="text-lg md:text-2xl font-bold text-green-700">{stats.active}</p>
-            </div>
-            <div className="bg-gray-100 rounded-xl p-2 md:p-3 text-center">
-              <p className="text-xs md:text-sm text-gray-600">فوت شده</p>
-              <p className="text-lg md:text-2xl font-bold text-gray-800">{stats.deceased}</p>
-            </div>
-            <div className="bg-red-50 rounded-xl p-2 md:p-3 text-center">
-              <p className="text-xs md:text-sm text-gray-600">موارد پرخطر</p>
-              <p className="text-lg md:text-2xl font-bold text-red-700">{stats.highRisk}</p>
-            </div>
-            <div className={`rounded-xl p-2 md:p-3 text-center ${
-              stats.overallRisk === 'بالا' ? 'bg-red-100' :
-              stats.overallRisk === 'متوسط' ? 'bg-yellow-100' : 'bg-green-100'
-            }`}>
-              <p className="text-xs md:text-sm text-gray-600">ریسک کلی</p>
-              <p className={`text-lg md:text-2xl font-bold ${
-                stats.overallRisk === 'بالا' ? 'text-red-800' :
-                stats.overallRisk === 'متوسط' ? 'text-yellow-800' : 'text-green-800'
-              }`}>
-                {stats.overallRisk}
-              </p>
-            </div>
-          </div>
-          
-          {/* تحلیل جزئی ریسک */}
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4">
-            <div className="bg-white border border-gray-200 rounded-xl p-2 md:p-3">
-              <p className="text-xs text-gray-600 mb-1">بیماری قلبی در بستگان درجه یک</p>
-              <p className="text-lg font-bold text-red-700">{stats.riskFactors.heartDisease} مورد</p>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-xl p-2 md:p-3">
-              <p className="text-xs text-gray-600 mb-1">سرطان در بستگان درجه یک</p>
-              <p className="text-lg font-bold text-red-700">{stats.riskFactors.cancer} مورد</p>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-xl p-2 md:p-3">
-              <p className="text-xs text-gray-600 mb-1">دیابت در والدین</p>
-              <p className="text-lg font-bold text-yellow-700">{stats.riskFactors.diabetes} مورد</p>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-xl p-2 md:p-3">
-              <p className="text-xs text-gray-600 mb-1">تشخیص زودهنگام (زیر ۵۰ سال)</p>
-              <p className="text-lg font-bold text-blue-700">{stats.riskFactors.earlyOnset} مورد</p>
-            </div>
           </div>
         </div>
       )}
