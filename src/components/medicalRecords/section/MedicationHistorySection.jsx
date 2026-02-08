@@ -15,7 +15,12 @@ import {
   FiAlertCircle,
   FiFilter,
   FiSearch,
-  FiStar
+  FiCheckCircle,
+  FiAlertTriangle,
+  FiMinusCircle,
+  FiActivity,
+  FiChevronDown,
+  FiChevronUp
 } from 'react-icons/fi';
 
 const MedicationHistorySection = ({ 
@@ -30,6 +35,11 @@ const MedicationHistorySection = ({
   const [editingId, setEditingId] = useState(null);
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [formErrors, setFormErrors] = useState({});
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const [expandedItems, setExpandedItems] = useState(new Set());
+  const [showSummary, setShowSummary] = useState(true);
+  
   const [formData, setFormData] = useState({
     drugName: '',
     dosage: '',
@@ -54,7 +64,8 @@ const MedicationHistorySection = ({
     const matchesFilter = activeFilter === 'all' || item.status === activeFilter;
     const matchesSearch = searchTerm === '' || 
       item.drugName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.purpose?.toLowerCase().includes(searchTerm.toLowerCase());
+      item.purpose?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.notes?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
@@ -64,50 +75,59 @@ const MedicationHistorySection = ({
     active: safeItems.filter(item => item.status === 'در حال مصرف').length,
     stopped: safeItems.filter(item => item.status === 'قطع شده').length,
     oneTime: safeItems.filter(item => item.status === 'تک‌دوز').length,
-    periodic: safeItems.filter(item => item.status === 'دوره‌ای').length
+    periodic: safeItems.filter(item => item.status === 'دوره‌ای').length,
+    prn: safeItems.filter(item => item.status === 'PRN').length
   };
 
+  // وضعیت نمایش خلاصه
   useEffect(() => {
-    // وقتی دارویی اضافه شد، لیست را باز کن
-    if (safeItems.length > 0 && !showMedicationList) {
-      setShowMedicationList(true);
+    if (safeItems.length > 0) {
+      setShowSummary(true);
     }
   }, [safeItems.length]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    // پاک کردن خطا هنگام تایپ
+    if (formErrors[name]) {
+      setFormErrors(prev => ({ ...prev, [name]: '' }));
+    }
   };
 
   const validateForm = () => {
-    const errors = [];
+    const errors = {};
+    let isValid = true;
     
     if (!formData.drugName.trim()) {
-      errors.push('نام دارو الزامی است');
+      errors.drugName = 'نام دارو الزامی است';
+      isValid = false;
     }
     
     if (!formData.dosage.trim()) {
-      errors.push('دوز دارو الزامی است');
+      errors.dosage = 'دوز دارو الزامی است';
+      isValid = false;
     } else if (isNaN(parseFloat(formData.dosage))) {
-      errors.push('دوز باید عددی باشد');
+      errors.dosage = 'دوز باید عددی باشد';
+      isValid = false;
     }
     
     if (!formData.startDate) {
-      errors.push('تاریخ شروع الزامی است');
+      errors.startDate = 'تاریخ شروع الزامی است';
+      isValid = false;
     }
     
     if (formData.endDate && formData.endDate < formData.startDate) {
-      errors.push('تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد');
+      errors.endDate = 'تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد';
+      isValid = false;
     }
     
-    return errors;
+    setFormErrors(errors);
+    return isValid;
   };
 
   const handleSubmit = () => {
-    const errors = validateForm();
-    
-    if (errors.length > 0) {
-      alert(errors.join('\n'));
+    if (!validateForm()) {
       return;
     }
 
@@ -130,6 +150,7 @@ const MedicationHistorySection = ({
 
     handleCloseModal();
     setShowMedicationList(true);
+    setFormErrors({});
   };
 
   const handleEdit = (item) => {
@@ -154,6 +175,7 @@ const MedicationHistorySection = ({
     });
     setEditingId(item.id);
     setShowAddModal(true);
+    setFormErrors({});
   };
 
   const handleCloseModal = () => {
@@ -175,6 +197,26 @@ const MedicationHistorySection = ({
     });
     setEditingId(null);
     setShowAddModal(false);
+    setFormErrors({});
+  };
+
+  const handleRemove = (id) => {
+    setShowDeleteConfirm(id);
+  };
+
+  const confirmRemove = () => {
+    onRemove(showDeleteConfirm);
+    setShowDeleteConfirm(null);
+  };
+
+  const toggleItemExpansion = (id) => {
+    const newExpanded = new Set(expandedItems);
+    if (newExpanded.has(id)) {
+      newExpanded.delete(id);
+    } else {
+      newExpanded.add(id);
+    }
+    setExpandedItems(newExpanded);
   };
 
   const getStatusColor = (status) => {
@@ -183,17 +225,19 @@ const MedicationHistorySection = ({
       case 'قطع شده': return 'bg-red-100 text-red-800 border border-red-200';
       case 'تک‌دوز': return 'bg-blue-100 text-blue-800 border border-blue-200';
       case 'دوره‌ای': return 'bg-purple-100 text-purple-800 border border-purple-200';
+      case 'PRN': return 'bg-amber-100 text-amber-800 border border-amber-200';
       default: return 'bg-gray-100 text-gray-800 border border-gray-200';
     }
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'در حال مصرف': return '🟢';
-      case 'قطع شده': return '🔴';
-      case 'تک‌دوز': return '🔵';
-      case 'دوره‌ای': return '🟣';
-      default: return '⚪';
+      case 'در حال مصرف': return <FiCheckCircle className="w-5 h-5 text-green-500" />;
+      case 'قطع شده': return <FiMinusCircle className="w-5 h-5 text-red-500" />;
+      case 'تک‌دوز': return <FiActivity className="w-5 h-5 text-blue-500" />;
+      case 'دوره‌ای': return <FiActivity className="w-5 h-5 text-purple-500" />;
+      case 'PRN': return <FiAlertCircle className="w-5 h-5 text-amber-500" />;
+      default: return <FiActivity className="w-5 h-5 text-gray-500" />;
     }
   };
 
@@ -203,6 +247,7 @@ const MedicationHistorySection = ({
       case 'تزریقی': return 'text-red-600 bg-red-50';
       case 'موضعی': return 'text-green-600 bg-green-50';
       case 'استنشاقی': return 'text-purple-600 bg-purple-50';
+      case 'زیرزبانی': return 'text-pink-600 bg-pink-50';
       default: return 'text-gray-600 bg-gray-50';
     }
   };
@@ -216,70 +261,31 @@ const MedicationHistorySection = ({
             <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-3 md:p-4 rounded-xl shadow-lg">
               <FiPackage className="text-white w-5 h-5 md:w-6 md:h-6" />
             </div>
-           
           </div>
           
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-gray-900 flex items-center gap-2">
               <span>سوابق دارویی</span>
-             
+              {safeItems.length > 0 && (
+                <span className="bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm px-3 py-1 rounded-full">
+                  {safeItems.length} دارو
+                </span>
+              )}
             </h2>
-            <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-2">
-              <div className="flex items-center gap-1 text-xs md:text-sm">
-                <span className="text-green-600 font-bold">{stats.active}</span>
-                <span className="text-gray-600">داروی فعال</span>
-              </div>
-              <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-              <div className="flex items-center gap-1 text-xs md:text-sm">
-                <span className="text-red-600 font-bold">{stats.stopped}</span>
-                <span className="text-gray-600">قطع شده</span>
-              </div>
-              <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-              <div className="flex items-center gap-1 text-xs md:text-sm">
-                <span className="text-blue-600 font-bold">{stats.oneTime + stats.periodic}</span>
-                <span className="text-gray-600">دوره‌ای</span>
-              </div>
-            </div>
+           
           </div>
         </div>
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          {/* دکمه‌های فیلتر */}
-          {safeItems.length > 0 && (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setActiveFilter('all')}
-                className={`px-3 py-1.5 text-sm rounded-lg transition-all flex items-center gap-1 ${activeFilter === 'all' 
-                  ? 'bg-green-600 text-white shadow-sm' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-              >
-                <FiFilter className="w-3 h-3" />
-                همه
-              </button>
-              <button
-                onClick={() => setActiveFilter('در حال مصرف')}
-                className={`px-3 py-1.5 text-sm rounded-lg transition-all ${activeFilter === 'در حال مصرف' 
-                  ? 'bg-green-600 text-white shadow-sm' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-              >
-                فعال
-              </button>
-              <button
-                onClick={() => setActiveFilter('قطع شده')}
-                className={`px-3 py-1.5 text-sm rounded-lg transition-all ${activeFilter === 'قطع شده' 
-                  ? 'bg-red-600 text-white shadow-sm' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-              >
-                قطع شده
-              </button>
-            </div>
-          )}
-
           {/* دکمه نمایش/پنهان لیست */}
           {safeItems.length > 0 && (
             <button
               onClick={() => setShowMedicationList(!showMedicationList)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-all duration-200 text-sm font-medium"
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 text-sm font-medium shadow-lg hover:shadow-xl ${
+                showMedicationList 
+                  ? 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white' 
+                  : 'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white'
+              }`}
             >
               {showMedicationList ? (
                 <>
@@ -308,213 +314,406 @@ const MedicationHistorySection = ({
         </div>
       </div>
 
-      {/* نوار جستجو */}
-      {safeItems.length > 0 && showMedicationList && (
-        <div className="mb-4">
-          <div className="relative">
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="جستجوی دارو یا هدف درمان..."
-              className="w-full px-4 py-3 pr-12 bg-white border-2 border-gray-200 rounded-xl text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm shadow-sm"
-            />
-            <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-              <FiSearch className="text-gray-400 w-4 h-4" />
+      {/* خلاصه وضعیت داروها (همیشه نمایش داده می‌شود) */}
+      {safeItems.length > 0 && showSummary && !showMedicationList && (
+        <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-5 animate-fadeIn">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white rounded-lg shadow-sm">
+                <FiPackage className="text-blue-600 w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-gray-800 font-bold text-lg">داروهای ثبت شده</h3>
+                <p className="text-gray-600 text-sm">خلاصه وضعیت داروهای بیمار</p>
+              </div>
             </div>
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                <FiX className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-          <div className="flex justify-between items-center mt-2">
-            <p className="text-xs text-gray-500">
-              {filteredItems.length} مورد از {safeItems.length} دارو یافت شد
-            </p>
             <button
-              onClick={() => {
-                setSearchTerm('');
-                setActiveFilter('all');
-              }}
-              className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+              onClick={() => setShowSummary(false)}
+              className="p-2 text-gray-400 hover:text-gray-600"
             >
-              <FiX className="w-3 h-3" />
-              پاکسازی فیلترها
+              <FiX className="w-5 h-5" />
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div className="bg-white rounded-lg p-4 text-center border border-green-100">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-gray-700 font-medium">فعال</span>
+              </div>
+              <div className="text-2xl font-bold text-green-600">{stats.active}</div>
+              <div className="text-xs text-gray-500 mt-1">دارو</div>
+            </div>
+            
+            <div className="bg-white rounded-lg p-4 text-center border border-red-100">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                <span className="text-gray-700 font-medium">قطع شده</span>
+              </div>
+              <div className="text-2xl font-bold text-red-600">{stats.stopped}</div>
+              <div className="text-xs text-gray-500 mt-1">دارو</div>
+            </div>
+            
+            <div className="bg-white rounded-lg p-4 text-center border border-blue-100">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                <span className="text-gray-700 font-medium">تک‌دوز</span>
+              </div>
+              <div className="text-2xl font-bold text-blue-600">{stats.oneTime}</div>
+              <div className="text-xs text-gray-500 mt-1">دارو</div>
+            </div>
+            
+            <div className="bg-white rounded-lg p-4 text-center border border-purple-100">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                <span className="text-gray-700 font-medium">دوره‌ای</span>
+              </div>
+              <div className="text-2xl font-bold text-purple-600">{stats.periodic + stats.prn}</div>
+              <div className="text-xs text-gray-500 mt-1">دارو</div>
+            </div>
+          </div>
+          
+          <div className="flex justify-between items-center pt-4 border-t border-blue-200">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <FiInfo className="w-4 h-4" />
+              <span>برای مشاهده جزئیات کامل، روی دکمه "مشاهده لیست" کلیک کنید</span>
+            </div>
+            <button
+              onClick={() => setShowMedicationList(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-lg transition-all duration-200 shadow hover:shadow-md"
+            >
+              <FiEye className="w-4 h-4" />
+              <span>مشاهده لیست کامل</span>
             </button>
           </div>
         </div>
       )}
 
-      {/* لیست داروها */}
-      {showMedicationList && filteredItems.length > 0 ? (
-        <div className="space-y-4 animate-fadeIn">
-          {filteredItems.map((item, index) => (
-            <div 
-              key={item.id} 
-              className="bg-white rounded-xl border border-gray-200 hover:border-green-300 hover:shadow-lg transition-all duration-300 overflow-hidden group"
-            >
-              <div className="p-4 md:p-5">
-                {/* هدر آیتم */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
-                  <div className="flex items-start gap-3">
-                    <div className={`p-2 rounded-lg ${getStatusColor(item.status)}`}>
-                      <span className="text-lg">{getStatusIcon(item.status)}</span>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-gray-900 text-lg md:text-xl">{item.drugName}</h3>
-                        {item.drugCode && (
-                          <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
-                            کد: {item.drugCode}
-                          </span>
-                        )}
-                        {item.route === 'تزریقی' && (
-                          <span className="text-xs px-2 py-1 bg-red-50 text-red-600 rounded-full flex items-center gap-1">
-                            ⚡ تزریقی
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-3 mt-1">
-                        <div className="flex items-center gap-1">
-                          <FiPackage className="text-gray-400 w-4 h-4" />
-                          <span className="text-gray-700 font-medium">{item.dosage}</span>
-                        </div>
-                        <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRouteColor(item.route)}`}>
-                          {item.route}
-                        </span>
-                        {item.status === 'در حال مصرف' && (
-                          <span className="flex items-center gap-1 text-xs text-green-600">
-                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                            فعال
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <span className={`px-3 py-1.5 rounded-full text-sm font-medium ${getStatusColor(item.status)}`}>
-                      {item.status}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => handleEdit(item)}
-                        className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-all duration-200"
-                        title="ویرایش دارو"
-                      >
-                        <FiEdit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (window.confirm('آیا از حذف این دارو اطمینان دارید؟')) {
-                            onRemove(item.id);
-                          }
-                        }}
-                        className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-all duration-200"
-                        title="حذف دارو"
-                      >
-                        <FiTrash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* اطلاعات اصلی */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <FiCalendar className="text-gray-500 w-4 h-4" />
-                      <span className="text-gray-700 text-sm font-medium">دوره درمان</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="text-right">
-                        <div className="text-xs text-gray-500">شروع</div>
-                        <div className="font-bold text-gray-900">{item.startDate}</div>
-                      </div>
-                      <div className="w-6 h-px bg-gray-300 mx-2"></div>
-                      <div className="text-right">
-                        <div className="text-xs text-gray-500">پایان</div>
-                        <div className="font-bold text-gray-900">
-                          {item.endDate ? item.endDate : 'تاکنون'}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <FiClock className="text-gray-500 w-4 h-4" />
-                      <span className="text-gray-700 text-sm font-medium">مدت زمان </span>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-gray-900 text-lg">
-                        {item.frequency || '---'}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="mb-2">
-                      <span className="text-gray-700 text-sm font-medium">هدف درمان</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-gray-900">
-                        {item.purpose || '---'}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* اطلاعات اضافی */}
-                <div className="border-t border-gray-100 pt-4">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2">
-                        <FiUser className="text-gray-400 w-4 h-4" />
-                        <span className="text-gray-600 text-sm">تجویز کننده:</span>
-                        <span className="font-medium text-gray-900">{item.prescribingDoctor}</span>
-                      </div>
-                    </div>
-                    
-                    {item.notes && (
-                      <div className="flex items-start gap-2">
-                        <FiInfo className="text-blue-500 w-4 h-4 mt-0.5 flex-shrink-0" />
-                        <div className="text-right">
-                          <div className="text-gray-600 text-sm mb-1">یادداشت:</div>
-                          <div className="text-gray-800 text-sm line-clamp-1">{item.notes}</div>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {item.warnings && (
-                      <div className="flex items-start gap-2">
-                        <FiAlertCircle className="text-amber-500 w-4 h-4 mt-0.5 flex-shrink-0" />
-                        <div className="text-right">
-                          <div className="text-gray-600 text-sm mb-1">هشدارها:</div>
-                          <div className="text-amber-700 text-sm line-clamp-1">{item.warnings}</div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-              
-              {/* نوار وضعیت پایین */}
-              <div className={`h-1 ${
-                item.status === 'در حال مصرف' ? 'bg-gradient-to-r from-green-400 to-emerald-500' :
-                item.status === 'قطع شده' ? 'bg-gradient-to-r from-red-400 to-rose-500' :
-                item.status === 'تک‌دوز' ? 'bg-gradient-to-r from-blue-400 to-indigo-500' :
-                'bg-gradient-to-r from-purple-400 to-violet-500'
-              }`}></div>
-            </div>
-          ))}
+      {/* پیام وقتی خلاصه بسته شده */}
+      {!showSummary && safeItems.length > 0 && !showMedicationList && (
+        <div className="mb-6 text-center py-4">
+          <button
+            onClick={() => setShowSummary(true)}
+            className="text-blue-600 hover:text-blue-800 flex items-center gap-2 mx-auto"
+          >
+            <FiChevronDown className="w-4 h-4" />
+            <span>نمایش خلاصه داروها</span>
+          </button>
         </div>
-      ) : showMedicationList && safeItems.length === 0 ? (
+      )}
+
+      {/* فیلتر و جستجو (فقط وقتی لیست باز است) */}
+      {showMedicationList && safeItems.length > 0 && (
+        <>
+          {/* دکمه‌های فیلتر */}
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => setActiveFilter('all')}
+                className={`px-3 py-2 text-sm rounded-lg transition-all flex items-center gap-1 ${activeFilter === 'all' 
+                  ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+              >
+                <FiFilter className="w-4 h-4" />
+                همه
+              </button>
+              <button
+                onClick={() => setActiveFilter('در حال مصرف')}
+                className={`px-3 py-2 text-sm rounded-lg transition-all flex items-center gap-1 ${activeFilter === 'در حال مصرف' 
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-sm' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+              >
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                فعال
+              </button>
+              <button
+                onClick={() => setActiveFilter('قطع شده')}
+                className={`px-3 py-2 text-sm rounded-lg transition-all flex items-center gap-1 ${activeFilter === 'قطع شده' 
+                  ? 'bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-sm' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+              >
+                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                قطع شده
+              </button>
+              <button
+                onClick={() => setActiveFilter('تک‌دوز')}
+                className={`px-3 py-2 text-sm rounded-lg transition-all flex items-center gap-1 ${activeFilter === 'تک‌دوز' 
+                  ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+              >
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                تک‌دوز
+              </button>
+              <button
+                onClick={() => setActiveFilter('PRN')}
+                className={`px-3 py-2 text-sm rounded-lg transition-all flex items-center gap-1 ${activeFilter === 'PRN' 
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-sm' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+              >
+                <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                PRN
+              </button>
+            </div>
+          </div>
+
+          {/* نوار جستجو */}
+          <div className="mb-6">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="جستجوی دارو، هدف درمان یا یادداشت..."
+                className="w-full px-4 py-3 pr-12 bg-white border-2 border-gray-200 rounded-xl text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm shadow-sm"
+              />
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                <FiSearch className="text-gray-400 w-4 h-4" />
+              </div>
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <FiX className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            <div className="flex justify-between items-center mt-2">
+              <p className="text-xs text-gray-500">
+                {filteredItems.length} مورد از {safeItems.length} دارو یافت شد
+              </p>
+              {(searchTerm || activeFilter !== 'all') && (
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setActiveFilter('all');
+                  }}
+                  className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                >
+                  <FiX className="w-3 h-3" />
+                  پاکسازی فیلترها
+                </button>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* لیست داروها */}
+      {showMedicationList ? (
+        filteredItems.length > 0 ? (
+          <div className="space-y-4 animate-fadeIn">
+            {filteredItems.map((item) => (
+              <div 
+                key={item.id} 
+                className="bg-white rounded-xl border border-gray-200 hover:border-green-300 hover:shadow-lg transition-all duration-300 overflow-hidden group"
+              >
+                <div className="p-4 md:p-5">
+                  {/* هدر آیتم */}
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+                    <div className="flex items-start gap-3">
+                      <div className={`p-2 rounded-lg ${getStatusColor(item.status)}`}>
+                        {getStatusIcon(item.status)}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-bold text-gray-900 text-lg md:text-xl">{item.drugName}</h3>
+                          {item.drugCode && (
+                            <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
+                              کد: {item.drugCode}
+                            </span>
+                          )}
+                          {item.route === 'تزریقی' && (
+                            <span className="text-xs px-2 py-1 bg-red-50 text-red-600 rounded-full flex items-center gap-1">
+                              <FiAlertTriangle className="w-3 h-3" />
+                              تزریقی
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-3 mt-1">
+                          <div className="flex items-center gap-1">
+                            <FiPackage className="text-gray-400 w-4 h-4" />
+                            <span className="text-gray-700 font-medium">{item.dosage}</span>
+                          </div>
+                          <div className="w-1 h-1 bg-gray-300 rounded-full hidden sm:block"></div>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRouteColor(item.route)}`}>
+                            {item.route}
+                          </span>
+                          {item.status === 'در حال مصرف' && (
+                            <span className="flex items-center gap-1 text-xs text-green-600">
+                              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                              فعال
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <span className={`px-3 py-1.5 rounded-full text-sm font-medium ${getStatusColor(item.status)}`}>
+                        {item.status}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => toggleItemExpansion(item.id)}
+                          className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-all duration-200"
+                          title={expandedItems.has(item.id) ? "بستن جزئیات" : "مشاهده جزئیات"}
+                        >
+                          {expandedItems.has(item.id) ? (
+                            <FiChevronUp className="w-4 h-4" />
+                          ) : (
+                            <FiChevronDown className="w-4 h-4" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleEdit(item)}
+                          className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                          title="ویرایش دارو"
+                        >
+                          <FiEdit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleRemove(item.id)}
+                          className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-all duration-200"
+                          title="حذف دارو"
+                        >
+                          <FiTrash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* اطلاعات اصلی (همیشه نمایش) */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <FiCalendar className="text-gray-500 w-4 h-4" />
+                        <span className="text-gray-700 text-sm font-medium">دوره درمان</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="text-right">
+                          <div className="text-xs text-gray-500">شروع</div>
+                          <div className="font-bold text-gray-900">{item.startDate}</div>
+                        </div>
+                        <div className="w-6 h-px bg-gray-300 mx-2"></div>
+                        <div className="text-right">
+                          <div className="text-xs text-gray-500">پایان</div>
+                          <div className="font-bold text-gray-900">
+                            {item.endDate ? item.endDate : 'تاکنون'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <FiClock className="text-gray-500 w-4 h-4" />
+                        <span className="text-gray-700 text-sm font-medium">تکرار مصرف</span>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-gray-900 text-lg">
+                          {item.frequency || '---'}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="mb-2">
+                        <span className="text-gray-700 text-sm font-medium">هدف درمان</span>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-gray-900 line-clamp-1">
+                          {item.purpose || '---'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* اطلاعات اضافی (فقط وقتی expand شده) */}
+                  {expandedItems.has(item.id) && (
+                    <div className="border-t border-gray-100 pt-4 mt-4 animate-fadeIn">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <FiUser className="text-gray-400 w-4 h-4" />
+                            <span className="text-gray-600 text-sm">تجویز کننده:</span>
+                            <span className="font-medium text-gray-900">{item.prescribingDoctor}</span>
+                          </div>
+                          
+                          {item.notes && (
+                            <div className="flex items-start gap-2">
+                              <FiInfo className="text-blue-500 w-4 h-4 mt-0.5 flex-shrink-0" />
+                              <div className="text-right">
+                                <div className="text-gray-600 text-sm mb-1">یادداشت:</div>
+                                <div className="text-gray-800 text-sm bg-blue-50 p-3 rounded-lg">
+                                  {item.notes}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div>
+                          {item.warnings && (
+                            <div className="flex items-start gap-2">
+                              <FiAlertCircle className="text-amber-500 w-4 h-4 mt-0.5 flex-shrink-0" />
+                              <div className="text-right">
+                                <div className="text-gray-600 text-sm mb-1">هشدارها:</div>
+                                <div className="text-amber-700 text-sm bg-amber-50 p-3 rounded-lg">
+                                  {item.warnings}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* نوار وضعیت پایین */}
+                <div className={`h-1 ${
+                  item.status === 'در حال مصرف' ? 'bg-gradient-to-r from-green-400 to-emerald-500' :
+                  item.status === 'قطع شده' ? 'bg-gradient-to-r from-red-400 to-rose-500' :
+                  item.status === 'تک‌دوز' ? 'bg-gradient-to-r from-blue-400 to-indigo-500' :
+                  item.status === 'PRN' ? 'bg-gradient-to-r from-amber-400 to-orange-500' :
+                  'bg-gradient-to-r from-purple-400 to-violet-500'
+                }`}></div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12 md:py-16 bg-gradient-to-br from-white to-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+            <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 shadow-inner">
+              <FiSearch className="w-10 h-10 md:w-12 md:h-12 text-gray-400" />
+            </div>
+            <h4 className="text-gray-700 font-bold text-lg md:text-xl mb-2 md:mb-3">دارویی یافت نشد</h4>
+            <p className="text-gray-500 text-sm md:text-base max-w-md mx-auto mb-6 md:mb-8">
+              هیچ دارویی با فیلترهای انتخاب شده مطابقت ندارد. فیلترها را تغییر دهید یا داروی جدیدی اضافه کنید.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setActiveFilter('all');
+                }}
+                className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl transition-all font-medium"
+              >
+                پاکسازی فیلترها
+              </button>
+              {showAddButton && (
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white rounded-xl transition-all font-medium"
+                >
+                  افزودن داروی جدید
+                </button>
+              )}
+            </div>
+          </div>
+        )
+      ) : safeItems.length === 0 ? (
+        // وقتی هیچ دارویی ثبت نشده
         <div className="text-center py-12 md:py-16 bg-gradient-to-br from-white to-gray-50 rounded-xl border-2 border-dashed border-gray-300">
           <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 shadow-inner">
             <FiPackage className="w-10 h-10 md:w-12 md:h-12 text-gray-400" />
@@ -550,9 +749,6 @@ const MedicationHistorySection = ({
                     <h3 className="text-xl md:text-2xl font-bold">
                       {editingId ? 'ویرایش اطلاعات دارو' : 'ثبت داروی جدید'}
                     </h3>
-                    <p className="text-emerald-100 text-sm mt-1">
-                      طبق پروتکل‌های وزارت بهداشت و سازمان جهانی بهداشت
-                    </p>
                   </div>
                 </div>
                 <button
@@ -571,7 +767,7 @@ const MedicationHistorySection = ({
                 <div className="space-y-5">
                   {/* نام دارو */}
                   <div>
-                    <label className="block text-gray-800 font-medium mb-2 flex items-center gap-2">
+                    <label className="text-gray-800 font-medium mb-2 flex items-center gap-2">
                       <span className="text-red-500">*</span>
                       نام دارو
                     </label>
@@ -580,10 +776,16 @@ const MedicationHistorySection = ({
                       name="drugName"
                       value={formData.drugName}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all text-lg placeholder:text-gray-400"
+                      className={`w-full px-4 py-3 border-2 ${formErrors.drugName ? 'border-red-300' : 'border-gray-300'} rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all text-lg placeholder:text-gray-400`}
                       placeholder="مثال: آتورواستاتین"
                       dir="rtl"
                     />
+                    {formErrors.drugName && (
+                      <p className="text-red-600 text-sm mt-2 flex items-center gap-1">
+                        <FiAlertCircle className="w-4 h-4" />
+                        {formErrors.drugName}
+                      </p>
+                    )}
                   </div>
                   
                   {/* دوز و واحد */}
@@ -598,11 +800,17 @@ const MedicationHistorySection = ({
                         name="dosage"
                         value={formData.dosage}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"
+                        className={`w-full px-4 py-3 border-2 ${formErrors.dosage ? 'border-red-300' : 'border-gray-300'} rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all`}
                         placeholder="20"
                         step="0.1"
                         min="0"
                       />
+                      {formErrors.dosage && (
+                        <p className="text-red-600 text-sm mt-2 flex items-center gap-1">
+                          <FiAlertCircle className="w-4 h-4" />
+                          {formErrors.dosage}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-gray-800 font-medium mb-2">واحد</label>
@@ -692,7 +900,7 @@ const MedicationHistorySection = ({
                   {/* تاریخ‌ها */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-gray-800 font-medium mb-2 flex items-center gap-2">
+                      <label className="text-gray-800 font-medium mb-2 flex items-center gap-2">
                         <span className="text-red-500">*</span>
                         تاریخ شروع
                       </label>
@@ -701,8 +909,14 @@ const MedicationHistorySection = ({
                         name="startDate"
                         value={formData.startDate}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"
+                        className={`w-full px-4 py-3 border-2 ${formErrors.startDate ? 'border-red-300' : 'border-gray-300'} rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all`}
                       />
+                      {formErrors.startDate && (
+                        <p className="text-red-600 text-sm mt-2 flex items-center gap-1">
+                          <FiAlertCircle className="w-4 h-4" />
+                          {formErrors.startDate}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-gray-800 font-medium mb-2">تاریخ پایان</label>
@@ -711,8 +925,14 @@ const MedicationHistorySection = ({
                         name="endDate"
                         value={formData.endDate}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"
+                        className={`w-full px-4 py-3 border-2 ${formErrors.endDate ? 'border-red-300' : 'border-gray-300'} rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all`}
                       />
+                      {formErrors.endDate && (
+                        <p className="text-red-600 text-sm mt-2 flex items-center gap-1">
+                          <FiAlertCircle className="w-4 h-4" />
+                          {formErrors.endDate}
+                        </p>
+                      )}
                     </div>
                   </div>
                   
@@ -760,7 +980,7 @@ const MedicationHistorySection = ({
                   
                   {/* هشدارها */}
                   <div>
-                    <label className="block text-gray-800 font-medium mb-2 flex items-center gap-2">
+                    <label className="text-gray-800 font-medium mb-2 flex items-center gap-2">
                       <FiAlertCircle className="text-amber-500" />
                       هشدارها و نکات مهم
                     </label>
@@ -777,7 +997,7 @@ const MedicationHistorySection = ({
                 
                 {/* یادداشت‌ها (تمام عرض) */}
                 <div className="md:col-span-2">
-                  <label className="block text-gray-800 font-medium mb-2 flex items-center gap-2">
+                  <label className="text-gray-800 font-medium mb-2 flex items-center gap-2">
                     <FiInfo className="text-blue-500" />
                     توضیحات و یادداشت‌ها
                   </label>
@@ -812,6 +1032,62 @@ const MedicationHistorySection = ({
                 >
                   <FiCheck className="w-5 h-5" />
                   {editingId ? 'ذخیره تغییرات' : 'ثبت دارو'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* مودال تایید حذف */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-3 md:p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200">
+            <div className="sticky top-0 bg-gradient-to-r from-red-600 to-rose-700 text-white p-5 md:p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                    <FiTrash2 className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold">تایید حذف دارو</h3>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDeleteConfirm(null)}
+                  className="p-2 hover:bg-white/20 rounded-lg transition-all"
+                >
+                  <FiX className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-5 md:p-6">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FiAlertTriangle className="w-8 h-8 text-red-600" />
+                </div>
+                <h4 className="text-gray-800 font-bold text-lg mb-2">
+                  آیا از حذف این دارو اطمینان دارید؟
+                </h4>
+                <p className="text-gray-600 text-sm">
+                  این عمل قابل بازگشت نیست و اطلاعات دارو به طور کامل حذف خواهد شد.
+                </p>
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(null)}
+                  className="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl transition-all font-medium"
+                >
+                  انصراف
+                </button>
+                <button
+                  onClick={confirmRemove}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800 text-white rounded-xl transition-all font-medium flex items-center justify-center gap-2"
+                >
+                  <FiTrash2 className="w-5 h-5" />
+                  حذف دارو
                 </button>
               </div>
             </div>

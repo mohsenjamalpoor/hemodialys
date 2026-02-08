@@ -21,6 +21,8 @@ import MedicationHistorySection from './section/MedicationHistorySection';
 import LabImagingSection from './section/LabImagingSection';
 import FoodAllergiesSection from './section/FoodAllergiesSection';
 import DrugAllergiesSection from './section/DrugAllergiesSection';
+import VitalSignsSection from './section/VitalSignsSection';
+
 
 const PATIENTS_STORAGE_KEY = 'hemo_patients_data';
 
@@ -44,6 +46,8 @@ const getDefaultPatientData = (basicData) => ({
   labTests: basicData.labTests || [],
   medicationHistory: basicData.medicationHistory || [],
   labImaging: basicData.labImaging || [],
+   vitalSigns: basicData.vitalSigns || [], //  
+
   lastVisit: basicData.lastVisit || new Date().toLocaleDateString('fa-IR'),
   lastUpdate: basicData.lastUpdate || new Date().toLocaleDateString('fa-IR'),
   bloodPressure: basicData.bloodPressure || '',
@@ -658,6 +662,44 @@ export default function PatientDetailPage() {
     savePatientToStorage({ notes: updatedNotes });
     showNotificationMessage('وضعیت خصوصی بودن یادداشت تغییر کرد', 'success');
   };
+
+
+  // توابع مدیریت علائم حیاتی (در PatientDetailPage)
+const handleAddVitalSign = (vital) => {
+  const currentVitals = Array.isArray(patient?.vitalSigns) 
+    ? patient.vitalSigns 
+    : [];
+  
+  const updatedVitals = [...currentVitals, vital];
+  handleInputChange('vitalSigns', updatedVitals);
+  savePatientToStorage({ vitalSigns: updatedVitals });
+  showNotificationMessage('علائم حیاتی اضافه شد', 'success');
+};
+
+const handleEditVitalSign = (id, updatedVital) => {
+  const currentVitals = Array.isArray(patient?.vitalSigns) 
+    ? patient.vitalSigns 
+    : [];
+  
+  const updatedVitals = currentVitals.map(item => 
+    item.id === id ? { ...item, ...updatedVital } : item
+  );
+  handleInputChange('vitalSigns', updatedVitals);
+  savePatientToStorage({ vitalSigns: updatedVitals });
+  showNotificationMessage('علائم حیاتی ویرایش شد', 'success');
+};
+
+const handleRemoveVitalSign = (id) => {
+  const currentVitals = Array.isArray(patient?.vitalSigns) 
+    ? patient.vitalSigns 
+    : [];
+  
+  const updatedVitals = currentVitals.filter(item => item.id !== id);
+  handleInputChange('vitalSigns', updatedVitals);
+  savePatientToStorage({ vitalSigns: updatedVitals });
+  showNotificationMessage('علائم حیاتی حذف شد', 'success');
+};
+
 
   // سوابق دارویی
   const handleAddMedication = (medication) => {
@@ -1508,6 +1550,18 @@ const handleRemoveDrugAllergy = (id) => {
               onRemove={handleRemoveMedication}
               showAddButton={true}
             />
+
+            {/* علائم حیاتی */}
+<VitalSignsSection
+  vitalSigns={patient.vitalSigns}
+  onAdd={handleAddVitalSign}
+  onEdit={handleEditVitalSign}
+  onRemove={handleRemoveVitalSign}
+  showAddButton={true}
+/>
+
+
+
 
             {/* آزمایشات و تصویربرداری */}
             <LabImagingSection

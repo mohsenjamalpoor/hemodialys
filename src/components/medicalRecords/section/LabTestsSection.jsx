@@ -26,6 +26,7 @@ const LabTestsSection = ({
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [removingId, setRemovingId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState(''); // برای جستجوی کلی
   
   const testNameRef = useRef(null);
   const editRefs = useRef({});
@@ -33,9 +34,19 @@ const LabTestsSection = ({
 
   const safeItems = Array.isArray(labTests) ? labTests : [];
 
+  // تابع تبدیل تاریخ شمسی به عدد
+  function convertPersianDateToNumber(dateStr) {
+    if (!dateStr) return 0;
+    const parts = dateStr.split('/').map(part => parseInt(part) || 0);
+    if (parts.length !== 3) return 0;
+    return parts[0] * 10000 + parts[1] * 100 + parts[2];
+  }
+
   // گروه‌بندی آزمایشات بر اساس نام
   const groupedTests = safeItems.reduce((groups, test) => {
-    const testName = test.testName;
+    const testName = test.testName || '';
+    if (!testName) return groups;
+    
     if (!groups[testName]) {
       groups[testName] = [];
     }
@@ -52,19 +63,21 @@ const LabTestsSection = ({
     });
   });
 
-  // تابع تبدیل تاریخ شمسی به عدد
-  function convertPersianDateToNumber(dateStr) {
-    if (!dateStr) return 0;
-    const parts = dateStr.split('/').map(part => parseInt(part) || 0);
-    if (parts.length !== 3) return 0;
-    return parts[0] * 10000 + parts[1] * 100 + parts[2];
-  }
+  // فیلتر کردن موارد بر اساس جستجو
+  const filteredItems = searchQuery 
+    ? safeItems.filter(item => {
+        const testInfo = getTestInfo(item.testName || '');
+        const title = testInfo?.title || item.testName || '';
+        return title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+               (item.testName || '').toLowerCase().includes(searchQuery.toLowerCase());
+      })
+    : safeItems;
 
-  // تابع جستجوی آزمایش
+  // تابع جستجوی آزمایش برای autocomplete
   const handleSearchTest = (query) => {
     if (query.length > 1) {
       const results = searchTest(query);
-      setSuggestions(results);
+      setSuggestions(results || []);
       setShowSuggestions(true);
     } else {
       setSuggestions([]);
@@ -80,6 +93,12 @@ const LabTestsSection = ({
         ...prev,
         testName: test.value,
         normalRange: testInfo.normalRange || ''
+      }));
+    } else {
+      setNewTest(prev => ({
+        ...prev,
+        testName: test.value,
+        normalRange: ''
       }));
     }
     setShowSuggestions(false);
@@ -107,10 +126,9 @@ const LabTestsSection = ({
     }
   };
 
-  // تابع ذخیره ویرایش - **رفع مشکل اصلی**
+  // تابع ذخیره ویرایش
   const handleSaveEdit = () => {
     if (editingId && editData.testName?.trim() && onEdit) {
-      // ارسال id و داده‌های ویرایش شده به onEdit
       onEdit(editingId, editData);
       setEditingId(null);
       setEditData({});
@@ -135,7 +153,7 @@ const LabTestsSection = ({
 
   // تابع پرینت
   const handlePrintTest = (test) => {
-    if (onPrint) {
+    if (onPrint && test) {
       onPrint(test);
     }
   };
@@ -150,7 +168,13 @@ const LabTestsSection = ({
   // تابع شروع ویرایش
   const handleStartEdit = (test) => {
     setEditingId(test.id);
-    setEditData({ ...test });
+    setEditData({ 
+      testName: test.testName || '',
+      date: test.date || '',
+      result: test.result || '',
+      normalRange: test.normalRange || '',
+      notes: test.notes || ''
+    });
     
     // فوکوس روی فیلد نام آزمایش
     setTimeout(() => {
@@ -166,23 +190,21 @@ const LabTestsSection = ({
     setEditData({});
   };
 
-  // تابع تغییر ویرایش - **بهبود یافته**
+  // تابع تغییر ویرایش
   const handleEditChange = (field, value) => {
-    setEditData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    const updatedEditData = { ...editData, [field]: value };
     
     // اگر نام آزمایش تغییر کرد، محدوده نرمال را آپدیت کن
     if (field === 'testName' && value) {
       const testInfo = getTestInfo(value);
       if (testInfo?.normalRange) {
-        setEditData(prev => ({
-          ...prev,
-          normalRange: testInfo.normalRange
-        }));
+        updatedEditData.normalRange = testInfo.normalRange;
+      } else {
+        updatedEditData.normalRange = '';
       }
     }
+    
+    setEditData(updatedEditData);
   };
 
   // تابع لغو افزودن
@@ -197,6 +219,23 @@ const LabTestsSection = ({
     });
     setSuggestions([]);
     setShowSuggestions(false);
+  };
+
+  // تغییر در فیلدهای اضافه کردن
+  const handleNewTestChange = (field, value) => {
+    setNewTest(prev => ({ ...prev, [field]: value }));
+    
+    // اگر نام آزمایش تغییر کرد، محدوده نرمال را آپدیت کن
+    if (field === 'testName' && value) {
+      const testInfo = getTestInfo(value);
+      if (testInfo?.normalRange) {
+        setNewTest(prev => ({ 
+          ...prev, 
+          testName: value,
+          normalRange: testInfo.normalRange 
+        }));
+      }
+    }
   };
 
   // کلیک خارج از suggestions
@@ -224,7 +263,9 @@ const LabTestsSection = ({
 
   // محاسبه روند (افزایش/کاهش)
   const calculateTrend = (tests) => {
-    if (tests.length < 2) return { direction: 'stable', percent: 0 };
+    if (!Array.isArray(tests) || tests.length < 2) {
+      return { direction: 'stable', percent: 0, firstResult: 0, lastResult: 0 };
+    }
     
     const sortedTests = [...tests].sort((a, b) => {
       const dateA = convertPersianDateToNumber(a.date);
@@ -235,26 +276,71 @@ const LabTestsSection = ({
     const firstResult = parseFloat(sortedTests[0].result) || 0;
     const lastResult = parseFloat(sortedTests[sortedTests.length - 1].result) || 0;
     
-    if (firstResult === 0) return { direction: 'stable', percent: 0 };
+    if (firstResult === 0) {
+      return { direction: 'stable', percent: 0, firstResult, lastResult };
+    }
     
     const percentChange = ((lastResult - firstResult) / firstResult) * 100;
     
     return {
       direction: percentChange > 5 ? 'up' : percentChange < -5 ? 'down' : 'stable',
-      percent: Math.abs(percentChange).toFixed(1)
+      percent: Math.abs(percentChange).toFixed(1),
+      firstResult,
+      lastResult
     };
   };
 
   // تابعی برای بررسی آیا آزمایش ویرایش شده با آزمایش اصلی متفاوت است
   const isEditChanged = (original, edited) => {
+    if (!original || !edited) return false;
+    
     const fields = ['testName', 'date', 'result', 'normalRange', 'notes'];
-    return fields.some(field => original[field] !== edited[field]);
+    return fields.some(field => {
+      const originalValue = original[field] || '';
+      const editedValue = edited[field] || '';
+      return originalValue !== editedValue;
+    });
   };
 
+  // تابع برای پیدا کردن آزمون اصلی بر اساس id
+  const findOriginalTest = (id) => {
+    return safeItems.find(item => item.id === id);
+  };
+
+  // بررسی وضعیت نرمال بودن
+  const getNormalStatus = (testName, result) => {
+    try {
+      return checkIfNormal(testName, result);
+    } catch (error) {
+      console.error('Error checking normal status:', error);
+      return 'unknown';
+    }
+  };
+
+  // گرفتن اطلاعات آزمایش
+  const getTestTitle = (testName) => {
+    try {
+      const testInfo = getTestInfo(testName);
+      return testInfo?.title || testName || 'بدون نام';
+    } catch (error) {
+      console.error('Error getting test info:', error);
+      return testName || 'بدون نام';
+    }
+  };
+
+  // فیلدهای ویرایش برای یک آزمایش خاص
+  const getEditFieldValue = (field, testId) => {
+    if (editingId === testId) {
+      return editData[field] || '';
+    }
+    return '';
+  };
+
+  // محتوای اصلی کامپوننت
   return (
     <div className="bg-white rounded-xl shadow-md p-6 mb-6">
       {/* هدر */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
           <div className="p-3 rounded-lg bg-blue-100">
             <FiDroplet className="w-6 h-6 text-blue-600" />
@@ -267,7 +353,31 @@ const LabTestsSection = ({
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          {/* جستجو */}
+          {safeItems.length > 0 && (
+            <div className="relative">
+              <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 w-full sm:w-auto">
+                <FiSearch className="text-gray-400 ml-2" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="جستجوی آزمایش..."
+                  className="outline-none text-right w-full sm:w-48"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <FiX className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+          
           {safeItems.length > 0 && (
             <>
               <div className="flex items-center gap-2 border border-gray-300 rounded-lg p-1">
@@ -287,7 +397,7 @@ const LabTestsSection = ({
               
               <button
                 onClick={handlePrintAll}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition"
+                className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition"
                 title="پرینت همه آزمایشات"
               >
                 <FiPrinter className="w-5 h-5" />
@@ -299,7 +409,7 @@ const LabTestsSection = ({
           {showAddButton && !isAdding && (
             <button
               onClick={() => setIsAdding(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition"
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition"
               title="افزودن آزمایش جدید"
             >
               <FiPlus className="w-5 h-5" />
@@ -309,9 +419,18 @@ const LabTestsSection = ({
         </div>
       </div>
 
+      {/* نمایش بر اساس فیلتر جستجو */}
+      {searchQuery && filteredItems.length === 0 && safeItems.length > 0 && (
+        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-yellow-700 text-center">
+            نتیجه‌ای برای جستجوی "{searchQuery}" یافت نشد.
+          </p>
+        </div>
+      )}
+
       {/* جدول آزمایشات */}
-      {viewMode === 'table' && safeItems.length > 0 && (
-        <div className="mb-6 overflow-x-auto">
+      {viewMode === 'table' && filteredItems.length > 0 && (
+        <div className="mb-6 overflow-x-auto rounded-lg border border-gray-200">
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
@@ -325,11 +444,22 @@ const LabTestsSection = ({
               </tr>
             </thead>
             <tbody>
-              {Object.keys(groupedTests).map((testName, index) => {
+              {Object.keys(groupedTests)
+                .filter(testName => {
+                  // فیلتر بر اساس جستجو
+                  if (!searchQuery) return true;
+                  const testInfo = getTestInfo(testName);
+                  const title = testInfo?.title || testName || '';
+                  return title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         testName.toLowerCase().includes(searchQuery.toLowerCase());
+                })
+                .map((testName, index) => {
                 const tests = groupedTests[testName];
                 const latestTest = tests[0];
+                if (!latestTest) return null;
+                
                 const testInfo = getTestInfo(testName);
-                const status = checkIfNormal(testName, latestTest.result);
+                const status = getNormalStatus(testName, latestTest.result);
                 const trend = calculateTrend(tests);
                 
                 return (
@@ -338,7 +468,7 @@ const LabTestsSection = ({
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-gray-800">
-                            {testInfo?.title || testName}
+                            {getTestTitle(testName)}
                           </span>
                           <button
                             onClick={() => handleViewTrend(testName)}
@@ -359,7 +489,7 @@ const LabTestsSection = ({
                           {latestTest.result || '---'}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-gray-600">{latestTest.date}</td>
+                      <td className="py-3 px-4 text-gray-600">{latestTest.date || '---'}</td>
                       <td className="py-3 px-4">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                           status === 'normal' ? 'bg-green-100 text-green-800' :
@@ -418,11 +548,18 @@ const LabTestsSection = ({
                       <tr className="bg-blue-50 border-b border-blue-100">
                         <td colSpan="7" className="py-4 px-4">
                           <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                              <h4 className="font-bold text-gray-800">روند آزمایش {testInfo?.title || testName}</h4>
-                              <span className="text-sm text-gray-500">
-                                {tests.length} بار انجام شده
-                              </span>
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                              <h4 className="font-bold text-gray-800 text-lg">روند آزمایش {getTestTitle(testName)}</h4>
+                              <div className="flex items-center gap-4">
+                                <span className="text-sm text-gray-500">
+                                  {tests.length} بار انجام شده
+                                </span>
+                                {trend.direction !== 'stable' && (
+                                  <span className={`text-sm font-medium ${trend.direction === 'up' ? 'text-red-600' : 'text-green-600'}`}>
+                                    {trend.direction === 'up' ? 'روند افزایشی' : 'روند کاهشی'} ({trend.percent}%)
+                                  </span>
+                                )}
+                              </div>
                             </div>
                             
                             <div className="overflow-x-auto">
@@ -439,31 +576,31 @@ const LabTestsSection = ({
                                 </thead>
                                 <tbody>
                                   {tests.map((test, idx) => {
-                                    const testStatus = checkIfNormal(testName, test.result);
+                                    const testStatus = getNormalStatus(testName, test.result);
                                     const isEditingThis = editingId === test.id;
                                     
                                     return (
-                                      <tr key={test.id} className="border-b border-blue-50 hover:bg-white transition-colors">
+                                      <tr key={test.id || idx} className="border-b border-blue-50 hover:bg-white transition-colors">
                                         <td className="py-2 px-3 text-center text-sm text-gray-600">{idx + 1}</td>
                                         <td className="py-2 px-3 text-sm text-gray-700">
                                           {isEditingThis ? (
                                             <input
                                               type="text"
-                                              value={editData.date || ''}
+                                              value={getEditFieldValue('date', test.id)}
                                               onChange={(e) => handleEditChange('date', e.target.value)}
-                                              className="w-full px-2 py-1 border border-gray-300 rounded text-right text-sm"
+                                              className="w-full px-2 py-1 border border-gray-300 rounded text-right text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                             />
                                           ) : (
-                                            test.date
+                                            test.date || '---'
                                           )}
                                         </td>
                                         <td className="py-2 px-3">
                                           {isEditingThis ? (
                                             <input
                                               type="text"
-                                              value={editData.result || ''}
+                                              value={getEditFieldValue('result', test.id)}
                                               onChange={(e) => handleEditChange('result', e.target.value)}
-                                              className="w-full px-2 py-1 border border-gray-300 rounded text-right text-sm"
+                                              className="w-full px-2 py-1 border border-gray-300 rounded text-right text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                             />
                                           ) : (
                                             <span className={`font-medium ${testStatus === 'normal' ? 'text-green-600' : testStatus === 'abnormal' ? 'text-red-600' : 'text-yellow-600'}`}>
@@ -472,38 +609,34 @@ const LabTestsSection = ({
                                           )}
                                         </td>
                                         <td className="py-2 px-3">
-                                          {isEditingThis ? (
-                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                              checkIfNormal(editData.testName || test.testName, editData.result || test.result) === 'normal' ? 'bg-green-100 text-green-800' :
-                                              checkIfNormal(editData.testName || test.testName, editData.result || test.result) === 'abnormal' ? 'bg-red-100 text-red-800' :
-                                              'bg-yellow-100 text-yellow-800'
-                                            }`}>
-                                              {checkIfNormal(editData.testName || test.testName, editData.result || test.result) === 'normal' ? 'نرمال' : 
-                                               checkIfNormal(editData.testName || test.testName, editData.result || test.result) === 'abnormal' ? 'غیرنرمال' : 
-                                               'نامشخص'}
-                                            </span>
-                                          ) : (
-                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                              testStatus === 'normal' ? 'bg-green-100 text-green-800' :
-                                              testStatus === 'abnormal' ? 'bg-red-100 text-red-800' :
-                                              'bg-yellow-100 text-yellow-800'
-                                            }`}>
-                                              {testStatus === 'normal' ? 'نرمال' : 
+                                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                            isEditingThis ? 
+                                              (getNormalStatus(getEditFieldValue('testName', test.id) || test.testName, getEditFieldValue('result', test.id) || test.result) === 'normal' ? 'bg-green-100 text-green-800' :
+                                               getNormalStatus(getEditFieldValue('testName', test.id) || test.testName, getEditFieldValue('result', test.id) || test.result) === 'abnormal' ? 'bg-red-100 text-red-800' :
+                                               'bg-yellow-100 text-yellow-800') :
+                                              (testStatus === 'normal' ? 'bg-green-100 text-green-800' :
+                                               testStatus === 'abnormal' ? 'bg-red-100 text-red-800' :
+                                               'bg-yellow-100 text-yellow-800')
+                                          }`}>
+                                            {isEditingThis ? 
+                                              (getNormalStatus(getEditFieldValue('testName', test.id) || test.testName, getEditFieldValue('result', test.id) || test.result) === 'normal' ? 'نرمال' : 
+                                               getNormalStatus(getEditFieldValue('testName', test.id) || test.testName, getEditFieldValue('result', test.id) || test.result) === 'abnormal' ? 'غیرنرمال' : 
+                                               'نامشخص') :
+                                              (testStatus === 'normal' ? 'نرمال' : 
                                                testStatus === 'abnormal' ? 'غیرنرمال' : 
-                                               'نامشخص'}
-                                            </span>
-                                          )}
+                                               'نامشخص')}
+                                          </span>
                                         </td>
-                                        <td className="py-2 px-3 text-xs text-gray-600">
+                                        <td className="py-2 px-3">
                                           {isEditingThis ? (
                                             <textarea
-                                              value={editData.notes || ''}
+                                              value={getEditFieldValue('notes', test.id)}
                                               onChange={(e) => handleEditChange('notes', e.target.value)}
-                                              className="w-full px-2 py-1 border border-gray-300 rounded text-right text-sm"
+                                              className="w-full px-2 py-1 border border-gray-300 rounded text-right text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                               rows="1"
                                             />
                                           ) : (
-                                            <span className="max-w-xs truncate inline-block">
+                                            <span className="text-xs text-gray-600 max-w-xs truncate inline-block">
                                               {test.notes || '---'}
                                             </span>
                                           )}
@@ -513,7 +646,7 @@ const LabTestsSection = ({
                                             <div className="flex items-center gap-2">
                                               <button
                                                 onClick={handleSaveEdit}
-                                                className="p-1 bg-green-500 text-white rounded hover:bg-green-600 transition"
+                                                className="p-1 bg-green-500 text-white rounded hover:bg-green-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                                 title="ذخیره"
                                                 disabled={!editData.testName?.trim()}
                                               >
@@ -567,10 +700,10 @@ const LabTestsSection = ({
       )}
 
       {/* حالت کارتی */}
-      {viewMode === 'card' && safeItems.length > 0 && (
+      {viewMode === 'card' && filteredItems.length > 0 && (
         <div className="mb-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {safeItems.map((item) => {
+            {filteredItems.map((item) => {
               if (removingId === item.id) {
                 return (
                   <div key={item.id} className="p-4 bg-red-50 border border-red-200 rounded-lg transition-all duration-300 opacity-50 transform scale-95">
@@ -582,8 +715,8 @@ const LabTestsSection = ({
                 );
               }
 
-              const testInfo = getTestInfo(item.testName);
-              const status = checkIfNormal(item.testName, item.result);
+              const testInfo = getTestInfo(item.testName || '');
+              const status = getNormalStatus(item.testName, item.result);
               const isEditing = editingId === item.id;
               
               return (
@@ -660,15 +793,15 @@ const LabTestsSection = ({
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-gray-600">وضعیت:</span>
                             <span className={`px-2 py-1 rounded text-xs font-medium ${
-                              checkIfNormal(editData.testName, editData.result) === 'normal' 
+                              getNormalStatus(editData.testName, editData.result) === 'normal' 
                                 ? 'bg-green-100 text-green-800' 
-                                : checkIfNormal(editData.testName, editData.result) === 'abnormal'
+                                : getNormalStatus(editData.testName, editData.result) === 'abnormal'
                                   ? 'bg-red-100 text-red-800'
                                   : 'bg-yellow-100 text-yellow-800'
                             }`}>
-                              {checkIfNormal(editData.testName, editData.result) === 'normal' 
+                              {getNormalStatus(editData.testName, editData.result) === 'normal' 
                                 ? 'نرمال' 
-                                : checkIfNormal(editData.testName, editData.result) === 'abnormal'
+                                : getNormalStatus(editData.testName, editData.result) === 'abnormal'
                                   ? 'غیرنرمال'
                                   : 'نامشخص'}
                             </span>
@@ -684,7 +817,7 @@ const LabTestsSection = ({
                               ? 'bg-green-500 hover:bg-green-600' 
                               : 'bg-gray-400 cursor-not-allowed'
                           }`}
-                          disabled={!isEditChanged(item, editData)}
+                          disabled={!isEditChanged(item, editData) || !editData.testName?.trim()}
                         >
                           <FiSave className="w-4 h-4" />
                           ذخیره
@@ -704,11 +837,13 @@ const LabTestsSection = ({
                       <div className="flex justify-between items-center mb-3">
                         <div>
                           <h4 className="font-bold text-gray-800 text-right">
-                            {testInfo?.title || item.testName}
+                            {testInfo?.title || item.testName || 'بدون نام'}
                           </h4>
-                          <p className="text-xs text-gray-500 text-right mt-1">
-                            {item.testName}
-                          </p>
+                          {item.testName && (
+                            <p className="text-xs text-gray-500 text-right mt-1">
+                              {item.testName}
+                            </p>
+                          )}
                         </div>
                         <div className="flex items-center gap-1">
                           <button
@@ -746,7 +881,7 @@ const LabTestsSection = ({
                         </div>
                         <div className="text-center p-2 bg-gray-50 rounded-lg">
                           <p className="text-xs text-gray-500 mb-1">تاریخ</p>
-                          <p className="text-lg font-medium text-gray-700">{item.date}</p>
+                          <p className="text-lg font-medium text-gray-700">{item.date || '---'}</p>
                         </div>
                       </div>
                       
@@ -772,7 +907,7 @@ const LabTestsSection = ({
                       {item.notes && (
                         <div className="p-2 bg-blue-50 rounded-lg border border-blue-100">
                           <p className="text-xs text-gray-500 mb-1">یادداشت:</p>
-                          <p className="text-sm text-gray-700 text-right">{item.notes}</p>
+                          <p className="text-sm text-gray-700 text-right line-clamp-2">{item.notes}</p>
                         </div>
                       )}
                     </>
@@ -786,19 +921,53 @@ const LabTestsSection = ({
 
       {/* پیام وقتی هیچ آزمایشی وجود ندارد */}
       {safeItems.length === 0 && !isAdding && (
-        <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
-          <div className="text-gray-400 mb-3 text-3xl">🔬</div>
-          <p className="text-gray-500">هیچ آزمایشی ثبت نشده است</p>
+        <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
+          <div className="text-gray-400 mb-4 text-5xl">🔬</div>
+          <p className="text-gray-500 text-lg mb-2">هیچ آزمایشی ثبت نشده است</p>
           {showAddButton && (
-            <p className="text-sm text-gray-400 mt-1">اولین آزمایش را اضافه کنید</p>
+            <>
+              <p className="text-sm text-gray-400 mb-4">برای شروع اولین آزمایش را اضافه کنید</p>
+              <button
+                onClick={() => setIsAdding(true)}
+                className="px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition inline-flex items-center gap-2"
+              >
+                <FiPlus className="w-5 h-5" />
+                افزودن اولین آزمایش
+              </button>
+            </>
           )}
+        </div>
+      )}
+
+      {/* پیام وقتی فیلتر جستجو نتیجه‌ای نداشت */}
+      {searchQuery && filteredItems.length === 0 && safeItems.length > 0 && (
+        <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
+          <div className="text-gray-400 mb-3 text-3xl">🔍</div>
+          <p className="text-gray-500">هیچ آزمایشی با این مشخصات یافت نشد</p>
+          <button
+            onClick={() => setSearchQuery('')}
+            className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+          >
+            مشاهده همه آزمایشات
+          </button>
         </div>
       )}
 
       {/* فرم افزودن جدید */}
       {isAdding && (
         <div className="mt-6 pt-6 border-t border-gray-200">
-          <div className="space-y-4">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h4 className="text-lg font-bold text-gray-800">افزودن آزمایش جدید</h4>
+              <button
+                onClick={handleCancelAdd}
+                className="text-gray-500 hover:text-gray-700"
+                title="بستن"
+              >
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+            
             {/* نام آزمایش با autocomplete */}
             <div className="relative" ref={suggestionsRef}>
               <label className="block text-sm font-medium text-gray-700 mb-2 text-right">
@@ -810,7 +979,7 @@ const LabTestsSection = ({
                   type="text"
                   value={newTest.testName}
                   onChange={(e) => {
-                    setNewTest(prev => ({ ...prev, testName: e.target.value }));
+                    handleNewTestChange('testName', e.target.value);
                     handleSearchTest(e.target.value);
                   }}
                   onFocus={() => newTest.testName.length > 1 && setShowSuggestions(true)}
@@ -857,7 +1026,7 @@ const LabTestsSection = ({
                 <input
                   type="text"
                   value={newTest.date}
-                  onChange={(e) => setNewTest(prev => ({ ...prev, date: e.target.value }))}
+                  onChange={(e) => handleNewTestChange('date', e.target.value)}
                   placeholder="1402/11/15"
                   className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-right"
                 />
@@ -869,7 +1038,7 @@ const LabTestsSection = ({
                 <input
                   type="text"
                   value={newTest.result}
-                  onChange={(e) => setNewTest(prev => ({ ...prev, result: e.target.value }))}
+                  onChange={(e) => handleNewTestChange('result', e.target.value)}
                   placeholder="مثلاً: 120"
                   className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-right"
                 />
@@ -883,7 +1052,7 @@ const LabTestsSection = ({
               <input
                 type="text"
                 value={newTest.normalRange}
-                onChange={(e) => setNewTest(prev => ({ ...prev, normalRange: e.target.value }))}
+                onChange={(e) => handleNewTestChange('normalRange', e.target.value)}
                 placeholder="مثلاً: 70-110 (به صورت خودکار پر می‌شود)"
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-right"
               />
@@ -895,47 +1064,55 @@ const LabTestsSection = ({
               </label>
               <textarea
                 value={newTest.notes}
-                onChange={(e) => setNewTest(prev => ({ ...prev, notes: e.target.value }))}
+                onChange={(e) => handleNewTestChange('notes', e.target.value)}
                 placeholder="یادداشت‌های اضافی"
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-right"
-                rows="2"
+                rows="3"
               />
             </div>
             
             {/* نمایش وضعیت */}
             {newTest.testName && newTest.result && (
               <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-2">
                   <span className="font-medium text-gray-700">وضعیت:</span>
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    checkIfNormal(newTest.testName, newTest.result) === 'normal' 
+                    getNormalStatus(newTest.testName, newTest.result) === 'normal' 
                       ? 'bg-green-100 text-green-800' 
-                      : checkIfNormal(newTest.testName, newTest.result) === 'abnormal'
+                      : getNormalStatus(newTest.testName, newTest.result) === 'abnormal'
                         ? 'bg-red-100 text-red-800'
                         : 'bg-yellow-100 text-yellow-800'
                   }`}>
-                    {checkIfNormal(newTest.testName, newTest.result) === 'normal' 
+                    {getNormalStatus(newTest.testName, newTest.result) === 'normal' 
                       ? 'نرمال' 
-                      : checkIfNormal(newTest.testName, newTest.result) === 'abnormal'
+                      : getNormalStatus(newTest.testName, newTest.result) === 'abnormal'
                         ? 'غیرنرمال'
                         : 'نامشخص'}
                   </span>
                 </div>
+                <div className="text-sm text-gray-600">
+                  <p>آزمایش: {getTestTitle(newTest.testName)}</p>
+                  {newTest.normalRange && (
+                    <p className="mt-1">محدوده نرمال: {newTest.normalRange}</p>
+                  )}
+                </div>
               </div>
             )}
             
-            <div className="flex gap-3">
+            <div className="flex gap-3 pt-2">
               <button
                 onClick={handleAddTest}
-                className="flex-1 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={!newTest.testName.trim()}
+                className="flex-1 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                disabled={!newTest.testName.trim() || !newTest.result.trim()}
               >
+                <FiSave className="w-5 h-5" />
                 ثبت آزمایش
               </button>
               <button
                 onClick={handleCancelAdd}
-                className="flex-1 py-3 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-xl transition font-medium"
+                className="flex-1 py-3 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-xl transition font-medium flex items-center justify-center gap-2"
               >
+                <FiX className="w-5 h-5" />
                 لغو
               </button>
             </div>
