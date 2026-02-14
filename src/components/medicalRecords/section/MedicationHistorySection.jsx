@@ -20,7 +20,8 @@ import {
   FiMinusCircle,
   FiActivity,
   FiChevronDown,
-  FiChevronUp
+  FiChevronUp,
+  FiRefreshCw
 } from 'react-icons/fi';
 
 const MedicationHistorySection = ({ 
@@ -40,21 +41,49 @@ const MedicationHistorySection = ({
   const [expandedItems, setExpandedItems] = useState(new Set());
   const [showSummary, setShowSummary] = useState(true);
   
+  // حالت جدید برای نوع دوزبندی
+  const [dosageType, setDosageType] = useState('daily'); // daily, weekly, monthly, prn, custom
+  
   const [formData, setFormData] = useState({
     drugName: '',
     dosage: '',
     dosageUnit: 'mg',
-    frequency: '',
-    frequencyUnit: 'روز',
+    dosageType: 'daily', // نوع دوزبندی
+    frequency: {
+      daily: {
+        times: 1, // تعداد دفعات در روز
+        schedule: [], // ساعات مصرف
+        withMeal: 'none' // before, after, with, none
+      },
+      weekly: {
+        days: [], // روزهای هفته
+        times: 1 // تعداد دفعات در روز
+      },
+      monthly: {
+        days: [], // روزهای ماه
+        times: 1 // تعداد دفعات در روز
+      },
+      prn: {
+        maxDaily: '', // حداکثر در روز
+        minInterval: '', // حداقل فاصله
+        reason: '' // موارد مصرف
+      },
+      custom: {
+        instruction: '' // دستور خاص
+      }
+    },
     startDate: new Date().toISOString().split('T')[0],
     endDate: '',
+    duration: '', // مدت زمان درمان
     purpose: '',
     prescribingDoctor: localStorage.getItem("doctorName") || "دکتر",
     status: 'در حال مصرف',
     notes: '',
     drugCode: '',
     route: 'خوراکی',
-    warnings: ''
+    warnings: '',
+    refills: '', // تعداد دفعات مجاز برای تکرار نسخه
+    lastRefillDate: '' // تاریخ آخرین تکرار
   });
 
   const safeItems = Array.isArray(medicationHistory) ? medicationHistory : [];
@@ -86,13 +115,85 @@ const MedicationHistorySection = ({
     }
   }, [safeItems.length]);
 
+  // تابع تبدیل مقدار مصرف به متن خوانا
+  const formatDosageSchedule = (item) => {
+    if (!item.frequency || !item.dosageType) return 'مشخص نشده';
+    
+    switch (item.dosageType) {
+      case 'daily':
+        const daily = item.frequency.daily;
+        if (daily.times === 1) return 'روزی یکبار';
+        if (daily.times === 2) return 'روزی دوبار';
+        if (daily.times === 3) return 'روزی سه بار';
+        if (daily.times === 4) return 'روزی چهار بار';
+        if (daily.schedule && daily.schedule.length > 0) {
+          return `روزی ${daily.times} بار (ساعات: ${daily.schedule.join('، ')})`;
+        }
+        return `روزی ${daily.times} بار`;
+        
+      case 'weekly':
+        const weekly = item.frequency.weekly;
+        const dayNames = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+        const days = weekly.days.map(d => dayNames[d]).join('، ');
+        return `هفته‌ای ${weekly.times} بار در روزهای ${days}`;
+        
+      case 'monthly':
+        return `ماهیانه ${item.frequency.monthly.times} بار در روزهای ${item.frequency.monthly.days.join('، ')} ماه`;
+        
+      case 'prn':
+        return `در صورت نیاز - ${item.frequency.prn.reason || 'موارد مصرف مشخص نشده'}`;
+        
+      case 'custom':
+        return item.frequency.custom.instruction || 'دستور خاص';
+        
+      default:
+        return 'نامشخص';
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // اگر فیلد مربوط به فرکانس است
+    if (name.startsWith('frequency.')) {
+      const parts = name.split('.');
+      const category = parts[1]; // daily, weekly, etc.
+      const field = parts[2]; // times, days, etc.
+      
+      setFormData(prev => ({
+        ...prev,
+        frequency: {
+          ...prev.frequency,
+          [category]: {
+            ...prev.frequency[category],
+            [field]: value
+          }
+        }
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+    
     // پاک کردن خطا هنگام تایپ
     if (formErrors[name]) {
       setFormErrors(prev => ({ ...prev, [name]: '' }));
     }
+  };
+
+  // مدیریت انتخاب روزهای هفته
+  const handleWeeklyDayToggle = (dayIndex) => {
+    setFormData(prev => ({
+      ...prev,
+      frequency: {
+        ...prev.frequency,
+        weekly: {
+          ...prev.frequency.weekly,
+          days: prev.frequency.weekly.days.includes(dayIndex)
+            ? prev.frequency.weekly.days.filter(d => d !== dayIndex)
+            : [...prev.frequency.weekly.days, dayIndex].sort()
+        }
+      }
+    }));
   };
 
   const validateForm = () => {
@@ -122,6 +223,17 @@ const MedicationHistorySection = ({
       isValid = false;
     }
     
+    // اعتبارسنجی بر اساس نوع دوزبندی
+    if (dosageType === 'weekly' && formData.frequency.weekly.days.length === 0) {
+      errors.weeklyDays = 'حداقل یک روز از هفته را انتخاب کنید';
+      isValid = false;
+    }
+    
+    if (dosageType === 'monthly' && formData.frequency.monthly.days.length === 0) {
+      errors.monthlyDays = 'حداقل یک روز از ماه را انتخاب کنید';
+      isValid = false;
+    }
+    
     setFormErrors(errors);
     return isValid;
   };
@@ -134,8 +246,9 @@ const MedicationHistorySection = ({
     const newItem = {
       id: editingId || Date.now(),
       ...formData,
+      dosageType: dosageType,
       dosage: `${formData.dosage} ${formData.dosageUnit}`,
-      frequency: formData.frequency ? `${formData.frequency} ${formData.frequencyUnit}` : '',
+      dosageSchedule: formatDosageSchedule({ ...formData, dosageType }),
       createdAt: new Date().toISOString(),
       lastModified: new Date().toISOString(),
       source: 'دستی'
@@ -161,18 +274,28 @@ const MedicationHistorySection = ({
       drugName: item.drugName || '',
       dosage: dosageParts[0] || '',
       dosageUnit: dosageParts[1] || 'mg',
-      frequency: item.frequency?.split(' ')[0] || '',
-      frequencyUnit: item.frequency?.split(' ')[1] || 'روز',
+      dosageType: item.dosageType || 'daily',
+      frequency: item.frequency || {
+        daily: { times: 1, schedule: [], withMeal: 'none' },
+        weekly: { days: [], times: 1 },
+        monthly: { days: [], times: 1 },
+        prn: { maxDaily: '', minInterval: '', reason: '' },
+        custom: { instruction: '' }
+      },
       startDate: item.startDate || new Date().toISOString().split('T')[0],
       endDate: item.endDate || '',
+      duration: item.duration || '',
       purpose: item.purpose || '',
       prescribingDoctor: item.prescribingDoctor || localStorage.getItem("doctorName") || "دکتر",
       status: item.status || 'در حال مصرف',
       notes: item.notes || '',
       drugCode: item.drugCode || '',
       route: item.route || 'خوراکی',
-      warnings: item.warnings || ''
+      warnings: item.warnings || '',
+      refills: item.refills || '',
+      lastRefillDate: item.lastRefillDate || ''
     });
+    setDosageType(item.dosageType || 'daily');
     setEditingId(item.id);
     setShowAddModal(true);
     setFormErrors({});
@@ -183,18 +306,28 @@ const MedicationHistorySection = ({
       drugName: '',
       dosage: '',
       dosageUnit: 'mg',
-      frequency: '',
-      frequencyUnit: 'روز',
+      dosageType: 'daily',
+      frequency: {
+        daily: { times: 1, schedule: [], withMeal: 'none' },
+        weekly: { days: [], times: 1 },
+        monthly: { days: [], times: 1 },
+        prn: { maxDaily: '', minInterval: '', reason: '' },
+        custom: { instruction: '' }
+      },
       startDate: new Date().toISOString().split('T')[0],
       endDate: '',
+      duration: '',
       purpose: '',
       prescribingDoctor: localStorage.getItem("doctorName") || "دکتر",
       status: 'در حال مصرف',
       notes: '',
       drugCode: '',
       route: 'خوراکی',
-      warnings: ''
+      warnings: '',
+      refills: '',
+      lastRefillDate: ''
     });
+    setDosageType('daily');
     setEditingId(null);
     setShowAddModal(false);
     setFormErrors({});
@@ -235,7 +368,7 @@ const MedicationHistorySection = ({
       case 'در حال مصرف': return <FiCheckCircle className="w-5 h-5 text-green-500" />;
       case 'قطع شده': return <FiMinusCircle className="w-5 h-5 text-red-500" />;
       case 'تک‌دوز': return <FiActivity className="w-5 h-5 text-blue-500" />;
-      case 'دوره‌ای': return <FiActivity className="w-5 h-5 text-purple-500" />;
+      case 'دوره‌ای': return <FiRefreshCw className="w-5 h-5 text-purple-500" />;
       case 'PRN': return <FiAlertCircle className="w-5 h-5 text-amber-500" />;
       default: return <FiActivity className="w-5 h-5 text-gray-500" />;
     }
@@ -608,12 +741,17 @@ const MedicationHistorySection = ({
                     <div className="bg-gray-50 rounded-lg p-3">
                       <div className="flex items-center gap-2 mb-2">
                         <FiClock className="text-gray-500 w-4 h-4" />
-                        <span className="text-gray-700 text-sm font-medium">تکرار مصرف</span>
+                        <span className="text-gray-700 text-sm font-medium">مقدار مصرف</span>
                       </div>
                       <div className="text-right">
                         <div className="font-bold text-gray-900 text-lg">
-                          {item.frequency || '---'}
+                          {item.dosageSchedule || formatDosageSchedule(item)}
                         </div>
+                        {item.frequency?.prn?.reason && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            {item.frequency.prn.reason}
+                          </div>
+                        )}
                       </div>
                     </div>
                     
@@ -640,6 +778,19 @@ const MedicationHistorySection = ({
                             <span className="font-medium text-gray-900">{item.prescribingDoctor}</span>
                           </div>
                           
+                          {item.refills && (
+                            <div className="flex items-center gap-2">
+                              <FiRefreshCw className="text-gray-400 w-4 h-4" />
+                              <span className="text-gray-600 text-sm">تکرار نسخه:</span>
+                              <span className="font-medium text-gray-900">{item.refills} بار</span>
+                              {item.lastRefillDate && (
+                                <span className="text-xs text-gray-500">
+                                  (آخرین: {item.lastRefillDate})
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          
                           {item.notes && (
                             <div className="flex items-start gap-2">
                               <FiInfo className="text-blue-500 w-4 h-4 mt-0.5 flex-shrink-0" />
@@ -661,6 +812,20 @@ const MedicationHistorySection = ({
                                 <div className="text-gray-600 text-sm mb-1">هشدارها:</div>
                                 <div className="text-amber-700 text-sm bg-amber-50 p-3 rounded-lg">
                                   {item.warnings}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {item.frequency?.daily?.withMeal && item.frequency.daily.withMeal !== 'none' && (
+                            <div className="flex items-start gap-2 mt-3">
+                              <FiInfo className="text-green-500 w-4 h-4 mt-0.5 flex-shrink-0" />
+                              <div className="text-right">
+                                <div className="text-gray-600 text-sm mb-1">نحوه مصرف:</div>
+                                <div className="text-green-700 text-sm bg-green-50 p-3 rounded-lg">
+                                  {item.frequency.daily.withMeal === 'before' && 'ناشتا مصرف شود'}
+                                  {item.frequency.daily.withMeal === 'after' && 'بعد از غذا مصرف شود'}
+                                  {item.frequency.daily.withMeal === 'with' && 'همراه با غذا مصرف شود'}
                                 </div>
                               </div>
                             </div>
@@ -791,7 +956,7 @@ const MedicationHistorySection = ({
                   {/* دوز و واحد */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-gray-800 font-medium mb-2 flex items-center gap-2">
+                      <label className="text-gray-800 font-medium mb-2 flex items-center gap-2">
                         <span className="text-red-500">*</span>
                         دوز
                       </label>
@@ -830,38 +995,6 @@ const MedicationHistorySection = ({
                     </div>
                   </div>
                   
-                  {/* فرکانس */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-gray-800 font-medium mb-2">تعداد</label>
-                      <input
-                        type="number"
-                        name="frequency"
-                        value={formData.frequency}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"
-                        placeholder="1"
-                        min="0"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-gray-800 font-medium mb-2">دوره زمانی</label>
-                      <select
-                        name="frequencyUnit"
-                        value={formData.frequencyUnit}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"
-                      >
-                        <option value="روز">روز</option>
-                        <option value="هفته">هفته</option>
-                        <option value="ماه">ماه</option>
-                        <option value="ساعت">ساعت</option>
-                        <option value="روز در هفته">روز در هفته</option>
-                        <option value="هر بار">هر بار</option>
-                      </select>
-                    </div>
-                  </div>
-                  
                   {/* کد دارو و راه مصرف */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -891,6 +1024,32 @@ const MedicationHistorySection = ({
                         <option value="مقعدی">مقعدی</option>
                         <option value="واژینال">واژینال</option>
                       </select>
+                    </div>
+                  </div>
+                  
+                  {/* تعداد تکرار نسخه */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-gray-800 font-medium mb-2">تعداد تکرار نسخه</label>
+                      <input
+                        type="number"
+                        name="refills"
+                        value={formData.refills}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"
+                        placeholder="0"
+                        min="0"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-800 font-medium mb-2">آخرین تکرار</label>
+                      <input
+                        type="date"
+                        name="lastRefillDate"
+                        value={formData.lastRefillDate}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"
+                      />
                     </div>
                   </div>
                 </div>
@@ -936,6 +1095,19 @@ const MedicationHistorySection = ({
                     </div>
                   </div>
                   
+                  {/* مدت زمان درمان */}
+                  <div>
+                    <label className="block text-gray-800 font-medium mb-2">مدت زمان درمان</label>
+                    <input
+                      type="text"
+                      name="duration"
+                      value={formData.duration}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"
+                      placeholder="مثال: 2 هفته، 1 ماه، 6 ماه"
+                    />
+                  </div>
+                  
                   {/* وضعیت */}
                   <div>
                     <label className="block text-gray-800 font-medium mb-2">وضعیت مصرف</label>
@@ -977,8 +1149,303 @@ const MedicationHistorySection = ({
                       className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"
                     />
                   </div>
-                  
-                  {/* هشدارها */}
+                </div>
+                
+                {/* بخش مقدار مصرف (تمام عرض) */}
+                <div className="md:col-span-2">
+                  <div className="bg-blue-50 p-4 rounded-xl border border-blue-200 mb-4">
+                    <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                      <FiClock className="text-blue-600" />
+                      برنامه مصرف دارو
+                    </h4>
+                    
+                    {/* انتخاب نوع دوزبندی */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <button
+                        type="button"
+                        onClick={() => setDosageType('daily')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                          dosageType === 'daily' 
+                            ? 'bg-blue-600 text-white shadow-md' 
+                            : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                        }`}
+                      >
+                        روزانه
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDosageType('weekly')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                          dosageType === 'weekly' 
+                            ? 'bg-blue-600 text-white shadow-md' 
+                            : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                        }`}
+                      >
+                        هفتگی
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDosageType('monthly')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                          dosageType === 'monthly' 
+                            ? 'bg-blue-600 text-white shadow-md' 
+                            : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                        }`}
+                      >
+                        ماهانه
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDosageType('prn')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                          dosageType === 'prn' 
+                            ? 'bg-blue-600 text-white shadow-md' 
+                            : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                        }`}
+                      >
+                        در صورت نیاز (PRN)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDosageType('custom')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                          dosageType === 'custom' 
+                            ? 'bg-blue-600 text-white shadow-md' 
+                            : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                        }`}
+                      >
+                        دستور خاص
+                      </button>
+                    </div>
+                    
+                    {/* فرم بر اساس نوع دوزبندی */}
+                    <div className="bg-white p-4 rounded-lg">
+                      {dosageType === 'daily' && (
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-gray-700 font-medium mb-2">
+                              تعداد دفعات در روز
+                            </label>
+                            <select
+                              name="frequency.daily.times"
+                              value={formData.frequency.daily.times}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              <option value={1}>روزی یکبار</option>
+                              <option value={2}>روزی دوبار</option>
+                              <option value={3}>روزی سه بار</option>
+                              <option value={4}>روزی چهار بار</option>
+                              <option value={5}>روزی پنج بار</option>
+                              <option value={6}>روزی شش بار</option>
+                            </select>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-gray-700 font-medium mb-2">
+                              نحوه مصرف نسبت به غذا
+                            </label>
+                            <select
+                              name="frequency.daily.withMeal"
+                              value={formData.frequency.daily.withMeal}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              <option value="none">مهم نیست</option>
+                              <option value="before">ناشتا (قبل از غذا)</option>
+                              <option value="after">بعد از غذا</option>
+                              <option value="with">همراه با غذا</option>
+                            </select>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-gray-700 font-medium mb-2">
+                              ساعات مصرف (اختیاری - با کاما جدا کنید)
+                            </label>
+                            <input
+                              type="text"
+                              name="frequency.daily.schedule"
+                              value={formData.frequency.daily.schedule.join('، ')}
+                              onChange={(e) => {
+                                const schedules = e.target.value.split('،').map(s => s.trim()).filter(s => s);
+                                setFormData(prev => ({
+                                  ...prev,
+                                  frequency: {
+                                    ...prev.frequency,
+                                    daily: {
+                                      ...prev.frequency.daily,
+                                      schedule: schedules
+                                    }
+                                  }
+                                }));
+                              }}
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="مثال: ۸ صبح، ۲ بعدازظهر، ۸ شب"
+                            />
+                          </div>
+                        </div>
+                      )}
+                      
+                      {dosageType === 'weekly' && (
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-gray-700 font-medium mb-2">
+                              روزهای هفته
+                            </label>
+                            <div className="grid grid-cols-7 gap-1">
+                              {['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'].map((day, index) => (
+                                <button
+                                  key={index}
+                                  type="button"
+                                  onClick={() => handleWeeklyDayToggle(index)}
+                                  className={`p-2 rounded-lg text-sm font-medium transition-all ${
+                                    formData.frequency.weekly.days.includes(index)
+                                      ? 'bg-blue-600 text-white'
+                                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                  }`}
+                                >
+                                  {day}
+                                </button>
+                              ))}
+                            </div>
+                            {formErrors.weeklyDays && (
+                              <p className="text-red-600 text-sm mt-2">{formErrors.weeklyDays}</p>
+                            )}
+                          </div>
+                          
+                          <div>
+                            <label className="block text-gray-700 font-medium mb-2">
+                              تعداد دفعات در روز
+                            </label>
+                            <select
+                              name="frequency.weekly.times"
+                              value={formData.frequency.weekly.times}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              <option value={1}>یکبار در روز</option>
+                              <option value={2}>دوبار در روز</option>
+                              <option value={3}>سه بار در روز</option>
+                            </select>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {dosageType === 'monthly' && (
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-gray-700 font-medium mb-2">
+                              روزهای ماه (مثال: 1,15,30)
+                            </label>
+                            <input
+                              type="text"
+                              value={formData.frequency.monthly.days.join(',')}
+                              onChange={(e) => {
+                                const days = e.target.value.split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d) && d >= 1 && d <= 31);
+                                setFormData(prev => ({
+                                  ...prev,
+                                  frequency: {
+                                    ...prev.frequency,
+                                    monthly: {
+                                      ...prev.frequency.monthly,
+                                      days: days
+                                    }
+                                  }
+                                }));
+                              }}
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="1, 15, 30"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-gray-700 font-medium mb-2">
+                              تعداد دفعات در روز
+                            </label>
+                            <select
+                              name="frequency.monthly.times"
+                              value={formData.frequency.monthly.times}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              <option value={1}>یکبار در روز</option>
+                              <option value={2}>دوبار در روز</option>
+                              <option value={3}>سه بار در روز</option>
+                            </select>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {dosageType === 'prn' && (
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-gray-700 font-medium mb-2">
+                              موارد مصرف
+                            </label>
+                            <input
+                              type="text"
+                              name="frequency.prn.reason"
+                              value={formData.frequency.prn.reason}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="مثال: در صورت درد، در صورت تهوع"
+                            />
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-gray-700 font-medium mb-2">
+                                حداکثر در روز
+                              </label>
+                              <input
+                                type="number"
+                                name="frequency.prn.maxDaily"
+                                value={formData.frequency.prn.maxDaily}
+                                onChange={handleInputChange}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="مثال: 4"
+                                min="1"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-gray-700 font-medium mb-2">
+                                حداقل فاصله (ساعت)
+                              </label>
+                              <input
+                                type="number"
+                                name="frequency.prn.minInterval"
+                                value={formData.frequency.prn.minInterval}
+                                onChange={handleInputChange}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="مثال: 6"
+                                min="1"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {dosageType === 'custom' && (
+                        <div>
+                          <label className="block text-gray-700 font-medium mb-2">
+                            دستور مصرف خاص
+                          </label>
+                          <textarea
+                            name="frequency.custom.instruction"
+                            value={formData.frequency.custom.instruction}
+                            onChange={handleInputChange}
+                            rows="3"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="مثال: روزهای فرد هفته، یک روز در میان، هر 12 ساعت و ..."
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* هشدارها و یادداشت‌ها (تمام عرض) */}
+                <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
                     <label className="text-gray-800 font-medium mb-2 flex items-center gap-2">
                       <FiAlertCircle className="text-amber-500" />
@@ -993,22 +1460,21 @@ const MedicationHistorySection = ({
                       placeholder="مثال: همراه غذا مصرف شود، از مصرف الکل خودداری شود"
                     />
                   </div>
-                </div>
-                
-                {/* یادداشت‌ها (تمام عرض) */}
-                <div className="md:col-span-2">
-                  <label className="text-gray-800 font-medium mb-2 flex items-center gap-2">
-                    <FiInfo className="text-blue-500" />
-                    توضیحات و یادداشت‌ها
-                  </label>
-                  <textarea
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleInputChange}
-                    rows="3"
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all resize-none"
-                    placeholder="هرگونه توضیح اضافی درباره دارو، عوارض جانبی، پاسخ بیمار و ..."
-                  />
+                  
+                  <div>
+                    <label className="text-gray-800 font-medium mb-2 flex items-center gap-2">
+                      <FiInfo className="text-blue-500" />
+                      توضیحات و یادداشت‌ها
+                    </label>
+                    <textarea
+                      name="notes"
+                      value={formData.notes}
+                      onChange={handleInputChange}
+                      rows="3"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-right focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all resize-none"
+                      placeholder="هرگونه توضیح اضافی درباره دارو، عوارض جانبی، پاسخ بیمار و ..."
+                    />
+                  </div>
                 </div>
               </div>
             </div>

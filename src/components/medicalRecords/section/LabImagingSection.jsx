@@ -12,13 +12,13 @@ import {
   FiDownload,
   FiInfo,
   FiChevronDown,
-  FiChevronUp,FiPlus
+  FiChevronUp,
+  FiPlus
 } from 'react-icons/fi';
 import { FaFileMedical, FaXRay, FaVial } from 'react-icons/fa';
-import { GiMedicines } from 'react-icons/gi';
 
 // کامپوننت EditableLabImagingItem برای ویرایش inline
-const EditableLabImagingItem = React.memo(({ 
+const EditableLabImagingItem = ({ 
   item, 
   onEdit, 
   onRemove,
@@ -81,6 +81,8 @@ const EditableLabImagingItem = React.memo(({
     if (editedData.name.trim()) {
       onEdit(item.id, editedData);
       setIsEditing(false);
+    } else {
+      alert('نام تست الزامی است');
     }
   };
 
@@ -111,6 +113,10 @@ const EditableLabImagingItem = React.memo(({
     } catch {
       return dateString;
     }
+  };
+
+  const handleRemove = () => {
+    onRemove(item.id);
   };
 
   return (
@@ -239,35 +245,40 @@ const EditableLabImagingItem = React.memo(({
                 </div>
               </div>
 
-              {/* تصویر */}
+              {/* تصویر - کوچک شده */}
               {item.image && (
-                <div className="mt-3">
-                  <div className="relative group">
-                    <img 
-                      src={item.image} 
-                      alt={item.name}
-                      className="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-90 transition"
-                      onClick={() => onViewImage(item)}
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
-                      <FiEye className="text-white text-xl" />
+                <div className="mt-2">
+                  <div className="flex items-start gap-3">
+                    {/* تصویر بندانگشتی کوچک */}
+                    <div className="relative group flex-shrink-0">
+                      <img 
+                        src={item.image} 
+                        alt={item.name}
+                        className="w-16 h-16 object-cover rounded-lg cursor-pointer hover:opacity-90 transition border border-gray-200 shadow-sm"
+                        onClick={() => onViewImage(item)}
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
+                        <FiEye className="text-white text-lg" />
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex gap-2 mt-2">
-                    <button
-                      onClick={() => onViewImage(item)}
-                      className="flex-1 flex items-center justify-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 py-1.5 rounded-lg transition"
-                    >
-                      <FiEye className="w-3 h-3" />
-                      مشاهده تصویر
-                    </button>
-                    <button
-                      onClick={() => onDownload(item)}
-                      className="flex-1 flex items-center justify-center gap-1 text-xs text-green-600 hover:text-green-800 hover:bg-green-50 py-1.5 rounded-lg transition"
-                    >
-                      <FiDownload className="w-3 h-3" />
-                      دانلود
-                    </button>
+                    
+                    {/* دکمه‌های کنار تصویر */}
+                    <div className="flex flex-col gap-1.5">
+                      <button
+                        onClick={() => onViewImage(item)}
+                        className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 py-1 px-2 rounded-lg transition"
+                      >
+                        <FiEye className="w-3 h-3" />
+                        مشاهده
+                      </button>
+                      <button
+                        onClick={() => onDownload(item)}
+                        className="flex items-center gap-1 text-xs text-green-600 hover:text-green-800 hover:bg-green-50 py-1 px-2 rounded-lg transition"
+                      >
+                        <FiDownload className="w-3 h-3" />
+                        دانلود
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -311,7 +322,7 @@ const EditableLabImagingItem = React.memo(({
                 <FiEdit className="w-4 h-4" />
               </button>
               <button
-                onClick={() => onRemove(item.id)}
+                onClick={handleRemove}
                 className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition"
                 title="حذف تست"
               >
@@ -323,7 +334,7 @@ const EditableLabImagingItem = React.memo(({
       )}
     </div>
   );
-});
+};
 
 // تابع مرتب‌سازی تست‌ها بر اساس تاریخ
 const sortLabImagingByDate = (items) => {
@@ -335,7 +346,7 @@ const sortLabImagingByDate = (items) => {
 };
 
 // کامپوننت اصلی LabImagingSection
-const LabImagingSection = React.memo(({ 
+const LabImagingSection = ({ 
   labImaging = [], 
   onAdd, 
   onEdit, 
@@ -378,7 +389,7 @@ const LabImagingSection = React.memo(({
       reader.onloadend = () => {
         setFormData(prev => ({
           ...prev,
-          image: file,
+          image: reader.result,
           imagePreview: reader.result
         }));
       };
@@ -403,6 +414,15 @@ const LabImagingSection = React.memo(({
       return;
     }
 
+    // اگر در حال ویرایش هستیم، تصویر قبلی را نگه داریم
+    let finalImage = formData.imagePreview;
+    if (editingId) {
+      const originalItem = safeLabImaging.find(item => item.id === editingId);
+      if (!finalImage && originalItem?.image) {
+        finalImage = originalItem.image;
+      }
+    }
+
     const newItem = {
       id: editingId || Date.now(),
       type: formData.type,
@@ -410,8 +430,8 @@ const LabImagingSection = React.memo(({
       date: formData.date,
       result: formData.result.trim(),
       notes: formData.notes.trim(),
-      image: formData.imagePreview,
-      createdAt: new Date().toISOString(),
+      image: finalImage,
+      createdAt: editingId ? safeLabImaging.find(item => item.id === editingId)?.createdAt || new Date().toISOString() : new Date().toISOString(),
       doctorName: localStorage.getItem("doctorName") || "دکتر"
     };
 
@@ -427,13 +447,17 @@ const LabImagingSection = React.memo(({
   };
 
   const handleEditItem = (id, editedData) => {
+    const originalItem = safeLabImaging.find(item => item.id === id);
+    
     const updatedItem = {
+      ...originalItem,
       ...editedData,
-      id,
-      createdAt: new Date().toISOString(),
-      doctorName: localStorage.getItem("doctorName") || "دکتر",
-      image: labImaging.find(item => item.id === id)?.image || null
+      id: id,
+      createdAt: originalItem?.createdAt || new Date().toISOString(),
+      doctorName: originalItem?.doctorName || localStorage.getItem("doctorName") || "دکتر",
+      image: editedData.image || originalItem?.image || null
     };
+    
     onEdit(id, updatedItem);
   };
 
@@ -441,6 +465,7 @@ const LabImagingSection = React.memo(({
     onRemove(id);
   };
 
+  // تابع handleEdit برای ویرایش آیتم - اینجا صدا زده می‌شود
   const handleEdit = (item) => {
     setFormData({
       type: item.type,
@@ -752,7 +777,7 @@ const LabImagingSection = React.memo(({
                 </div>
               </div>
               
-              {/* تصویر / فایل */}
+              {/* تصویر / فایل - این بخش در ویرایش هم فعال است */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   تصویر / فایل
@@ -881,21 +906,6 @@ const LabImagingSection = React.memo(({
                   </div>
                 )}
               </div>
-
-              {/* نکات مهم */}
-              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex items-start gap-2">
-                  <FiInfo className="text-blue-600 w-5 h-5 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium text-blue-800 mb-1">نکات مهم ثبت تست</p>
-                    <ul className="text-xs text-blue-700 space-y-1">
-                      <li>• حتماً تاریخ دقیق انجام تست را ثبت کنید</li>
-                      <li>• برای نتایج غیرطبیعی، حتماً تصویر نتیجه را آپلود کنید</li>
-                      <li>• نام تست را کامل و دقیق وارد کنید</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
             </div>
             
             {/* دکمه‌های پایین */}
@@ -949,6 +959,6 @@ const LabImagingSection = React.memo(({
       )}
     </div>
   );
-});
+};
 
 export default LabImagingSection;

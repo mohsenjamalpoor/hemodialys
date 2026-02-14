@@ -1,14 +1,77 @@
 import React, { useState } from 'react';
 import { 
-  FiEye, FiActivity, FiHeart, FiThermometer, 
-  FiUpload, FiEdit, FiTrash2, FiPlus, 
-  FiCheck, FiX, FiUser, FiStar, 
+  FiEye, FiActivity, FiHeart, 
+  FiEdit, FiTrash2, FiPlus, 
+  FiCheck, FiX, FiUser,  
   FiCalendar, FiClock, FiAlertCircle,
   FiInfo, FiFilter, FiSearch,
   FiEyeOff, FiChevronDown, FiChevronUp,
-  FiMoreHorizontal, FiShield, FiAlertTriangle,
-  FiThumbsUp, FiPhone
+ FiAlertTriangle,
+  FiThumbsUp,
+
 } from 'react-icons/fi';
+
+// تابع تبدیل تاریخ به فارسی (مشابه کامپوننت علائم حیاتی)
+const convertToPersianDate = (dateString) => {
+  if (!dateString) return "";
+  
+  const date = new Date(dateString);
+  const options = {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    calendar: "persian",
+    numberingSystem: "arab",
+  };
+  
+  return new Intl.DateTimeFormat("fa-IR", options).format(date);
+};
+
+// تابع تبدیل تاریخ کوتاه برای نمایش
+const convertToShortPersianDate = (dateString) => {
+  if (!dateString) return "";
+  
+  const date = new Date(dateString);
+  const options = {
+    month: "short",
+    day: "numeric",
+    calendar: "persian",
+    numberingSystem: "arab",
+  };
+  
+  return new Intl.DateTimeFormat("fa-IR", options).format(date);
+};
+
+// تابع تبدیل زمان به فارسی
+const convertToPersianTime = (timeString) => {
+  if (!timeString) return "";
+  
+  const [hours, minutes] = timeString.split(":");
+  const persianHours = String(hours).replace(/[0-9]/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[d]);
+  const persianMinutes = String(minutes).replace(/[0-9]/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[d]);
+  
+  return `${persianHours}:${persianMinutes}`;
+};
+
+// تابع دریافت تاریخ و زمان فعلی به فارسی
+const getCurrentPersianDate = () => {
+  const now = new Date();
+  const options = {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    calendar: "persian",
+    numberingSystem: "arab",
+  };
+  return new Intl.DateTimeFormat("fa-IR", options).format(now);
+};
+
+const getCurrentPersianTime = () => {
+  const now = new Date();
+  const hours = now.getHours().toString().padStart(2, "0");
+  const minutes = now.getMinutes().toString().padStart(2, "0");
+  return `${hours}:${minutes}`;
+};
 
 const PhysicalExamSection = ({ 
   physicalExams = [], 
@@ -25,9 +88,66 @@ const PhysicalExamSection = ({
   const [formErrors, setFormErrors] = useState({});
   const [expandedItems, setExpandedItems] = useState(new Set());
 
+  // تابع کمکی برای استخراج متن از آبجکت یا رشته
+  const extractText = (value) => {
+    if (!value) return '';
+    
+    if (typeof value === 'string') return value;
+    
+    if (typeof value === 'object') {
+      if (Object.keys(value).length === 0) return '';
+      
+      if (value.text) return value.text;
+      if (value.findings) return value.findings;
+      if (value.content) return value.content;
+      if (value.description) return value.description;
+      if (value.value) return value.value;
+      
+      try {
+        return Object.values(value).filter(v => v && typeof v === 'string').join(' - ');
+      } catch {
+        return 'اطلاعات ثبت شده';
+      }
+    }
+    
+    return String(value);
+  };
+
+  // تابع کمکی برای نمایش امن مقادیر
+  const safeDisplay = (value, defaultValue = '---') => {
+    if (value === null || value === undefined) return defaultValue;
+    
+    const extracted = extractText(value);
+    return extracted || defaultValue;
+  };
+
+  // تابع برای تشخیص و نمایش آبجکت‌های خاص
+  const displayObject = (obj) => {
+    if (!obj) return '---';
+    if (typeof obj === 'string') return obj;
+    if (typeof obj === 'object') {
+      if (obj.keyFindings !== undefined) {
+        return obj.keyFindings || '---';
+      }
+      if (obj.differentialDiagnosis !== undefined) {
+        return obj.differentialDiagnosis || '---';
+      }
+      if (obj.workingDiagnosis !== undefined) {
+        return obj.workingDiagnosis || '---';
+      }
+      if (obj.redFlags !== undefined) {
+        return obj.redFlags || '---';
+      }
+      
+      const firstValue = Object.values(obj).find(v => v && typeof v === 'string');
+      return firstValue || 'اطلاعات ثبت شده';
+    }
+    return String(obj);
+  };
+
   const [formData, setFormData] = useState({
-    date: new Date().toISOString().split('T')[0],
-    time: new Date().toTimeString().slice(0, 5),
+    date: getCurrentPersianDate(),
+    time: getCurrentPersianTime(),
     generalAppearance: '',
     headAndNeck: '',
     chestAndLungs: '',
@@ -47,10 +167,16 @@ const PhysicalExamSection = ({
   // فیلتر کردن معاینات
   const filteredExams = safeExams.filter(exam => {
     const matchesFilter = activeFilter === 'all' || exam.status === activeFilter;
+    
+    const findingsText = extractText(exam.findings);
+    const recommendationsText = extractText(exam.recommendations);
+    const examinerText = extractText(exam.examiner);
+    
     const matchesSearch = searchTerm === '' || 
-      exam.findings?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      exam.recommendations?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      exam.examiner?.toLowerCase().includes(searchTerm.toLowerCase());
+      findingsText.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      recommendationsText.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      examinerText.toLowerCase().includes(searchTerm.toLowerCase());
+    
     return matchesFilter && matchesSearch;
   });
 
@@ -82,7 +208,6 @@ const PhysicalExamSection = ({
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     
-    // پاک کردن خطا هنگام تایپ
     if (formErrors[name]) {
       setFormErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -116,10 +241,28 @@ const PhysicalExamSection = ({
       return;
     }
 
+    // تعیین وضعیت بر اساس یافته‌ها
+    let status = "نرمال";
+    
+    // اگر یافته‌های بحرانی وجود داشته باشد
+    if (formData.findings && formData.findings.toLowerCase().includes("بحرانی")) {
+      status = "بحرانی";
+    } else if (formData.findings && formData.findings.toLowerCase().includes("غیرطبیعی")) {
+      status = "غیرنرمال";
+    }
+
+    // اطمینان از اینکه findings و recommendations رشته هستند
+    const processedData = {
+      ...formData,
+      findings: typeof formData.findings === 'string' ? formData.findings : JSON.stringify(formData.findings),
+      recommendations: typeof formData.recommendations === 'string' ? formData.recommendations : JSON.stringify(formData.recommendations),
+      timestamp: new Date().toISOString(), // اضافه کردن timestamp برای استفاده در نمودارها
+    };
+
     const newExam = {
       id: editingId || Date.now(),
-      ...formData,
-      timestamp: new Date().toISOString(),
+      ...processedData,
+      status: status,
       lastModified: new Date().toISOString()
     };
 
@@ -136,9 +279,12 @@ const PhysicalExamSection = ({
   };
 
   const handleEdit = (exam) => {
+    const findingsValue = extractText(exam.findings);
+    const recommendationsValue = extractText(exam.recommendations);
+    
     setFormData({
-      date: exam.date || new Date().toISOString().split('T')[0],
-      time: exam.time || new Date().toTimeString().slice(0, 5),
+      date: exam.date || getCurrentPersianDate(),
+      time: exam.time || getCurrentPersianTime(),
       generalAppearance: exam.generalAppearance || '',
       headAndNeck: exam.headAndNeck || '',
       chestAndLungs: exam.chestAndLungs || '',
@@ -147,8 +293,8 @@ const PhysicalExamSection = ({
       extremities: exam.extremities || '',
       neurological: exam.neurological || '',
       skin: exam.skin || '',
-      findings: exam.findings || '',
-      recommendations: exam.recommendations || '',
+      findings: findingsValue,
+      recommendations: recommendationsValue,
       examiner: exam.examiner || localStorage.getItem("doctorName") || "دکتر",
       status: exam.status || 'نرمال'
     });
@@ -159,8 +305,8 @@ const PhysicalExamSection = ({
 
   const handleCloseModal = () => {
     setFormData({
-      date: new Date().toISOString().split('T')[0],
-      time: new Date().toTimeString().slice(0, 5),
+      date: getCurrentPersianDate(),
+      time: getCurrentPersianTime(),
       generalAppearance: '',
       headAndNeck: '',
       chestAndLungs: '',
@@ -245,7 +391,6 @@ const PhysicalExamSection = ({
         </div>
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          {/* دکمه نمایش/پنهان لیست */}
           {safeExams.length > 0 && (
             <button
               onClick={() => setShowAllExams(!showAllExams)}
@@ -263,13 +408,12 @@ const PhysicalExamSection = ({
               ) : (
                 <>
                   <FiEye className="w-4 h-4" />
-                  <span>مشاهده لیست</span>
+                  <span>مشاهده لیست کامل</span>
                 </>
               )}
             </button>
           )}
           
-          {/* دکمه افزودن */}
           {showAddButton && !showAddModal && (
             <button
               onClick={() => setShowAddModal(true)}
@@ -294,6 +438,10 @@ const PhysicalExamSection = ({
                 <h3 className="text-gray-800 font-bold text-lg">آخرین معاینه فیزیکی</h3>
                 <p className="text-gray-600 text-sm">مختصری از آخرین معاینه</p>
               </div>
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+  <FiCalendar className="w-4 h-4" />
+  <span>تاریخ: {convertToShortPersianDate(stats.lastExam.timestamp || stats.lastExam.date)}</span>
+</div>
             </div>
             <button
               onClick={() => setShowAllExams(true)}
@@ -311,7 +459,7 @@ const PhysicalExamSection = ({
                   <field.icon className="w-4 h-4" />
                   <span className="text-sm font-medium">{field.shortLabel}</span>
                 </div>
-                <p className="text-xs truncate">{stats.lastExam[field.id] || 'ثبت نشده'}</p>
+                <p className="text-xs truncate">{safeDisplay(stats.lastExam[field.id])}</p>
               </div>
             ))}
           </div>
@@ -322,7 +470,7 @@ const PhysicalExamSection = ({
                 <FiAlertCircle className="text-amber-600 w-4 h-4" />
                 <span className="text-sm font-medium text-gray-700">یافته مهم:</span>
               </div>
-              <p className="text-sm text-gray-800 line-clamp-2">{stats.lastExam.findings}</p>
+              <p className="text-sm text-gray-800 line-clamp-2">{displayObject(stats.lastExam.findings)}</p>
             </div>
           )}
         </div>
@@ -331,7 +479,6 @@ const PhysicalExamSection = ({
       {/* فیلتر و جستجو */}
       {showAllExams && safeExams.length > 0 && (
         <>
-          {/* دکمه‌های فیلتر */}
           <div className="flex flex-wrap items-center gap-2 mb-4">
             <div className="flex flex-wrap items-center gap-2">
               <button
@@ -373,14 +520,13 @@ const PhysicalExamSection = ({
             </div>
           </div>
 
-          {/* نوار جستجو */}
           <div className="mb-6">
             <div className="relative">
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="جستجوی یافته‌ها، توصیه‌ها یا معاینه کننده..."
+                placeholder="جستجو در یافته‌ها، توصیه‌ها یا معاینه کننده..."
                 className="w-full px-4 py-3 pr-12 bg-white border-2 border-gray-200 rounded-xl text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm shadow-sm"
               />
               <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
@@ -443,17 +589,21 @@ const PhysicalExamSection = ({
                         <div className="flex flex-wrap items-center gap-3 mt-1">
                           <div className="flex items-center gap-1">
                             <FiCalendar className="text-gray-400 w-4 h-4" />
-                            <span className="text-gray-700 font-medium">{exam.date}</span>
+                            <span className="text-gray-700 font-medium">
+                              {convertToPersianDate(exam.timestamp || exam.date)}
+                            </span>
                           </div>
                           <div className="w-1 h-1 bg-gray-300 rounded-full hidden sm:block"></div>
                           <div className="flex items-center gap-1">
                             <FiClock className="text-gray-400 w-4 h-4" />
-                            <span className="text-gray-700 font-medium">{exam.time}</span>
+                            <span className="text-gray-700 font-medium">
+                              {convertToPersianTime(exam.time)}
+                            </span>
                           </div>
                           <div className="w-1 h-1 bg-gray-300 rounded-full hidden sm:block"></div>
                           <div className="flex items-center gap-1">
                             <FiUser className="text-gray-400 w-4 h-4" />
-                            <span className="text-gray-700 font-medium">{exam.examiner}</span>
+                            <span className="text-gray-700 font-medium">{safeDisplay(exam.examiner)}</span>
                           </div>
                         </div>
                       </div>
@@ -492,15 +642,22 @@ const PhysicalExamSection = ({
                   
                   {/* نتایج معاینه سیستم‌ها */}
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-2 mb-4">
-                    {systemExamFields.map(field => (
-                      <div key={field.id} className={`${getSystemColor(field.color)} border rounded-lg p-2`}>
-                        <div className="flex items-center gap-1 mb-1">
-                          <field.icon className="w-3 h-3" />
-                          <span className="text-xs font-medium">{field.shortLabel}</span>
+                    {systemExamFields.map(field => {
+                      const value = exam[field.id];
+                      const displayValue = safeDisplay(value);
+                      
+                      return (
+                        <div key={field.id} className={`${getSystemColor(field.color)} border rounded-lg p-2`}>
+                          <div className="flex items-center gap-1 mb-1">
+                            <field.icon className="w-3 h-3" />
+                            <span className="text-xs font-medium">{field.shortLabel}</span>
+                          </div>
+                          <p className="text-xs truncate" title={displayValue}>
+                            {displayValue}
+                          </p>
                         </div>
-                        <p className="text-xs truncate">{exam[field.id] || '---'}</p>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                   
                   {/* اطلاعات اضافی */}
@@ -514,7 +671,9 @@ const PhysicalExamSection = ({
                               <FiAlertCircle className="text-amber-600 w-4 h-4" />
                               <span className="text-sm font-medium text-amber-800">یافته‌های مهم</span>
                             </div>
-                            <p className="text-sm text-amber-900">{exam.findings}</p>
+                            <p className="text-sm text-amber-900 whitespace-pre-wrap">
+                              {displayObject(exam.findings)}
+                            </p>
                           </div>
                         )}
                         
@@ -525,7 +684,9 @@ const PhysicalExamSection = ({
                               <FiCheck className="text-emerald-600 w-4 h-4" />
                               <span className="text-sm font-medium text-emerald-800">توصیه‌ها</span>
                             </div>
-                            <p className="text-sm text-emerald-900">{exam.recommendations}</p>
+                            <p className="text-sm text-emerald-900 whitespace-pre-wrap">
+                              {displayObject(exam.recommendations)}
+                            </p>
                           </div>
                         )}
                       </div>
@@ -535,7 +696,7 @@ const PhysicalExamSection = ({
                       <div className="flex items-center gap-2">
                         <FiInfo className="text-blue-500 w-4 h-4" />
                         <p className="text-sm text-gray-700 truncate">
-                          {exam.findings || exam.recommendations}
+                          {displayObject(exam.findings || exam.recommendations)}
                         </p>
                       </div>
                     </div>
@@ -644,13 +805,17 @@ const PhysicalExamSection = ({
                     <span className="text-red-500">*</span>
                     تاریخ معاینه
                   </label>
-                  <input
-                    type="date"
-                    name="date"
-                    value={formData.date}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border-2 ${formErrors.date ? 'border-red-300' : 'border-gray-300'} rounded-xl text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all`}
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="date"
+                      value={formData.date}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-3 border-2 ${formErrors.date ? 'border-red-300' : 'border-gray-300'} rounded-xl text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all`}
+                      placeholder="۱۴۰۳/۰۱/۰۱"
+                    />
+                    <FiCalendar className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  </div>
                   {formErrors.date && (
                     <p className="text-red-600 text-sm mt-2 flex items-center gap-1">
                       <FiAlertCircle className="w-4 h-4" />
@@ -663,13 +828,17 @@ const PhysicalExamSection = ({
                     <span className="text-red-500">*</span>
                     ساعت معاینه
                   </label>
-                  <input
-                    type="time"
-                    name="time"
-                    value={formData.time}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border-2 ${formErrors.time ? 'border-red-300' : 'border-gray-300'} rounded-xl text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all`}
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="time"
+                      value={formData.time}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-3 border-2 ${formErrors.time ? 'border-red-300' : 'border-gray-300'} rounded-xl text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all`}
+                      placeholder="۱۴:۳۰"
+                    />
+                    <FiClock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  </div>
                   {formErrors.time && (
                     <p className="text-red-600 text-sm mt-2 flex items-center gap-1">
                       <FiAlertCircle className="w-4 h-4" />
@@ -677,6 +846,21 @@ const PhysicalExamSection = ({
                     </p>
                   )}
                 </div>
+              </div>
+
+              {/* وضعیت کلی */}
+              <div className="mb-6">
+                <label className="block text-gray-800 font-medium mb-2">وضعیت کلی معاینه</label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                >
+                  <option value="نرمال">نرمال</option>
+                  <option value="غیرنرمال">غیرنرمال</option>
+                  <option value="بحرانی">بحرانی</option>
+                </select>
               </div>
 
               {/* سیستم‌های بدن */}
@@ -707,7 +891,7 @@ const PhysicalExamSection = ({
                     name="findings"
                     value={formData.findings}
                     onChange={handleInputChange}
-                    rows="3"
+                    rows="4"
                     className="w-full px-4 py-3 border-2 border-amber-200 rounded-xl text-right focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all resize-none"
                     placeholder="یافته‌های کلیدی و مهم معاینه..."
                   />
@@ -718,7 +902,7 @@ const PhysicalExamSection = ({
                     name="recommendations"
                     value={formData.recommendations}
                     onChange={handleInputChange}
-                    rows="3"
+                    rows="4"
                     className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl text-right focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all resize-none"
                     placeholder="توصیه‌های درمانی و پیگیری..."
                   />
@@ -748,7 +932,7 @@ const PhysicalExamSection = ({
               </div>
             </div>
             
-            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-6 flex items-center justify-between">
+            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-3 flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <FiAlertCircle className="w-4 h-4" />
                 <span>فیلدهای ستاره‌دار (*) الزامی هستند</span>
@@ -756,13 +940,13 @@ const PhysicalExamSection = ({
               <div className="flex gap-3">
                 <button
                   onClick={handleCloseModal}
-                  className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl transition-all font-medium"
+                  className="px-5 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl transition-all font-medium"
                 >
                   انصراف
                 </button>
                 <button
                   onClick={handleSubmit}
-                  className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white rounded-xl transition-all font-medium flex items-center gap-2"
+                  className="px-5 py-2 bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white rounded-xl transition-all font-medium flex items-center gap-2"
                 >
                   <FiCheck className="w-5 h-5" />
                   {editingId ? 'ذخیره تغییرات' : 'ثبت معاینه'}
@@ -772,6 +956,22 @@ const PhysicalExamSection = ({
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 };

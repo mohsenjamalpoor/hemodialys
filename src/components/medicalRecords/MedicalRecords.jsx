@@ -17,12 +17,13 @@ import {
   FiArrowRight,
   FiLogOut,
   FiHeart,
-  FiFolder
+  FiFolder,
+  FiClipboard
 } from 'react-icons/fi';
 
 const PATIENTS_STORAGE_KEY = 'hemo_patients_data';
 
-// داده‌های اولیه فقط با فیلدهای اصلی
+// داده‌های اولیه با فیلدهای اصلی
 const initialPatients = [
   {
     id: 1,
@@ -36,22 +37,9 @@ const initialPatients = [
     doctorId: 'DR001',
     doctorName: 'دکتر احمدی',
     lastVisit: '1402/11/15',
-    lastUpdate: '1402/11/15'
+    lastUpdate: '1402/11/15',
+    diagnosis: 'نارسایی مزمن کلیه مرحله ۵'
   },
-  {
-    id: 2,
-    fullName: 'فاطمه کریمی',
-    nationalId: '0023456789',
-    medicalRecordNumber: 'MR-2024-002',
-    age: 28,
-    gender: 'زن',
-    phone: '09129876543',
-    bloodType: 'A+',
-    doctorId: 'DR001',
-    doctorName: 'دکتر احمدی',
-    lastVisit: '1402/11/10',
-    lastUpdate: '1402/11/10'
-  }
 ];
 
 export default function MedicalRecords() {
@@ -83,7 +71,8 @@ export default function MedicalRecords() {
     doctorId: '',
     doctorName: '',
     lastVisit: new Date().toLocaleDateString('fa-IR'),
-    lastUpdate: new Date().toLocaleDateString('fa-IR')
+    lastUpdate: new Date().toLocaleDateString('fa-IR'),
+    diagnosis: ''
   });
   
   const [showNotification, setShowNotification] = useState(false);
@@ -149,7 +138,8 @@ export default function MedicalRecords() {
     const filtered = patients.filter(patient => 
       patient.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       patient.nationalId.includes(searchTerm) ||
-      patient.medicalRecordNumber.toLowerCase().includes(searchTerm.toLowerCase())
+      patient.medicalRecordNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (patient.diagnosis && patient.diagnosis.toLowerCase().includes(searchTerm.toLowerCase()))
     );
     setFilteredPatients(filtered);
   }, [searchTerm, patients]);
@@ -167,7 +157,8 @@ export default function MedicalRecords() {
     if (type === 'edit' && patient) {
       setNewPatient(patient);
     } else if (type === 'add') {
-      const nextRecordNumber = patients.length + 1;
+      const doctorPatients = patients.filter(p => p.doctorId === doctorInfo.doctorId);
+      const nextRecordNumber = doctorPatients.length + 1;
       setNewPatient({
         fullName: '',
         nationalId: '',
@@ -176,6 +167,7 @@ export default function MedicalRecords() {
         gender: '',
         phone: '',
         bloodType: '',
+        diagnosis: '',
         doctorId: doctorInfo.doctorId,
         doctorName: doctorInfo.name,
         lastVisit: new Date().toLocaleDateString('fa-IR'),
@@ -201,6 +193,7 @@ export default function MedicalRecords() {
       gender: '',
       phone: '',
       bloodType: '',
+      diagnosis: '',
       doctorId: doctorInfo.doctorId,
       doctorName: doctorInfo.name,
       lastVisit: new Date().toLocaleDateString('fa-IR'),
@@ -345,6 +338,19 @@ export default function MedicalRecords() {
     return date.toLocaleDateString("fa-IR", options);
   };
 
+  // محاسبه سن بر اساس تاریخ تولد (اختیاری - برای آینده)
+  const calculateAgeFromBirthDate = (birthDate) => {
+    if (!birthDate) return '';
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50">
       {/* هدر ثابت */}
@@ -454,7 +460,7 @@ export default function MedicalRecords() {
                 <input
                   type="text"
                   className="w-full pr-10 pl-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-right"
-                  placeholder="جستجو بر اساس نام، کد ملی یا شماره پرونده..."
+                  placeholder="جستجو بر اساس نام، کد ملی، شماره پرونده یا تشخیص..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -565,6 +571,14 @@ export default function MedicalRecords() {
                     </div>
                     
                     <div className="flex items-center gap-2">
+                      <FiClipboard className="w-4 h-4 text-gray-500" />
+                      <span className="text-gray-700">
+                        <strong>تشخیص:</strong> 
+                        <span className="mr-2 text-sm">{patient.diagnosis || '---'}</span>
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
                       <FiHash className="w-4 h-4 text-gray-500" />
                       <span className="text-gray-700">
                         <strong>کد ملی:</strong> 
@@ -668,6 +682,20 @@ export default function MedicalRecords() {
                       
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
+                          تشخیص
+                        </label>
+                        <input
+                          type="text"
+                          name="diagnosis"
+                          value={newPatient.diagnosis}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-right"
+                          placeholder="مثلاً: نارسایی کلیه، دیابت، فشار خون"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
                           کد ملی *
                         </label>
                         <input
@@ -679,9 +707,7 @@ export default function MedicalRecords() {
                           required
                         />
                       </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           شماره پرونده
@@ -694,7 +720,9 @@ export default function MedicalRecords() {
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-right"
                         />
                       </div>
-                      
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           شماره تماس *
@@ -706,6 +734,20 @@ export default function MedicalRecords() {
                           onChange={handleInputChange}
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-right"
                           required
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          آخرین ویزیت
+                        </label>
+                        <input
+                          type="text"
+                          name="lastVisit"
+                          value={newPatient.lastVisit}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-right"
+                          placeholder="1402/11/15"
                         />
                       </div>
                     </div>

@@ -1,4 +1,4 @@
-import   useState  from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { HiChevronRight, HiChevronLeft } from "react-icons/hi";
 import { Link } from "react-router-dom";
@@ -16,9 +16,6 @@ import {
   FaImage,
   FaSyncAlt
 } from "react-icons/fa";
-
-// -------------------- Utility --------------------
-
 
 // -------------------- Steps with Real Images --------------------
 const STEPS = [
@@ -107,6 +104,43 @@ const STEPS = [
     timeEstimate: "2 دقیقه"
   },
 ];
+
+// -------------------- Image Display with Fallback --------------------
+function StepImage({ step, running }) {
+  const [imageError, setImageError] = useState(false);
+  
+  const handleImageError = () => {
+    if (!imageError) {
+      setImageError(true);
+    }
+  };
+  
+  return (
+    <div className="relative w-full h-64 md:h-96 rounded-2xl overflow-hidden">
+      <img
+        src={imageError ? step.backupImage : step.image}
+        alt={step.titleFa}
+        className="w-full h-full object-cover"
+        onError={handleImageError}
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+      {running && (
+        <div className="absolute top-4 right-4 bg-black/70 text-white px-3 py-2 rounded-lg backdrop-blur-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            <span className="text-sm">جریان فعال</span>
+          </div>
+        </div>
+      )}
+      <div className="absolute bottom-4 right-4 text-white">
+        <div className="flex items-center gap-2">
+          <FaImage />
+          <span className="text-sm">Fresenius 4008S</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // -------------------- Circuit Diagram Component --------------------
 function CircuitDiagram({ stepIndex, running }) {
@@ -248,44 +282,6 @@ function CircuitDiagram({ stepIndex, running }) {
   );
 }
 
-// -------------------- Image Display with Fallback --------------------
-function StepImage({ step, running, imageError, setImageError }) {
-  const [currentImage, setCurrentImage] = useState(step.image);
-  
-  const handleImageError = () => {
-    if (!imageError) {
-      setCurrentImage(step.backupImage);
-      setImageError(true);
-    }
-  };
-  
-  return (
-    <div className="relative w-full h-64 md:h-96 rounded-2xl overflow-hidden">
-      <img
-        src={currentImage}
-        alt={step.titleFa}
-        className="w-full h-full object-cover"
-        onError={handleImageError}
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-      {running && (
-        <div className="absolute top-4 right-4 bg-black/70 text-white px-3 py-2 rounded-lg backdrop-blur-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            <span className="text-sm">جریان فعال</span>
-          </div>
-        </div>
-      )}
-      <div className="absolute bottom-4 right-4 text-white">
-        <div className="flex items-center gap-2">
-          <FaImage />
-          <span className="text-sm">Fresenius 4008S</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // -------------------- Main Component --------------------
 export default function Priming4008S() {
   const [running, setRunning] = useState(false);
@@ -295,10 +291,8 @@ export default function Priming4008S() {
   const [alarmOn, setAlarmOn] = useState(false);
   const [fluidType, setFluidType] = useState("NS");
   const [showDetails, setShowDetails] = useState(true);
-  const [imageError, setImageError] = useState(false);
 
   const step = STEPS[stepIndex];
-
 
   const toggleRunning = () => {
     setRunning((r) => {
@@ -313,8 +307,16 @@ export default function Priming4008S() {
     setRate(100);
     setClampsClosed(true);
     setAlarmOn(false);
-    setImageError(false);
+    setFluidType("NS");
   };
+
+  // تعریف انواع محلول‌های پرایم
+  const fluidTypes = [
+    { value: "NS", label: "نرمال سالین", color: "from-blue-500 to-cyan-500", activeColor: "from-blue-600 to-cyan-600" },
+    { value: "FFP", label: "FFP", color: "from-purple-500 to-pink-500", activeColor: "from-purple-600 to-pink-600" },
+    { value: "Alb", label: "آلبومین", color: "from-amber-500 to-orange-500", activeColor: "from-amber-600 to-orange-600" },
+    { value: "PC", label: "پک‌سل", color: "from-red-500 to-rose-500", activeColor: "from-red-600 to-rose-600" }
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50 p-4">
@@ -432,9 +434,7 @@ export default function Priming4008S() {
               
               <StepImage 
                 step={step} 
-                running={running} 
-                imageError={imageError}
-                setImageError={setImageError}
+                running={running}
               />
               
               <div className="p-6">
@@ -509,16 +509,16 @@ export default function Priming4008S() {
                       />
                       <div className="flex items-center justify-between">
                         <button
-                          onClick={() => setRate(r => Math.max(20, r - 10))}
-                          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                          onClick={() => setRate(r => Math.max(20, r - 5))}
+                          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors active:scale-95"
                         >
-                          کاهش 10
+                          کاهش ۵
                         </button>
                         <button
-                          onClick={() => setRate(r => Math.min(500, r + 10))}
-                          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                          onClick={() => setRate(r => Math.min(500, r + 5))}
+                          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors active:scale-95"
                         >
-                          افزایش 10
+                          افزایش ۵
                         </button>
                       </div>
                     </div>
@@ -536,19 +536,16 @@ export default function Priming4008S() {
                       نوع محلول پرایم
                     </label>
                     <div className="grid grid-cols-2 gap-2">
-                      {[
-                        { value: "NS", label: "نرمال سالین", color: "bg-gradient-to-r from-blue-500 to-cyan-500" },
-                        { value: "FFP", label: "FFP", color: "bg-gradient-to-r from-purple-500 to-pink-500" },
-                        { value: "Alb", label: "آلبومین", color: "bg-gradient-to-r from-amber-500 to-orange-500" },
-                        { value: "PC", label: "پک‌سل", color: "bg-gradient-to-r from-red-500 to-rose-500" }
-                      ].map((type) => (
+                      {fluidTypes.map((type) => (
                         <button
                           key={type.value}
                           onClick={() => setFluidType(type.value)}
-                          className={`p-3 rounded-xl text-sm font-medium transition-all ${type.color} ${
+                          className={`p-3 rounded-xl text-sm font-medium transition-all bg-gradient-to-r ${
+                            fluidType === type.value ? type.activeColor : type.color
+                          } ${
                             fluidType === type.value
-                              ? 'text-white shadow-lg'
-                              : 'text-white/70 hover:text-white'
+                              ? 'text-white shadow-lg ring-2 ring-white/50'
+                              : 'text-white/90 hover:text-white hover:shadow-md'
                           }`}
                         >
                           {type.label}

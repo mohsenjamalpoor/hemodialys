@@ -7,7 +7,7 @@ import {
   FiClock, FiAlertCircle, FiX, FiCheck, FiEdit2,
   FiSave, FiArrowLeft, FiRefreshCw,
    FiPrinter,
-  FiTrendingUp,
+  FiClipboard
 } from 'react-icons/fi';
 
 // کامپوننت‌های جداگانه
@@ -22,6 +22,7 @@ import LabImagingSection from './section/LabImagingSection';
 import FoodAllergiesSection from './section/FoodAllergiesSection';
 import DrugAllergiesSection from './section/DrugAllergiesSection';
 import VitalSignsSection from './section/VitalSignsSection';
+import PhysicalExamSection from './section/PhysicalExamSection';
 
 
 const PATIENTS_STORAGE_KEY = 'hemo_patients_data';
@@ -36,6 +37,7 @@ const getDefaultPatientData = (basicData) => ({
   pregnancy: basicData.pregnancy || false,
   breastfeeding: basicData.breastfeeding || false,
   bloodType: basicData.bloodType || '',
+  diagnosis: basicData.diagnosis || '', // اضافه کردن فیلد تشخیص
   vaccinations: basicData.vaccinations || [],
   medicalHistory: basicData.medicalHistory || [],
   surgeryHistory: basicData.surgeryHistory || [],
@@ -46,8 +48,8 @@ const getDefaultPatientData = (basicData) => ({
   labTests: basicData.labTests || [],
   medicationHistory: basicData.medicationHistory || [],
   labImaging: basicData.labImaging || [],
-   vitalSigns: basicData.vitalSigns || [], //  
-
+  vitalSigns: basicData.vitalSigns || [],   
+  physicalExams: basicData.physicalExams || [],
   lastVisit: basicData.lastVisit || new Date().toLocaleDateString('fa-IR'),
   lastUpdate: basicData.lastUpdate || new Date().toLocaleDateString('fa-IR'),
   bloodPressure: basicData.bloodPressure || '',
@@ -478,6 +480,46 @@ export default function PatientDetailPage() {
     showNotificationMessage('سابقه جراحی حذف شد', 'success');
   };
 
+  
+// معاینه فیزیکی
+const handleAddPhysicalExam = (exam) => {
+  const currentExams = Array.isArray(patient?.physicalExams) 
+    ? patient.physicalExams 
+    : [];
+  
+  const updatedExams = [...currentExams, exam];
+  
+  handleInputChange('physicalExams', updatedExams);
+  savePatientToStorage({ physicalExams: updatedExams });
+  showNotificationMessage('معاینه فیزیکی جدید اضافه شد', 'success');
+};
+
+const handleEditPhysicalExam = (id, updatedExam) => {
+  const currentExams = Array.isArray(patient?.physicalExams) 
+    ? patient.physicalExams 
+    : [];
+  
+  const updatedExams = currentExams.map(item => 
+    item.id === id ? { ...item, ...updatedExam } : item
+  );
+  
+  handleInputChange('physicalExams', updatedExams);
+  savePatientToStorage({ physicalExams: updatedExams });
+  showNotificationMessage('معاینه فیزیکی ویرایش شد', 'success');
+};
+
+const handleRemovePhysicalExam = (id) => {
+  const currentExams = Array.isArray(patient?.physicalExams) 
+    ? patient.physicalExams 
+    : [];
+  
+  const updatedExams = currentExams.filter(item => item.id !== id);
+  handleInputChange('physicalExams', updatedExams);
+  savePatientToStorage({ physicalExams: updatedExams });
+  showNotificationMessage('معاینه فیزیکی حذف شد', 'success');
+};
+
+
   // سوابق خانوادگی
   const handleAddFamilyHistory = (item) => {
     const currentHistory = Array.isArray(patient?.familyHistory) 
@@ -491,14 +533,23 @@ export default function PatientDetailPage() {
     showNotificationMessage('سابقه خانوادگی اضافه شد', 'success');
   };
 
-  const handleEditFamilyHistory = (id, newText) => {
+  const handleEditFamilyHistory = (id, newText, newRelation, newAge, newAgeAtDiagnosis, isActive) => {
     const currentHistory = Array.isArray(patient?.familyHistory) 
       ? patient.familyHistory 
       : [];
     
     const updatedHistory = currentHistory.map(item => 
-      item.id === id ? { ...item, text: newText } : item
+      item.id === id ? { 
+        ...item, 
+        text: newText,
+        relation: newRelation || item.relation,
+        age: newAge || item.age,
+        ageAtDiagnosis: newAgeAtDiagnosis || item.ageAtDiagnosis,
+        isActive: isActive !== undefined ? isActive : item.isActive,
+        lastUpdated: new Date().toLocaleDateString('fa-IR')
+      } : item
     );
+    
     handleInputChange('familyHistory', updatedHistory);
     savePatientToStorage({ familyHistory: updatedHistory });
     showNotificationMessage('سابقه خانوادگی ویرایش شد', 'success');
@@ -513,6 +564,29 @@ export default function PatientDetailPage() {
     handleInputChange('familyHistory', updatedHistory);
     savePatientToStorage({ familyHistory: updatedHistory });
     showNotificationMessage('سابقه خانوادگی حذف شد', 'success');
+  };
+
+  // تابع تغییر وضعیت زنده/فوت شده برای سوابق خانوادگی
+  const handleToggleFamilyStatus = (id) => {
+    const currentHistory = Array.isArray(patient?.familyHistory) 
+      ? patient.familyHistory 
+      : [];
+    
+    const updatedHistory = currentHistory.map(item => 
+      item.id === id ? { 
+        ...item, 
+        isActive: !item.isActive,  // تغییر وضعیت زنده/فوت شده
+        lastUpdated: new Date().toLocaleDateString('fa-IR')
+      } : item
+    );
+    
+    handleInputChange('familyHistory', updatedHistory);
+    savePatientToStorage({ familyHistory: updatedHistory });
+    
+    // پیدا کردن آیتم برای نمایش پیام مناسب
+    const toggledItem = currentHistory.find(item => item.id === id);
+    const statusText = toggledItem?.isActive === false ? 'زنده' : 'فوت شده';
+    showNotificationMessage(`وضعیت به ${statusText} تغییر یافت`, 'success');
   };
 
   // واکسیناسیون
@@ -663,43 +737,41 @@ export default function PatientDetailPage() {
     showNotificationMessage('وضعیت خصوصی بودن یادداشت تغییر کرد', 'success');
   };
 
+  // توابع مدیریت علائم حیاتی
+  const handleAddVitalSign = (vital) => {
+    const currentVitals = Array.isArray(patient?.vitalSigns) 
+      ? patient.vitalSigns 
+      : [];
+    
+    const updatedVitals = [...currentVitals, vital];
+    handleInputChange('vitalSigns', updatedVitals);
+    savePatientToStorage({ vitalSigns: updatedVitals });
+    showNotificationMessage('علائم حیاتی اضافه شد', 'success');
+  };
 
-  // توابع مدیریت علائم حیاتی (در PatientDetailPage)
-const handleAddVitalSign = (vital) => {
-  const currentVitals = Array.isArray(patient?.vitalSigns) 
-    ? patient.vitalSigns 
-    : [];
-  
-  const updatedVitals = [...currentVitals, vital];
-  handleInputChange('vitalSigns', updatedVitals);
-  savePatientToStorage({ vitalSigns: updatedVitals });
-  showNotificationMessage('علائم حیاتی اضافه شد', 'success');
-};
+  const handleEditVitalSign = (id, updatedVital) => {
+    const currentVitals = Array.isArray(patient?.vitalSigns) 
+      ? patient.vitalSigns 
+      : [];
+    
+    const updatedVitals = currentVitals.map(item => 
+      item.id === id ? { ...item, ...updatedVital } : item
+    );
+    handleInputChange('vitalSigns', updatedVitals);
+    savePatientToStorage({ vitalSigns: updatedVitals });
+    showNotificationMessage('علائم حیاتی ویرایش شد', 'success');
+  };
 
-const handleEditVitalSign = (id, updatedVital) => {
-  const currentVitals = Array.isArray(patient?.vitalSigns) 
-    ? patient.vitalSigns 
-    : [];
-  
-  const updatedVitals = currentVitals.map(item => 
-    item.id === id ? { ...item, ...updatedVital } : item
-  );
-  handleInputChange('vitalSigns', updatedVitals);
-  savePatientToStorage({ vitalSigns: updatedVitals });
-  showNotificationMessage('علائم حیاتی ویرایش شد', 'success');
-};
-
-const handleRemoveVitalSign = (id) => {
-  const currentVitals = Array.isArray(patient?.vitalSigns) 
-    ? patient.vitalSigns 
-    : [];
-  
-  const updatedVitals = currentVitals.filter(item => item.id !== id);
-  handleInputChange('vitalSigns', updatedVitals);
-  savePatientToStorage({ vitalSigns: updatedVitals });
-  showNotificationMessage('علائم حیاتی حذف شد', 'success');
-};
-
+  const handleRemoveVitalSign = (id) => {
+    const currentVitals = Array.isArray(patient?.vitalSigns) 
+      ? patient.vitalSigns 
+      : [];
+    
+    const updatedVitals = currentVitals.filter(item => item.id !== id);
+    handleInputChange('vitalSigns', updatedVitals);
+    savePatientToStorage({ vitalSigns: updatedVitals });
+    showNotificationMessage('علائم حیاتی حذف شد', 'success');
+  };
 
   // سوابق دارویی
   const handleAddMedication = (medication) => {
@@ -773,88 +845,88 @@ const handleRemoveVitalSign = (id) => {
     showNotificationMessage('آزمایش/تصویربرداری حذف شد', 'success');
   };
 
-// توابع مدیریت آلرژی غذایی (در PatientDetailPage)
-const handleAddFoodAllergy = (item) => {
-  const currentAllergies = Array.isArray(patient?.foodAllergies) 
-    ? patient.foodAllergies 
-    : [];
-  
-  const updatedAllergies = [...currentAllergies, item];
-  handleInputChange('foodAllergies', updatedAllergies);
-  savePatientToStorage({ foodAllergies: updatedAllergies });
-  showNotificationMessage('آلرژی غذایی اضافه شد', 'success');
-};
+  // توابع مدیریت آلرژی غذایی
+  const handleAddFoodAllergy = (item) => {
+    const currentAllergies = Array.isArray(patient?.foodAllergies) 
+      ? patient.foodAllergies 
+      : [];
+    
+    const updatedAllergies = [...currentAllergies, item];
+    handleInputChange('foodAllergies', updatedAllergies);
+    savePatientToStorage({ foodAllergies: updatedAllergies });
+    showNotificationMessage('آلرژی غذایی اضافه شد', 'success');
+  };
 
-const handleEditFoodAllergy = (id, newText, newSeverity) => {
-  const currentAllergies = Array.isArray(patient?.foodAllergies) 
-    ? patient.foodAllergies 
-    : [];
-  
-  const updatedAllergies = currentAllergies.map(item => 
-    item.id === id ? { 
-      ...item, 
-      text: newText, 
-      severity: newSeverity || item.severity,
-      lastUpdated: new Date().toLocaleDateString('fa-IR')
-    } : item
-  );
-  handleInputChange('foodAllergies', updatedAllergies);
-  savePatientToStorage({ foodAllergies: updatedAllergies });
-  showNotificationMessage('آلرژی غذایی ویرایش شد', 'success');
-};
+  const handleEditFoodAllergy = (id, newText, newSeverity) => {
+    const currentAllergies = Array.isArray(patient?.foodAllergies) 
+      ? patient.foodAllergies 
+      : [];
+    
+    const updatedAllergies = currentAllergies.map(item => 
+      item.id === id ? { 
+        ...item, 
+        text: newText, 
+        severity: newSeverity || item.severity,
+        lastUpdated: new Date().toLocaleDateString('fa-IR')
+      } : item
+    );
+    handleInputChange('foodAllergies', updatedAllergies);
+    savePatientToStorage({ foodAllergies: updatedAllergies });
+    showNotificationMessage('آلرژی غذایی ویرایش شد', 'success');
+  };
 
-const handleRemoveFoodAllergy = (id) => {
-  const currentAllergies = Array.isArray(patient?.foodAllergies) 
-    ? patient.foodAllergies 
-    : [];
-  
-  const updatedAllergies = currentAllergies.filter(item => item.id !== id);
-  handleInputChange('foodAllergies', updatedAllergies);
-  savePatientToStorage({ foodAllergies: updatedAllergies });
-  showNotificationMessage('آلرژی غذایی حذف شد', 'success');
-};
+  const handleRemoveFoodAllergy = (id) => {
+    const currentAllergies = Array.isArray(patient?.foodAllergies) 
+      ? patient.foodAllergies 
+      : [];
+    
+    const updatedAllergies = currentAllergies.filter(item => item.id !== id);
+    handleInputChange('foodAllergies', updatedAllergies);
+    savePatientToStorage({ foodAllergies: updatedAllergies });
+    showNotificationMessage('آلرژی غذایی حذف شد', 'success');
+  };
 
-// توابع مدیریت آلرژی دارویی (در PatientDetailPage)
-const handleAddDrugAllergy = (item) => {
-  const currentAllergies = Array.isArray(patient?.drugAllergies) 
-    ? patient.drugAllergies 
-    : [];
-  
-  const updatedAllergies = [...currentAllergies, item];
-  handleInputChange('drugAllergies', updatedAllergies);
-  savePatientToStorage({ drugAllergies: updatedAllergies });
-  showNotificationMessage('آلرژی دارویی اضافه شد', 'success');
-};
+  // توابع مدیریت آلرژی دارویی
+  const handleAddDrugAllergy = (item) => {
+    const currentAllergies = Array.isArray(patient?.drugAllergies) 
+      ? patient.drugAllergies 
+      : [];
+    
+    const updatedAllergies = [...currentAllergies, item];
+    handleInputChange('drugAllergies', updatedAllergies);
+    savePatientToStorage({ drugAllergies: updatedAllergies });
+    showNotificationMessage('آلرژی دارویی اضافه شد', 'success');
+  };
 
-const handleEditDrugAllergy = (id, newText, newSeverity, newReaction) => {
-  const currentAllergies = Array.isArray(patient?.drugAllergies) 
-    ? patient.drugAllergies 
-    : [];
-  
-  const updatedAllergies = currentAllergies.map(item => 
-    item.id === id ? { 
-      ...item, 
-      text: newText, 
-      severity: newSeverity || item.severity,
-      reaction: newReaction || item.reaction,
-      lastUpdated: new Date().toLocaleDateString('fa-IR')
-    } : item
-  );
-  handleInputChange('drugAllergies', updatedAllergies);
-  savePatientToStorage({ drugAllergies: updatedAllergies });
-  showNotificationMessage('آلرژی دارویی ویرایش شد', 'success');
-};
+  const handleEditDrugAllergy = (id, newText, newSeverity, newReaction) => {
+    const currentAllergies = Array.isArray(patient?.drugAllergies) 
+      ? patient.drugAllergies 
+      : [];
+    
+    const updatedAllergies = currentAllergies.map(item => 
+      item.id === id ? { 
+        ...item, 
+        text: newText, 
+        severity: newSeverity || item.severity,
+        reaction: newReaction || item.reaction,
+        lastUpdated: new Date().toLocaleDateString('fa-IR')
+      } : item
+    );
+    handleInputChange('drugAllergies', updatedAllergies);
+    savePatientToStorage({ drugAllergies: updatedAllergies });
+    showNotificationMessage('آلرژی دارویی ویرایش شد', 'success');
+  };
 
-const handleRemoveDrugAllergy = (id) => {
-  const currentAllergies = Array.isArray(patient?.drugAllergies) 
-    ? patient.drugAllergies 
-    : [];
-  
-  const updatedAllergies = currentAllergies.filter(item => item.id !== id);
-  handleInputChange('drugAllergies', updatedAllergies);
-  savePatientToStorage({ drugAllergies: updatedAllergies });
-  showNotificationMessage('آلرژی دارویی حذف شد', 'success');
-};
+  const handleRemoveDrugAllergy = (id) => {
+    const currentAllergies = Array.isArray(patient?.drugAllergies) 
+      ? patient.drugAllergies 
+      : [];
+    
+    const updatedAllergies = currentAllergies.filter(item => item.id !== id);
+    handleInputChange('drugAllergies', updatedAllergies);
+    savePatientToStorage({ drugAllergies: updatedAllergies });
+    showNotificationMessage('آلرژی دارویی حذف شد', 'success');
+  };
 
   // پرینت
   const handlePrint = (test = null, type = 'single') => {
@@ -953,6 +1025,7 @@ const handleRemoveDrugAllergy = (id) => {
             <h3>اطلاعات بیمار</h3>
             <p>نام: ${printContent.patient.fullName}</p>
             <p>سن: ${printContent.patient.age} سال</p>
+            <p>تشخیص: ${printContent.patient.diagnosis || '---'}</p>
             <p>شماره پرونده: ${printContent.patient.medicalRecordNumber}</p>
             <p>کد ملی: ${printContent.patient.nationalId}</p>
           </div>
@@ -1168,6 +1241,11 @@ const handleRemoveDrugAllergy = (id) => {
                   <span className="bg-white bg-opacity-20 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-xs md:text-sm font-medium">
                     پرونده: {patient.medicalRecordNumber}
                   </span>
+                  {patient.diagnosis && (
+                    <span className="bg-white bg-opacity-20 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-xs md:text-sm font-medium">
+                      تشخیص: {patient.diagnosis}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -1244,6 +1322,8 @@ const handleRemoveDrugAllergy = (id) => {
                 </div>
               </div>
               
+          
+              
               {/* اطلاعات سلامت اصلی - جمع‌وجور */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 mb-3 md:mb-4">
                 {/* قد */}
@@ -1310,66 +1390,37 @@ const handleRemoveDrugAllergy = (id) => {
                   </div>
                 </div>
               </div>
+                  {/* فیلد تشخیص */}
+              <div className="mb-4 md:mb-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="p-1.5 md:p-2 rounded-lg bg-purple-100">
+                    <FiClipboard className="text-purple-600 w-4 h-4 md:w-5 md:h-5" />
+                  </div>
+                  <h4 className="font-bold text-gray-700 text-sm md:text-lg">تشخیص پزشکی</h4>
+                </div>
+                {editingBasicInfo ? (
+                  <input
+                    name="diagnosis"
+                    value={patient.diagnosis || ''}
+                    onChange={handleTextInputChange}
+                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg text-right focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm md:text-base"
+                    rows="2"
+                    placeholder="تشخیص پزشکی بیمار را وارد کنید..."
+                  />
+                ) : (
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-3 md:p-4">
+                    <p className="text-gray-800 font-medium text-sm md:text-base">
+                      {patient.diagnosis || 'تشخیص وارد نشده است'}
+                    </p>
+                  </div>
+                )}
+              </div>
 
               {/* اطلاعات سلامت تکمیلی - قابل گسترش */}
               {expandedVitals && (
                 <div className="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-gray-200">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
-                    {/* فشار خون */}
-                    <CompactHealthInfoCard
-                      title="فشار خون"
-                      icon={FiTrendingUp}
-                      value={patient.bloodPressure}
-                      unit="mmHg"
-                      color="red"
-                      isEditing={editingBasicInfo}
-                      onChange={(value) => handleInputChange('bloodPressure', value)}
-                      type="text"
-                      size="sm"
-                    />
-
-                    {/* نبض */}
-                    <CompactHealthInfoCard
-                      title="نبض"
-                      icon={FiHeart}
-                      value={patient.pulse}
-                      unit="bpm"
-                      color="purple"
-                      isEditing={editingBasicInfo}
-                      onChange={(value) => handleInputChange('pulse', value)}
-                      type="number"
-                      size="sm"
-                    />
-
-                    {/* دما */}
-                    <CompactHealthInfoCard
-                      title="دمای بدن"
-                      icon={FiThermometer}
-                      value={patient.temperature}
-                      unit="°C"
-                      color="orange"
-                      isEditing={editingBasicInfo}
-                      onChange={(value) => handleInputChange('temperature', value)}
-                      type="number"
-                      size="sm"
-                    />
-
-                    {/* تعداد تنفس */}
-                    <CompactHealthInfoCard
-                      title="تعداد تنفس"
-                      icon={FiActivity}
-                      value={patient.respiratoryRate}
-                      unit="breaths/min"
-                      color="blue"
-                      isEditing={editingBasicInfo}
-                      onChange={(value) => handleInputChange('respiratoryRate', value)}
-                      type="number"
-                      size="sm"
-                    />
-                  </div>
-
                   {/* اطلاعات سلامت تکمیلی */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3 mt-2 md:mt-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
                     {/* مصرف دخانیات */}
                     <div className="bg-gray-50 border border-gray-200 rounded-xl p-3">
                       <div className="flex items-center justify-between">
@@ -1406,7 +1457,7 @@ const handleRemoveDrugAllergy = (id) => {
                             <option value="B+">B+</option>
                             <option value="B-">B-</option>
                             <option value="O+">O+</option>
-                            <option value="O-">O-</option>
+                            <option value="O-">O  </option>
                             <option value="AB+">AB+</option>
                             <option value="AB-">AB-</option>
                           </select>
@@ -1497,6 +1548,24 @@ const handleRemoveDrugAllergy = (id) => {
               </div>
             </div>
 
+            {/* علائم حیاتی - بخش اصلی */}
+            <VitalSignsSection
+              vitalSigns={patient.vitalSigns}
+              onAdd={handleAddVitalSign}
+              onEdit={handleEditVitalSign}
+              onRemove={handleRemoveVitalSign}
+              showAddButton={true}
+            />
+
+            {/* معاینه فیزیکی -   */}
+<PhysicalExamSection
+  physicalExams={patient.physicalExams}
+  onAdd={handleAddPhysicalExam}
+  onEdit={handleEditPhysicalExam}
+  onRemove={handleRemovePhysicalExam}
+  showAddButton={true}
+/>
+
             {/* سوابق پزشکی */}
             <MedicalHistorySection
               medicalHistory={patient.medicalHistory}
@@ -1521,6 +1590,7 @@ const handleRemoveDrugAllergy = (id) => {
               onAdd={handleAddFamilyHistory}
               onEdit={handleEditFamilyHistory}
               onRemove={handleRemoveFamilyHistory}
+              onToggleStatus={handleToggleFamilyStatus}  
               showAddButton={true}
             />
 
@@ -1550,18 +1620,6 @@ const handleRemoveDrugAllergy = (id) => {
               onRemove={handleRemoveMedication}
               showAddButton={true}
             />
-
-            {/* علائم حیاتی */}
-<VitalSignsSection
-  vitalSigns={patient.vitalSigns}
-  onAdd={handleAddVitalSign}
-  onEdit={handleEditVitalSign}
-  onRemove={handleRemoveVitalSign}
-  showAddButton={true}
-/>
-
-
-
 
             {/* آزمایشات و تصویربرداری */}
             <LabImagingSection
@@ -1759,6 +1817,14 @@ const handleRemoveDrugAllergy = (id) => {
                     color="orange"
                   />
                 )}
+                {patient.diagnosis && patient.diagnosis.includes('نارسایی کلیه') && (
+                  <AlertCard
+                    title="نارسایی کلیه"
+                    description="نیاز به پیگیری منظم و مراقبت ویژه"
+                    icon=""
+                    color="red"
+                  />
+                )}
               </div>
             </div>
 
@@ -1770,19 +1836,15 @@ const handleRemoveDrugAllergy = (id) => {
               </div>
               <div className="space-y-2">
                 <div className="flex items-start gap-2">
-              
                   <p className="text-xs text-gray-600">تمام تغییرات به صورت خودکار ذخیره می‌شوند</p>
                 </div>
                 <div className="flex items-start gap-2">
-                
                   <p className="text-xs text-gray-600">برای ویرایش اطلاعات پایه، روی دکمه ویرایش کلیک کنید</p>
                 </div>
                 <div className="flex items-start gap-2">
-               
                   <p className="text-xs text-gray-600">آلرژی‌های دارویی باید با دقت ثبت شوند</p>
                 </div>
                 <div className="flex items-start gap-2">
-                 
                   <p className="text-xs text-gray-600">برای پرینت آزمایشات، از دکمه پرینت در بخش آزمایشات استفاده کنید</p>
                 </div>
               </div>

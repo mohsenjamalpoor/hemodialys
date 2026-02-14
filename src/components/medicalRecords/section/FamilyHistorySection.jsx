@@ -2,11 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   FiUsers, FiPlus, FiX, FiEdit2, FiTrash2, FiCheck, 
   FiCalendar, FiHeart, FiFilter, FiSearch, 
-  FiUserPlus, FiUserMinus, FiList, FiChevronUp,
-  FiEyeOff,
+  FiUserPlus, FiUserMinus, FiEyeOff,
   FiEye
 } from 'react-icons/fi';
-import { GiFamilyHouse, GiFamilyTree } from 'react-icons/gi';
 
 // تابع کمکی برای تعیین اطلاعات رابطه خانوادگی
 const getRelationInfo = (relation) => {
@@ -44,18 +42,6 @@ const getDiseaseSeverity = (text) => {
   return { level: 'خفیف', color: 'bg-green-100 text-green-800' };
 };
 
-// لیست بیماری‌های شایع خانوادگی
-const COMMON_FAMILY_DISEASES = [
-  { name: "بیماری قلبی عروقی", relation: "پدر", icon: "❤️", risk: "بالا" },
-  { name: "دیابت نوع ۲", relation: "مادر", icon: "🩸", risk: "متوسط" },
-  { name: "فشار خون بالا", relation: "پدر", icon: "💓", risk: "متوسط" },
-  { name: "سرطان پستان", relation: "خواهر", icon: "🎗️", risk: "بالا" },
-  { name: "آلزایمر", relation: "مادربزرگ", icon: "🧠", risk: "متوسط" },
-  { name: "آسم", relation: "برادر", icon: "🌬️", risk: "پایین" },
-  { name: "میگرن", relation: "مادر", icon: "🤕", risk: "پایین" },
-  { name: "پوکی استخوان", relation: "مادر", icon: "🦴", risk: "متوسط" },
-];
-
 // دسته‌بندی‌های پیش‌فرض
 const FAMILY_RELATIONS = [
   { value: '', label: 'انتخاب نسبت' },
@@ -80,6 +66,7 @@ const EditableFamilyItem = React.memo(({ item, onEdit, onRemove, onToggleStatus 
   const [editedRelation, setEditedRelation] = useState(item.relation || '');
   const [editedAge, setEditedAge] = useState(item.age || '');
   const [editedAgeAtDiagnosis, setEditedAgeAtDiagnosis] = useState(item.ageAtDiagnosis || '');
+  const [editedStatus, setEditedStatus] = useState(item.isActive !== false ? 'active' : 'deceased');
   const editInputRef = useRef(null);
 
   useEffect(() => {
@@ -88,9 +75,15 @@ const EditableFamilyItem = React.memo(({ item, onEdit, onRemove, onToggleStatus 
     }
   }, [isEditingItem]);
 
+  useEffect(() => {
+    // وقتی item تغییر می‌کند، وضعیت ویرایش را هم به‌روزرسانی کن
+    setEditedStatus(item.isActive !== false ? 'active' : 'deceased');
+  }, [item.isActive]);
+
   const handleSaveEdit = () => {
     if (editedText.trim() && onEdit) {
-      onEdit(item.id, editedText, editedRelation, editedAge, editedAgeAtDiagnosis);
+      const isActive = editedStatus === 'active';
+      onEdit(item.id, editedText, editedRelation, editedAge, editedAgeAtDiagnosis, isActive);
       setIsEditingItem(false);
     }
   };
@@ -100,6 +93,7 @@ const EditableFamilyItem = React.memo(({ item, onEdit, onRemove, onToggleStatus 
     setEditedRelation(item.relation || '');
     setEditedAge(item.age || '');
     setEditedAgeAtDiagnosis(item.ageAtDiagnosis || '');
+    setEditedStatus(item.isActive !== false ? 'active' : 'deceased');
     setIsEditingItem(false);
   };
 
@@ -115,47 +109,49 @@ const EditableFamilyItem = React.memo(({ item, onEdit, onRemove, onToggleStatus 
   const severityInfo = getDiseaseSeverity(editedText);
 
   return (
-    <div className={`flex items-center justify-between group p-3 hover:bg-gray-50 rounded-lg border border-gray-100 mb-2 transition-all duration-200 ${
+    <div className={`flex items-center justify-between group p-3 md:p-4 hover:bg-gray-50 rounded-lg border border-gray-100 mb-2 transition-all duration-200 ${
       item.isActive === false ? 'opacity-60' : ''
     }`}>
       <div className="flex-1">
         {isEditingItem ? (
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col md:flex-row gap-2">
+          <div className="flex flex-col gap-3 md:gap-4">
+            <div className="flex flex-col md:flex-row gap-2 md:gap-3">
               <input
                 ref={editInputRef}
                 type="text"
                 value={editedText}
                 onChange={(e) => setEditedText(e.target.value)}
                 onKeyDown={handleKeyPress}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-right focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                className="flex-1 px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg text-right focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm md:text-base"
                 placeholder="نام بیماری یا شرایط پزشکی"
               />
               <div className="flex gap-2">
                 <button
                   onClick={handleSaveEdit}
-                  className="flex-1 md:flex-none px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm flex items-center justify-center gap-1 transition"
+                  className="flex-1 md:flex-none px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm md:text-base flex items-center justify-center gap-1 md:gap-2 transition"
                 >
-                  <FiCheck className="w-4 h-4" />
+                  <FiCheck className="w-4 h-4 md:w-5 md:h-5" />
+                  <span className="hidden md:inline">ذخیره</span>
                   <span className="md:hidden">ذخیره</span>
                 </button>
                 <button
                   onClick={handleCancelEdit}
-                  className="flex-1 md:flex-none px-3 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg text-sm flex items-center justify-center gap-1 transition"
+                  className="flex-1 md:flex-none px-3 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg text-sm md:text-base flex items-center justify-center gap-1 md:gap-2 transition"
                 >
-                  <FiX className="w-4 h-4" />
+                  <FiX className="w-4 h-4 md:w-5 md:h-5" />
+                  <span className="hidden md:inline">لغو</span>
                   <span className="md:hidden">لغو</span>
                 </button>
               </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-              <div className="flex items-center gap-2">
-                <span className="text-gray-500 text-sm">نسبت:</span>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-3">
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-1 md:gap-2">
+                <span className="text-gray-500 text-xs md:text-sm whitespace-nowrap">نسبت:</span>
                 <select
                   value={editedRelation}
                   onChange={(e) => setEditedRelation(e.target.value)}
-                  className="w-full px-2 py-1 border border-gray-300 rounded-lg text-right text-sm"
+                  className="w-full px-2 md:px-3 py-1.5 md:py-2 border border-gray-300 rounded-lg text-right text-sm md:text-base"
                 >
                   {FAMILY_RELATIONS.map(rel => (
                     <option key={rel.value} value={rel.value}>
@@ -165,115 +161,100 @@ const EditableFamilyItem = React.memo(({ item, onEdit, onRemove, onToggleStatus 
                 </select>
               </div>
               
-              <div className="flex items-center gap-2">
-                <span className="text-gray-500 text-sm">سن:</span>
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-1 md:gap-2">
+                <span className="text-gray-500 text-xs md:text-sm whitespace-nowrap">سن:</span>
                 <input
                   type="text"
                   value={editedAge}
                   onChange={(e) => setEditedAge(e.target.value)}
-                  className="w-full px-2 py-1 border border-gray-300 rounded-lg text-right text-sm"
+                  className="w-full px-2 md:px-3 py-1.5 md:py-2 border border-gray-300 rounded-lg text-right text-sm md:text-base"
                   placeholder="سن فعلی"
                 />
               </div>
               
-              <div className="flex items-center gap-2">
-                <span className="text-gray-500 text-sm">سن تشخیص:</span>
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-1 md:gap-2">
+                <span className="text-gray-500 text-xs md:text-sm whitespace-nowrap">سن تشخیص:</span>
                 <input
                   type="text"
                   value={editedAgeAtDiagnosis}
                   onChange={(e) => setEditedAgeAtDiagnosis(e.target.value)}
-                  className="w-full px-2 py-1 border border-gray-300 rounded-lg text-right text-sm"
+                  className="w-full px-2 md:px-3 py-1.5 md:py-2 border border-gray-300 rounded-lg text-right text-sm md:text-base"
                   placeholder="سن تشخیص"
                 />
               </div>
               
-              <div className="flex items-center gap-2">
-                <span className="text-gray-500 text-sm">شدت:</span>
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-1 md:gap-2">
+                <span className="text-gray-500 text-xs md:text-sm whitespace-nowrap">وضعیت:</span>
                 <select
-                  value={severityInfo.level}
-                  className="w-full px-2 py-1 border border-gray-300 rounded-lg text-right text-sm"
-                  onChange={(e) => {
-                    const baseText = editedText.replace(/\s*\(شدید\)|\s*\(متوسط\)|\s*\(خفیف\)/g, '').trim();
-                    const newText = e.target.value === 'خفیف' ? baseText : `${baseText} (${e.target.value})`;
-                    setEditedText(newText);
-                  }}
+                  value={editedStatus}
+                  onChange={(e) => setEditedStatus(e.target.value)}
+                  className="w-full px-2 md:px-3 py-1.5 md:py-2 border border-gray-300 rounded-lg text-right text-sm md:text-base"
                 >
-                  <option value="خفیف">خفیف</option>
-                  <option value="متوسط">متوسط</option>
-                  <option value="شدید">شدید</option>
+                  <option value="active">زنده</option>
+                  <option value="deceased">فوت شده</option>
                 </select>
               </div>
             </div>
-            
-            {item.notes && (
-              <div className="mt-2">
-                <textarea
-                  value={item.notes}
-                  className="w-full px-2 py-1 border border-gray-300 rounded-lg text-right text-sm"
-                  placeholder="یادداشت اضافی"
-                  rows="2"
-                  readOnly
-                />
-              </div>
-            )}
           </div>
         ) : (
           <>
-            <div className="flex items-start gap-2">
-              <div className={`${relationInfo.bgColor} p-2 rounded-lg`}>
-                <span className="text-lg">{relationInfo.emoji}</span>
+            <div className="flex items-start gap-2 md:gap-3">
+              <div className={`${relationInfo.bgColor} p-2 md:p-3 rounded-lg flex-shrink-0`}>
+                <span className="text-lg md:text-xl">{relationInfo.emoji}</span>
               </div>
-              <div className="flex-1">
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-col md:flex-row justify-between items-start gap-2 md:gap-0">
+                  <div className="flex flex-wrap items-center gap-1 md:gap-2">
                     <div className={`px-2 py-1 rounded-full text-xs ${severityInfo.color}`}>
                       {severityInfo.level}
                     </div>
                     {item.age && (
-                      <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
+                      <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full whitespace-nowrap">
                         سن: {item.age}
                       </span>
                     )}
                     {item.ageAtDiagnosis && (
-                      <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full">
+                      <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full whitespace-nowrap">
                         تشخیص در {item.ageAtDiagnosis} سالگی
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 md:gap-2">
                     {item.relation && (
-                      <span className={`text-xs px-2 py-1 rounded-full ${relationInfo.bgColor} ${relationInfo.color}`}>
+                      <span className={`text-xs px-2 py-1 rounded-full ${relationInfo.bgColor} ${relationInfo.color} whitespace-nowrap`}>
                         {item.relation}
                       </span>
                     )}
                     {item.isActive === false && (
-                      <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full">
+                      <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full whitespace-nowrap">
                         فوت شده
                       </span>
                     )}
                   </div>
                 </div>
                 
-                <p className="text-gray-700 text-right text-sm md:text-base font-medium mt-2">{item.text}</p>
+                <p className="text-gray-700 text-right text-sm md:text-base font-medium mt-2 break-words">
+                  {item.text}
+                </p>
                 
-                <div className="flex items-center gap-3 mt-2">
+                <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-2">
                   {item.date && (
                     <div className="flex items-center gap-1">
-                      <FiCalendar className="text-gray-400 w-3 h-3" />
-                      <p className="text-xs text-gray-500">تاریخ ثبت: {item.date}</p>
+                      <FiCalendar className="text-gray-400 w-3 h-3 md:w-4 md:h-4" />
+                      <p className="text-xs text-gray-500 whitespace-nowrap">تاریخ ثبت: {item.date}</p>
                     </div>
                   )}
                   
                   {item.onsetAge && (
                     <div className="flex items-center gap-1">
-                      <FiHeart className="text-red-400 w-3 h-3" />
-                      <p className="text-xs text-gray-500">شروع در سن {item.onsetAge}</p>
+                      <FiHeart className="text-red-400 w-3 h-3 md:w-4 md:h-4" />
+                      <p className="text-xs text-gray-500 whitespace-nowrap">شروع در سن {item.onsetAge}</p>
                     </div>
                   )}
                 </div>
                 
                 {item.notes && (
-                  <p className="text-xs text-gray-600 mt-2 text-right">{item.notes}</p>
+                  <p className="text-xs text-gray-600 mt-2 text-right break-words">{item.notes}</p>
                 )}
               </div>
             </div>
@@ -281,16 +262,21 @@ const EditableFamilyItem = React.memo(({ item, onEdit, onRemove, onToggleStatus 
         )}
       </div>
       {!isEditingItem && (
-        <div className="flex items-center gap-1 md:gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <div className="flex items-center gap-1 md:gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-shrink-0">
           <button
-            onClick={() => onToggleStatus && onToggleStatus(item.id)}
+            onClick={() => {
+              console.log('Toggling status for item:', item.id, 'current status:', item.isActive);
+              if (onToggleStatus) {
+                onToggleStatus(item.id);
+              }
+            }}
             className="p-1 md:p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition"
             title={item.isActive === false ? "بازگرداندن" : "علامت‌گذاری فوت"}
           >
             {item.isActive === false ? (
-              <FiUserPlus className="w-4 h-4" />
+              <FiUserPlus className="w-4 h-4 md:w-5 md:h-5" />
             ) : (
-              <FiUserMinus className="w-4 h-4" />
+              <FiUserMinus className="w-4 h-4 md:w-5 md:h-5" />
             )}
           </button>
           <button
@@ -298,14 +284,14 @@ const EditableFamilyItem = React.memo(({ item, onEdit, onRemove, onToggleStatus 
             className="p-1 md:p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition"
             title="ویرایش"
           >
-            <FiEdit2 className="w-4 h-4" />
+            <FiEdit2 className="w-4 h-4 md:w-5 md:h-5" />
           </button>
           <button
             onClick={() => onRemove(item.id)}
             className="p-1 md:p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition"
             title="حذف"
           >
-            <FiTrash2 className="w-4 h-4" />
+            <FiTrash2 className="w-4 h-4 md:w-5 md:h-5" />
           </button>
         </div>
       )}
@@ -329,8 +315,8 @@ const FamilyHistorySection = React.memo(({
   const [newItemRelation, setNewItemRelation] = useState('');
   const [newItemAge, setNewItemAge] = useState('');
   const [newItemAgeAtDiagnosis, setNewItemAgeAtDiagnosis] = useState('');
-  const [showQuickAdd, setShowQuickAdd] = useState(false);
-  const [filter, setFilter] = useState('all'); // all, active, deceased
+  const [newItemStatus, setNewItemStatus] = useState('active');
+  const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showList, setShowList] = useState(false);
   const inputRef = useRef(null);
@@ -339,41 +325,24 @@ const FamilyHistorySection = React.memo(({
 
   // فیلتر و جستجوی موارد
   const filteredItems = safeItems.filter(item => {
-    // جستجوی متنی
     if (searchQuery && 
         !item.text?.toLowerCase().includes(searchQuery.toLowerCase()) && 
         !item.relation?.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false;
     }
     
-    // فیلتر وضعیت
     if (filter === 'active' && item.isActive === false) return false;
     if (filter === 'deceased' && item.isActive !== false) return false;
     
     return true;
   });
 
-  // پیشنهاد بیماری‌های شایع بر اساس جنسیت بیمار
-  const getSuggestedDiseases = () => {
-    let suggestions = [...COMMON_FAMILY_DISEASES];
-    
-    // فیلتر بر اساس جنسیت بیمار برای سرطان پستان
-    if (patientGender === 'مرد') {
-      suggestions = suggestions.filter(d => !d.name.includes('پستان'));
-    }
-    
-    // فیلتر مواردی که قبلاً اضافه شده‌اند
-    return suggestions.filter(suggestion => 
-      !safeItems.some(item => 
-        item.text?.includes(suggestion.name.split(' ')[0]) && 
-        item.relation === suggestion.relation
-      )
-    );
-  };
-
-  const handleAddItem = (text = null, relation = null, age = null, ageAtDiagnosis = null) => {
+  const handleAddItem = (text = null, relation = null, age = null, ageAtDiagnosis = null, status = null) => {
     const itemText = text || newItemText;
     if (itemText.trim()) {
+      const selectedStatus = status || newItemStatus;
+      const isActive = selectedStatus === 'deceased' ? false : true;
+      
       const newItem = {
         id: Date.now() + Math.random(),
         text: itemText,
@@ -381,7 +350,7 @@ const FamilyHistorySection = React.memo(({
         age: age || newItemAge,
         ageAtDiagnosis: ageAtDiagnosis || newItemAgeAtDiagnosis,
         date: new Date().toLocaleDateString('fa-IR'),
-        isActive: true,
+        isActive: isActive,
         notes: '',
         addedDate: new Date().toLocaleDateString('fa-IR')
       };
@@ -391,11 +360,8 @@ const FamilyHistorySection = React.memo(({
       }
       
       resetForm();
+      setShowList(true);
     }
-  };
-
-  const handleQuickAdd = (disease) => {
-    handleAddItem(disease.name, disease.relation, '', '');
   };
 
   const handleCancelAdd = () => {
@@ -407,13 +373,15 @@ const FamilyHistorySection = React.memo(({
     setNewItemRelation('');
     setNewItemAge('');
     setNewItemAgeAtDiagnosis('');
+    setNewItemStatus('active');
     setIsAdding(false);
-    setShowQuickAdd(false);
   };
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       handleAddItem();
+    } else if (e.key === 'Escape') {
+      handleCancelAdd();
     }
   };
 
@@ -423,9 +391,9 @@ const FamilyHistorySection = React.memo(({
     }
   }, [isAdding]);
 
-  const handleEditItem = (id, newText, newRelation, newAge, newAgeAtDiagnosis) => {
+  const handleEditItem = (id, newText, newRelation, newAge, newAgeAtDiagnosis, isActive) => {
     if (onEdit) {
-      onEdit(id, newText, newRelation, newAge, newAgeAtDiagnosis);
+      onEdit(id, newText, newRelation, newAge, newAgeAtDiagnosis, isActive);
     }
   };
 
@@ -435,18 +403,10 @@ const FamilyHistorySection = React.memo(({
     }
   };
 
-  const handleStatusToggle = (id) => {
-    if (onToggleStatus) {
-      onToggleStatus(id);
-    }
-  };
-
-  const suggestedDiseases = getSuggestedDiseases();
-
   return (
     <div className="bg-white rounded-xl shadow-md p-4 md:p-6 mb-6 transition-all duration-300 hover:shadow-lg">
       {/* هدر */}
-      <div className="flex items-center justify-between mb-4 md:mb-6">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-0 mb-4 md:mb-6">
         <div className="flex items-center gap-2 md:gap-3">
           <div className="p-2 md:p-3 rounded-lg bg-purple-100">
             <FiUsers className="w-5 h-5 md:w-6 md:h-6 text-purple-600" />
@@ -459,37 +419,34 @@ const FamilyHistorySection = React.memo(({
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
-          {!isAdding && (
-            <button
-              onClick={() => setShowList(!showList)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-all duration-200 text-sm font-medium"
-            >
-              {showList ? (
-                <>
-                 <FiEyeOff className="w-4 h-4" />
-                  <span className="hidden md:inline">بستن لیست</span>
-                  <span className="md:hidden">بستن</span>
-                </>
-              ) : (
-                <>
-                  <FiEye className="w-4 h-4" />
-                  <span className="hidden md:inline">مشاهده لیست</span>
-                  <span className="md:hidden">لیست</span>
-                </>
-              )}
-            </button>
-          )}
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <button
+            onClick={() => setShowList(!showList)}
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-all duration-200 text-sm font-medium"
+          >
+            {showList ? (
+              <>
+                <FiEyeOff className="w-4 h-4" />
+                <span className="hidden md:inline">بستن لیست</span>
+                <span className="md:hidden">بستن</span>
+              </>
+            ) : (
+              <>
+                <FiEye className="w-4 h-4" />
+                <span className="hidden md:inline">مشاهده لیست</span>
+                <span className="md:hidden">لیست</span>
+              </>
+            )}
+          </button>
           
           {showAddButton && !isAdding && (
             <button
               onClick={() => {
                 setIsAdding(true);
-                setShowQuickAdd(false);
               }}
-              className="flex items-center gap-1 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition text-sm md:text-base"
+              className="flex-1 md:flex-none flex items-center justify-center gap-1 md:gap-2 px-3 py-2.5 md:px-4 md:py-2.5 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition text-sm md:text-base font-medium"
             >
-              <FiPlus className="w-4 h-4" />
+              <FiPlus className="w-4 h-4 md:w-5 md:h-5" />
               <span className="hidden md:inline">افزودن سابقه</span>
               <span className="md:hidden">افزودن</span>
             </button>
@@ -509,9 +466,9 @@ const FamilyHistorySection = React.memo(({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="جستجو در سوابق خانوادگی..."
-                  className="w-full px-3 md:px-4 py-2 pr-10 border border-gray-300 rounded-lg text-right text-sm md:text-base focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                  className="w-full px-3 md:px-4 py-2 md:py-3 pr-10 border border-gray-300 rounded-lg text-right text-sm md:text-base focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                 />
-                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 md:w-5 md:h-5" />
               </div>
             </div>
             
@@ -519,7 +476,7 @@ const FamilyHistorySection = React.memo(({
               <select
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-right text-sm md:text-base"
+                className="flex-1 md:flex-none px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg text-right text-sm md:text-base min-w-[120px]"
               >
                 <option value="all">همه موارد</option>
                 <option value="active">افراد زنده</option>
@@ -530,14 +487,14 @@ const FamilyHistorySection = React.memo(({
                   setSearchQuery('');
                   setFilter('all');
                 }}
-                className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm"
+                className="px-3 md:px-4 py-2 md:py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm md:text-base flex items-center justify-center"
               >
-                <FiFilter className="w-4 h-4" />
+                <FiFilter className="w-4 h-4 md:w-5 md:h-5" />
               </button>
             </div>
           </div>
           
-          <div className="mb-4 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+          <div className="mb-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
             {filteredItems.length > 0 ? (
               filteredItems.map((item) => (
                 <EditableFamilyItem
@@ -545,78 +502,18 @@ const FamilyHistorySection = React.memo(({
                   item={item}
                   onEdit={handleEditItem}
                   onRemove={handleRemoveItem}
-                  onToggleStatus={handleStatusToggle}
+                  onToggleStatus={onToggleStatus} // 🔴 اینجا مستقیماً prop را پاس می‌دهیم
                 />
               ))
             ) : (
-              <div className="text-center py-6 md:py-8 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
-                <p className="text-gray-500 text-sm md:text-base">سابقه خانوادگی ثبت نشده است</p>
-                {showAddButton && (
-                  <p className="text-xs md:text-sm text-gray-400 mt-1">برای افزودن سابقه، روی افزودن کلیک کنید</p>
-                )}
+              <div className="text-center py-8 md:py-12 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
+                <div className="text-5xl md:text-6xl mb-3 md:mb-4">👨‍👩‍👧‍👦</div>
+                <p className="text-gray-500 text-sm md:text-base mb-1 md:mb-2">سابقه خانوادگی ثبت نشده است</p>
+                <p className="text-xs md:text-sm text-gray-400">برای افزودن سابقه خانوادگی، روی دکمه "افزودن سابقه" کلیک کنید</p>
               </div>
             )}
           </div>
         </>
-      )}
-      
-      {/* بیماری‌های شایع سریع */}
-      {showQuickAdd && !isAdding && (
-        <div className="mb-4 p-3 md:p-4 bg-blue-50 rounded-xl border border-blue-200">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="font-bold text-gray-800 text-sm md:text-base">بیماری‌های شایع خانوادگی</h4>
-            <button
-              onClick={() => setShowQuickAdd(false)}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              <FiX className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {suggestedDiseases.map((disease, index) => {
-              const relationInfo = getRelationInfo(disease.relation);
-              
-              return (
-                <button
-                  key={index}
-                  onClick={() => handleQuickAdd(disease)}
-                  className="flex items-center gap-2 p-2 md:p-3 rounded-lg transition bg-white hover:bg-blue-100 text-gray-700 hover:text-blue-700 border border-gray-200 hover:border-blue-300"
-                >
-                  <div className={`${relationInfo.bgColor} p-2 rounded-lg`}>
-                    <span className="text-lg">{disease.icon}</span>
-                  </div>
-                  <div className="flex-1 text-right">
-                    <p className="text-xs md:text-sm font-medium">{disease.name}</p>
-                    <div className="flex items-center justify-between mt-1">
-                      <span className={`text-xs px-2 py-1 rounded-full ${relationInfo.bgColor} ${relationInfo.color}`}>
-                        {disease.relation}
-                      </span>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        disease.risk === 'بالا' ? 'bg-red-100 text-red-800' :
-                        disease.risk === 'متوسط' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-green-100 text-green-800'
-                      }`}>
-                        ریسک {disease.risk}
-                      </span>
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-          <div className="mt-3 pt-3 border-t border-blue-200">
-            <button
-              onClick={() => {
-                setShowQuickAdd(false);
-                setIsAdding(true);
-              }}
-              className="text-purple-600 hover:text-purple-800 text-sm flex items-center gap-1"
-            >
-              <FiPlus className="w-3 h-3" />
-              افزودن بیماری سفارشی
-            </button>
-          </div>
-        </div>
       )}
       
       {/* فرم افزودن جدید */}
@@ -639,12 +536,12 @@ const FamilyHistorySection = React.memo(({
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-gray-500 text-sm">نسبت:</span>
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-1 md:gap-2">
+                <span className="text-gray-500 text-xs md:text-sm whitespace-nowrap">نسبت:</span>
                 <select
                   value={newItemRelation}
                   onChange={(e) => setNewItemRelation(e.target.value)}
-                  className="flex-1 px-2 md:px-3 py-1.5 md:py-2 border border-purple-200 rounded-lg text-right text-sm md:text-base"
+                  className="w-full px-2 md:px-3 py-1.5 md:py-2 border border-purple-200 rounded-lg text-right text-sm md:text-base"
                 >
                   {FAMILY_RELATIONS.map(rel => (
                     <option key={rel.value} value={rel.value}>
@@ -654,33 +551,34 @@ const FamilyHistorySection = React.memo(({
                 </select>
               </div>
               
-              <div className="flex items-center gap-2">
-                <span className="text-gray-500 text-sm">سن فعلی:</span>
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-1 md:gap-2">
+                <span className="text-gray-500 text-xs md:text-sm whitespace-nowrap">سن فعلی:</span>
                 <input
                   type="text"
                   value={newItemAge}
                   onChange={(e) => setNewItemAge(e.target.value)}
                   placeholder="سن (اختیاری)"
-                  className="flex-1 px-2 md:px-3 py-1.5 md:py-2 border border-purple-200 rounded-lg text-right text-sm md:text-base"
+                  className="w-full px-2 md:px-3 py-1.5 md:py-2 border border-purple-200 rounded-lg text-right text-sm md:text-base"
                 />
               </div>
               
-              <div className="flex items-center gap-2">
-                <span className="text-gray-500 text-sm">سن تشخیص:</span>
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-1 md:gap-2">
+                <span className="text-gray-500 text-xs md:text-sm whitespace-nowrap">سن تشخیص:</span>
                 <input
                   type="text"
                   value={newItemAgeAtDiagnosis}
                   onChange={(e) => setNewItemAgeAtDiagnosis(e.target.value)}
                   placeholder="سن تشخیص (اختیاری)"
-                  className="flex-1 px-2 md:px-3 py-1.5 md:py-2 border border-purple-200 rounded-lg text-right text-sm md:text-base"
+                  className="w-full px-2 md:px-3 py-1.5 md:py-2 border border-purple-200 rounded-lg text-right text-sm md:text-base"
                 />
               </div>
               
-              <div className="flex items-center gap-2">
-                <span className="text-gray-500 text-sm">وضعیت:</span>
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-1 md:gap-2">
+                <span className="text-gray-500 text-xs md:text-sm whitespace-nowrap">وضعیت:</span>
                 <select
-                  defaultValue="active"
-                  className="flex-1 px-2 md:px-3 py-1.5 md:py-2 border border-purple-200 rounded-lg text-right text-sm md:text-base"
+                  value={newItemStatus}
+                  onChange={(e) => setNewItemStatus(e.target.value)}
+                  className="w-full px-2 md:px-3 py-1.5 md:py-2 border border-purple-200 rounded-lg text-right text-sm md:text-base"
                 >
                   <option value="active">زنده</option>
                   <option value="deceased">فوت شده</option>
@@ -688,30 +586,30 @@ const FamilyHistorySection = React.memo(({
               </div>
             </div>
             
-            <div className="flex gap-2 md:gap-3">
+            <div className="flex flex-col md:flex-row gap-2 md:gap-3">
               <button
                 onClick={() => handleAddItem()}
-                className="flex-1 md:flex-none flex items-center justify-center gap-1 md:gap-2 px-3 py-2 md:px-5 md:py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                className="flex-1 flex items-center justify-center gap-1 md:gap-2 px-3 py-2.5 md:px-5 md:py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg text-sm md:text-base font-medium"
                 disabled={!newItemText.trim()}
               >
                 <FiPlus className="w-4 h-4 md:w-5 md:h-5" />
-                <span className="text-sm md:text-base">افزودن سابقه</span>
+                <span>افزودن سابقه</span>
               </button>
               <button
                 onClick={handleCancelAdd}
-                className="flex-1 md:flex-none flex items-center justify-center gap-1 md:gap-2 px-3 py-2 md:px-4 md:py-3 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-xl transition text-sm md:text-base"
+                className="flex-1 flex items-center justify-center gap-1 md:gap-2 px-3 py-2.5 md:px-5 md:py-3 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-xl transition text-sm md:text-base font-medium"
               >
-                <FiX className="w-4 h-4" />
-                <span className="text-sm md:text-base">لغو</span>
+                <FiX className="w-4 h-4 md:w-5 md:h-5" />
+                <span>لغو</span>
               </button>
             </div>
           </div>
-          <div className="flex justify-between mt-2 text-xs text-gray-500">
-            <p>Enter ↵ برای افزودن سریع</p>
+          <div className="flex flex-col md:flex-row justify-between mt-2 text-xs text-gray-500 gap-1">
+            <p>Enter ↵ برای افزودن سریع | Escape ⎋ برای لغو</p>
             <p>{newItemText.length}/200 کاراکتر</p>
           </div>
-          <div className="mt-2 text-xs text-purple-500">
-            <p>💡 بیماری‌های پرخطر خانوادگی: سرطان‌ها، بیماری‌های قلبی زودهنگام، دیابت نوع ۱</p>
+          <div className="mt-2 text-xs md:text-sm text-purple-500">
+            <p> بیماری‌های پرخطر خانوادگی: سرطان‌ها، بیماری‌های قلبی زودهنگام، دیابت نوع ۱</p>
           </div>
         </div>
       )}

@@ -8,7 +8,7 @@ const convertToPersianDate = (dateString) => {
     month: 'long', 
     day: 'numeric',
     calendar: 'persian',
-    numberingSystem: 'arab'
+    
   };
   
   return new Intl.DateTimeFormat('fa-IR', options).format(date);
