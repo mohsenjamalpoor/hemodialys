@@ -45,7 +45,6 @@ const LabTestsSection = ({
   const [removingId, setRemovingId] = useState(null);
   const [searchQuery, setSearchQuery] = useState(''); // برای جستجوی کلی
   const [activeFilter, setActiveFilter] = useState('all'); // فیلتر وضعیت
-  const [showSummary, setShowSummary] = useState(true); // نمایش خلاصه
   
   const testNameRef = useRef(null);
   const editRefs = useRef({});
@@ -107,13 +106,6 @@ const LabTestsSection = ({
     
     return matchesSearch && matchesFilter;
   });
-
-  // وضعیت نمایش خلاصه
-  useEffect(() => {
-    if (safeItems.length > 0) {
-      setShowSummary(true);
-    }
-  }, [safeItems.length]);
 
   // تابع جستجوی آزمایش برای autocomplete
   const handleSearchTest = (query) => {
@@ -429,94 +421,6 @@ const LabTestsSection = ({
           )}
         </div>
       </div>
-
-      {/* خلاصه وضعیت آزمایشات (همیشه نمایش داده می‌شود) */}
-      {safeItems.length > 0 && showSummary && !showTestList && (
-        <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-5 animate-fadeIn">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white rounded-lg shadow-sm">
-                <FiActivity className="text-blue-600 w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-gray-800 font-bold text-lg">خلاصه آزمایشات</h3>
-                <p className="text-gray-600 text-sm">وضعیت کلی آزمایشات بیمار</p>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowSummary(false)}
-              className="p-2 text-gray-400 hover:text-gray-600"
-            >
-              <FiX className="w-5 h-5" />
-            </button>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-            <div className="bg-white rounded-lg p-4 text-center border border-green-100">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-gray-700 font-medium">نرمال</span>
-              </div>
-              <div className="text-2xl font-bold text-green-600">{stats.normal}</div>
-              <div className="text-xs text-gray-500 mt-1">آزمایش</div>
-            </div>
-            
-            <div className="bg-white rounded-lg p-4 text-center border border-red-100">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                <span className="text-gray-700 font-medium">غیرنرمال</span>
-              </div>
-              <div className="text-2xl font-bold text-red-600">{stats.abnormal}</div>
-              <div className="text-xs text-gray-500 mt-1">آزمایش</div>
-            </div>
-            
-            <div className="bg-white rounded-lg p-4 text-center border border-yellow-100">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                <span className="text-gray-700 font-medium">نامشخص</span>
-              </div>
-              <div className="text-2xl font-bold text-yellow-600">{stats.unknown}</div>
-              <div className="text-xs text-gray-500 mt-1">آزمایش</div>
-            </div>
-            
-            <div className="bg-white rounded-lg p-4 text-center border border-purple-100">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <FiCalendar className="text-purple-500 w-4 h-4" />
-                <span className="text-gray-700 font-medium">نوع آزمایش</span>
-              </div>
-              <div className="text-2xl font-bold text-purple-600">{stats.testTypes}</div>
-              <div className="text-xs text-gray-500 mt-1">نوع</div>
-            </div>
-          </div>
-          
-          <div className="flex justify-between items-center pt-4 border-t border-blue-200">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <FiInfo className="w-4 h-4" />
-              <span>برای مشاهده جزئیات کامل، روی دکمه "مشاهده لیست" کلیک کنید</span>
-            </div>
-            <button
-              onClick={() => setShowTestList(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-lg transition-all duration-200 shadow hover:shadow-md"
-            >
-              <FiEye className="w-4 h-4" />
-              <span>مشاهده لیست کامل</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* پیام وقتی خلاصه بسته شده */}
-      {!showSummary && safeItems.length > 0 && !showTestList && (
-        <div className="mb-6 text-center py-4">
-          <button
-            onClick={() => setShowSummary(true)}
-            className="text-blue-600 hover:text-blue-800 flex items-center gap-2 mx-auto"
-          >
-            <FiChevronDown className="w-4 h-4" />
-            <span>نمایش خلاصه آزمایشات</span>
-          </button>
-        </div>
-      )}
 
       {/* فیلتر و جستجو (فقط وقتی لیست باز است) */}
       {showTestList && safeItems.length > 0 && (

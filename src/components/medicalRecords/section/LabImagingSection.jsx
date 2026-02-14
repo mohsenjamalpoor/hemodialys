@@ -27,6 +27,7 @@ const EditableLabImagingItem = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [nameError, setNameError] = useState(false);
   const [editedData, setEditedData] = useState({
     type: item.type || 'آزمایش خون',
     name: item.name || '',
@@ -78,12 +79,13 @@ const EditableLabImagingItem = ({
   const typeInfo = getTypeInfo(item.type);
 
   const handleSaveEdit = () => {
-    if (editedData.name.trim()) {
-      onEdit(item.id, editedData);
-      setIsEditing(false);
-    } else {
-      alert('نام تست الزامی است');
+    if (!editedData.name.trim()) {
+      setNameError(true);
+      return;
     }
+    setNameError(false);
+    onEdit(item.id, editedData);
+    setIsEditing(false);
   };
 
   const handleCancelEdit = () => {
@@ -94,6 +96,7 @@ const EditableLabImagingItem = ({
       result: item.result || '',
       notes: item.notes || '',
     });
+    setNameError(false);
     setIsEditing(false);
   };
 
@@ -103,6 +106,13 @@ const EditableLabImagingItem = ({
       handleSaveEdit();
     } else if (e.key === 'Escape') {
       handleCancelEdit();
+    }
+  };
+
+  const handleNameChange = (e) => {
+    setEditedData({...editedData, name: e.target.value});
+    if (nameError && e.target.value.trim()) {
+      setNameError(false);
     }
   };
 
@@ -153,11 +163,19 @@ const EditableLabImagingItem = ({
                 ref={editInputRef}
                 type="text"
                 value={editedData.name}
-                onChange={(e) => setEditedData({...editedData, name: e.target.value})}
+                onChange={handleNameChange}
                 onKeyDown={handleKeyPress}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-right focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm"
+                className={`w-full px-3 py-2 border rounded-lg text-right focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm ${
+                  nameError ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                }`}
                 placeholder="مثال: CBC, Chest X-Ray"
               />
+              {nameError && (
+                <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                  <FiInfo className="w-3 h-3" />
+                  وارد کردن نام تست الزامی است
+                </p>
+              )}
             </div>
           </div>
 
@@ -355,6 +373,7 @@ const LabImagingSection = ({
 }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showLabImagingList, setShowLabImagingList] = useState(false);
+  const [nameError, setNameError] = useState(false);
   const [formData, setFormData] = useState({
     type: 'آزمایش خون',
     name: '',
@@ -375,6 +394,9 @@ const LabImagingSection = ({
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === 'name' && nameError && value.trim()) {
+      setNameError(false);
+    }
   };
 
   const handleFileChange = (e) => {
@@ -410,9 +432,16 @@ const LabImagingSection = ({
 
   const handleSubmit = () => {
     if (!formData.name.trim()) {
-      alert('نام تست الزامی است');
+      setNameError(true);
+      // اسکرول به بالای مودال برای دیدن خطا
+      const modalContent = document.querySelector('.bg-white.rounded-2xl.shadow-2xl');
+      if (modalContent) {
+        modalContent.scrollTo({ top: 0, behavior: 'smooth' });
+      }
       return;
     }
+
+    setNameError(false);
 
     // اگر در حال ویرایش هستیم، تصویر قبلی را نگه داریم
     let finalImage = formData.imagePreview;
@@ -465,7 +494,6 @@ const LabImagingSection = ({
     onRemove(id);
   };
 
-  // تابع handleEdit برای ویرایش آیتم - اینجا صدا زده می‌شود
   const handleEdit = (item) => {
     setFormData({
       type: item.type,
@@ -478,6 +506,7 @@ const LabImagingSection = ({
     });
     setEditingId(item.id);
     setShowAddModal(true);
+    setNameError(false);
   };
 
   const handleCloseModal = () => {
@@ -492,6 +521,7 @@ const LabImagingSection = ({
     });
     setEditingId(null);
     setShowAddModal(false);
+    setNameError(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -552,6 +582,9 @@ const LabImagingSection = ({
       type: template.type,
       name: template.name
     }));
+    if (nameError && template.name.trim()) {
+      setNameError(false);
+    }
     setShowExamples(false);
   };
 
@@ -709,6 +742,14 @@ const LabImagingSection = ({
             </div>
             
             <div className="p-4 md:p-6">
+              {/* هشدار در بالای مودال */}
+              {nameError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
+                  <FiInfo className="w-5 h-5 flex-shrink-0" />
+                  <p className="text-sm">لطفاً نام تست را وارد کنید</p>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -743,9 +784,17 @@ const LabImagingSection = ({
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border-2 border-purple-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all text-right text-base placeholder:text-gray-400"
+                    className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all text-right text-base placeholder:text-gray-400 ${
+                      nameError ? 'border-red-500 bg-red-50' : 'border-purple-300'
+                    }`}
                     placeholder="مثال: CBC, Chest X-Ray"
                   />
+                  {nameError && (
+                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                      <FiInfo className="w-3 h-3" />
+                      وارد کردن نام تست الزامی است
+                    </p>
+                  )}
                 </div>
                 
                 <div>
@@ -777,7 +826,7 @@ const LabImagingSection = ({
                 </div>
               </div>
               
-              {/* تصویر / فایل - این بخش در ویرایش هم فعال است */}
+              {/* تصویر / فایل */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   تصویر / فایل

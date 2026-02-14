@@ -20,6 +20,7 @@ import {
   FiFolder,
   FiClipboard
 } from 'react-icons/fi';
+import AnalysisStats from './AnalysisStats';
 
 const PATIENTS_STORAGE_KEY = 'hemo_patients_data';
 
@@ -448,6 +449,7 @@ export default function MedicalRecords() {
             </div>
           </div>
         </div>
+        <AnalysisStats patients={patients}/>
 
         {/* نوار جستجو و اقدامات */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
@@ -687,7 +689,7 @@ export default function MedicalRecords() {
                         <input
                           type="text"
                           name="diagnosis"
-                          value={newPatient.diagnosis}
+                          value={newPatient.diagnosis.toUpperCase()}
                           onChange={handleInputChange}
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-right"
                           placeholder="مثلاً: نارسایی کلیه، دیابت، فشار خون"
